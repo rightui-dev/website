@@ -56,6 +56,48 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
+  expect tree has "ai-install-copy"
+  tap "ai-install-toggle"
+  expect tree has "ai-install-prompt-text"
+  tap "ai-install-copy"
+  expect text "ai-install-copy" == "Copied"
+  expect no failures
+
+test "homepage provides the AI installation prompt"
+  size 390x844
+  clock data
+  expect tree has "made-with-exact"
+  expect tree has "ai-install-copy"
+  tap "ai-install-toggle"
+  expect tree has "ai-install-prompt-text"
+  tap "ai-install-copy"
+  expect text "ai-install-copy" == "Copied"
+  tap "ai-install-toggle"
+  expect text "ai-install-toggle" == "View prompt"
+  expect no failures
+
+test "accordion variants retain independent expansion after resize"
+  at "/docs/components/accordion"
+  size 1280x1000
+  clock data
+  clock settle
+  tap "advanced-accordion-trigger-1"
+  expect tree has "advanced-accordion-panel-0"
+  expect tree has "advanced-accordion-panel-1"
+  tap "advanced-accordion-trigger-0"
+  expect tree missing "advanced-accordion-panel-0"
+  expect tree has "advanced-accordion-panel-1"
+  tap "single-expansion-trigger-1"
+  expect tree missing "single-expansion-panel-0"
+  expect tree has "single-expansion-panel-1"
+  resize 390x844
+  clock settle
+  expect tree has "advanced-accordion-panel-1"
+  expect tree has "single-expansion-panel-1"
+  prefer prefers-reduced-motion reduce
+  type "single-expansion-trigger-0" key "Enter"
+  expect tree has "single-expansion-panel-0"
+  expect tree missing "single-expansion-panel-1"
   expect no failures
 
 test "area charts respond to period changes and keyboard inspection"
@@ -270,17 +312,17 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.3"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.3"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.4"
   tap "install-button-mode-1"
-  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.3 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.3.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
+  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.4 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.4.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.3"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"

@@ -1,10 +1,10 @@
 # Validation status
 
-Recorded checks as of November 13, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
+Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 ## Website
 
-- The latest recorded `bun run test` completed **24 browser tests, 0 failures**. Coverage includes navigation, search, theme, installation controls, compatibility tables and targeted component interactions. The preceding `verify` run reported 0 Contract findings across its 22 tests.
+- The latest recorded `bun run test` completed **26 browser tests, 0 failures**. Coverage includes navigation, search, theme, installation controls, compatibility tables and targeted component interactions. The preceding `verify` run reported 0 Contract findings across its 22 tests.
 - The production build passed for 66 component examples, 21 AI patterns, 27 blocks and 10 charts. The build generated 130 Markdown documents, including compatibility and installation pages. The official Exact SDK checkout was unchanged.
 - The previous production release passed **137 route/status/MIME checks** on `https://rightui.dev`. This update passed **138 checks** against the local Cloudflare emulator. Served `app.js` and Geist matched the local build. Checks included Markdown, client-rendered routes and genuine unknown-route 404 responses.
 - The approved logo is registered for the favicon, Apple touch icon and web manifest. A faithful 56×56, 1,155-byte derivative is embedded in initial HTML and the runtime for the 28px header logo. Postbuild rejects missing, deferred or external header logos.
@@ -51,4 +51,12 @@ The SEO check passed for all 130 page heads, 102 sitemap URLs, robots.txt, the r
 
 ## Clean release history
 
-The current GitHub prerelease and annotated tag are `v0.1.0-beta.3`, from the clean source history. Earlier GitHub prereleases and tags were removed after their metadata and archives were backed up and verified. Existing npm versions remain available. The beta.3 archive changes only the README, changelog and package version; all Contract components, theme tokens and font assets are byte-identical to beta.2.
+The history cleanup was completed with `v0.1.0-beta.3`, from the clean source history. Earlier GitHub prereleases and tags were removed after their metadata and archives were backed up and verified. Existing npm versions remain available. The beta.3 archive changes only the README, changelog and package version; all Contract components, theme tokens and font assets are byte-identical to beta.2.
+
+## AI installation prompt and Accordion spacing
+
+The homepage and Installation guide share one versioned AI setup prompt, including their Markdown exports. Browser checks confirmed the complete prompt reached the clipboard successfully on both pages, with the Copied state displayed. The expandable prompt wraps without horizontal overflow at 390px. The homepage attribution links Exact to its official repository.
+
+The beta.4 Accordion and AccordionMultiple render their headings, expanded content and chevrons 16px from the container edges. Browser measurements confirmed those insets at 390px, including hover, with no horizontal document overflow. ArrowDown moved focus to the next trigger. An isolated archive test and the website regression test checked single and independent expansion, keyboard activation and preserved state after resize. These are web checks; no new native validation is claimed.
+
+The beta.4 package passed isolated installation, build and Button interaction checks from both its archive and the public npm registry. The website uses the exact npm version, with no local dependency override. The 26 browser tests passed; the 12-width initial-render comparison remained stable, and local hosting/SEO checks passed 138 route checks, 130 heads and 102 sitemap URLs.

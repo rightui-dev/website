@@ -37,7 +37,7 @@ rightui/
 
 Edit `tools/app.contract.template`, not generated `apps/site/app.contract`. `tools/generate.ts` reads the library sources and creates the routes, catalog, Markdown documents, demo dispatchers and source viewer data. Generated files and build artifacts are excluded from Git. Every demo imports the shared Contract library; the site does not maintain a separate copy of the components.
 
-The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui@0.1.0-beta.3` is published on npm.
+The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui@0.1.0-beta.4` is published on npm.
 
 ## Platform scope and validation
 

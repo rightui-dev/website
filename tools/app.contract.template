@@ -10,6 +10,7 @@ use ChartDemo from "./generated/charts.contract"
 use AIDemo from "./generated/ai-demos.contract"
 use DocActions from "./components/doc-actions.contract"
 use Installation from "./components/installation.contract"
+use AIInstallPrompt from "./components/ai-install-prompt.contract"
 use Compatibility from "./components/compatibility.contract"
 use ExactOverview from "./components/exact-overview.contract"
 use GitHubIcon, NpmIcon, ThemeIcon from "./components/header-icons.contract"
@@ -107,6 +108,13 @@ component RightUI
             if page.kind == "home"
               main
                 Hero(title="The Foundation for your Design System", description="Composable, accessible components with thoughtful defaults. Build your own Exact component library with code you can customize, extend, and make your own.", primary="Get Started", primaryHref="/docs/installation", secondary="View Components", secondaryHref="/docs/components")
+                row testId="made-with-exact" padding="0 24px 24px" gap=4 justify-content="center" flex-wrap="wrap" color="ui.muted-foreground" font-size="0.8125rem"
+                  text "This site is 100% made with"
+                  link href="https://github.com/expo/exact" target="_blank" rel="noopener noreferrer" class=QuietLink text-decoration="underline"
+                    text "Exact"
+                column padding="0 24px 40px" max-width="64rem" margin="0 auto" box-sizing="border-box"
+                  for section in page.sections key=section.id
+                    AIInstallPrompt(title=section.title, description=section.text, prompt=section.code)
                 // HOME_CARDS
             else if doc
               row padding="calc(32px + clamp(0px, (100vw - 1023px) * 1000, 16px)) 0 64px" gap=0 align-items="flex-start" box-sizing="border-box"
@@ -193,12 +201,15 @@ component RightUI
                     else
                       for section in page.sections key=section.id
                         column gap=16 id=section.id testId=section.id padding-top=16
-                          h2 font-size="1.25rem" font-weight=600 letter-spacing="-0.025em" margin=0
-                            text section.title
-                          if section.text != ""
-                            text section.text class=Paragraph markup="markdown"
-                          if section.code != ""
-                            Code(code=section.code, title=section.language, language=section.language, compact=false)
+                          if section.id == "ai-setup"
+                            AIInstallPrompt(title=section.title, description=section.text, prompt=section.code)
+                          else
+                            h2 font-size="1.25rem" font-weight=600 letter-spacing="-0.025em" margin=0
+                              text section.title
+                            if section.text != ""
+                              text section.text class=Paragraph markup="markdown"
+                            if section.code != ""
+                              Code(code=section.code, title=section.language, language=section.language, compact=false)
                     row border-top="1px solid ui.border" padding-top=24 margin-top=24 gap=16 justify-content="space-between"
                       link href="/docs/installation" class=QuietLink
                         text "← Get started"
