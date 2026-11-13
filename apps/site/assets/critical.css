@@ -13,3 +13,8 @@
   #exact-build-flow { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1fr) !important; }
   #exact-build-flow > div > svg { transform: none !important; }
 }
+
+@media (max-width: 359px) {
+  #navbar-wordmark { display: none !important; }
+  #navbar-home { gap: 0 !important; }
+}

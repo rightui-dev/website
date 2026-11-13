@@ -12,7 +12,7 @@ use DocActions from "./components/doc-actions.contract"
 use Installation from "./components/installation.contract"
 use Compatibility from "./components/compatibility.contract"
 use ExactOverview from "./components/exact-overview.contract"
-use GitHubIcon, ThemeIcon from "./components/header-icons.contract"
+use GitHubIcon, NpmIcon, ThemeIcon from "./components/header-icons.contract"
 // HOME_IMPORT
 routes nav
 // GENERATED_ROUTES
@@ -281,9 +281,9 @@ component RightUI
           row min-height=64 align-items="center" max-width="96rem" margin="0 auto" gap=8 flex-wrap="wrap"
             button display="flex" class=Hit press=toggleMenu aria-label="Toggle navigation" aria-expanded=menu inert=(not mobile) width="clamp(0px, (1024px - 100vw) * 1000, 32px)" min-width=0 flex-shrink=0 overflow="hidden" padding=0 height=32 margin-right="calc(0px - clamp(0px, (100vw - 1023px) * 1000, 8px))" testId="nav-toggle"
               text "☰" font-size="1.125rem"
-            link href="/" class=Hit padding="6px 8px" aria-label="rightui home" display="flex" align-items="center" gap=8
+            link href="/" class=Hit padding="6px 8px" id="navbar-home" aria-label="rightui home" display="flex" align-items="center" gap=8
               image "{{NAVBAR_LOGO}}" id="navbar-logo" testId="navbar-logo" alt="" width=28 height=28 border-radius="ui.radius-control"
-              text "rightui" font-weight=700 letter-spacing="-0.04em" font-size="1.125rem"
+              text "rightui" id="navbar-wordmark" font-weight=700 letter-spacing="-0.04em" font-size="1.125rem"
             nav aria-label="Main navigation" display="flex" max-width="clamp(0px, (100vw - 1023px) * 1000, 28rem)" max-height=32 min-width=0 overflow="hidden" inert=mobile gap=2
               for item in [CatalogEntry(slug="docs", title="Docs", description="", href="/docs/installation"), CatalogEntry(slug="components", title="Components", description="", href="/docs/components"), CatalogEntry(slug="blocks", title="Blocks", description="", href="/blocks"), CatalogEntry(slug="charts", title="Charts", description="", href="/charts/area")] key=item.slug
                 link href=item.href class=Hit padding="6px 10px" aria-current=(top(nav).url.startsWith(item.href) ? "page" : "false")
@@ -294,8 +294,11 @@ component RightUI
               text "Search documentation..." flex=1 min-width=0 max-width="clamp(0px, (100vw - 1023px) * 1000, 14rem)" overflow="hidden" white-space="nowrap" margin-left="clamp(0px, (100vw - 1023px) * 1000, 12px)" text-align="left" font-size="0.8125rem"
               text "⌘ K" max-width="clamp(0px, (100vw - 1023px) * 1000, 3rem)" min-width=0 overflow="hidden" white-space="nowrap" margin-right="clamp(0px, (100vw - 1023px) * 1000, 12px)" font-size="0.6875rem" color="ui.muted-foreground"
             view width=1 height=16 flex-shrink=0 background-color="ui.border" aria-hidden=true
-            link href="https://github.com/rightui-dev/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 flex-shrink=0 display="flex" align-items="center" justify-content="center" aria-label="rightui on GitHub" testId="github-link"
-              GitHubIcon()
+            row gap=2 align-items="center" flex-shrink=0
+              link href="https://github.com/rightui-dev/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 display="flex" align-items="center" justify-content="center" aria-label="rightui on GitHub" testId="github-link"
+                GitHubIcon()
+              link href="https://www.npmjs.com/package/@rightui/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 display="flex" align-items="center" justify-content="center" aria-label="rightui on npm" title="@rightui/ui on npm" testId="npm-link"
+                NpmIcon()
             view width=1 height=16 flex-shrink=0 background-color="ui.border" aria-hidden=true
             button id="theme-toggle" testId="theme-toggle" class=Hit press=toggleTheme aria-label="Toggle theme" aria-pressed=(theme == "dark") width=32 height=32 flex-shrink=0 padding=0 display="flex" align-items="center" justify-content="center"
               ThemeIcon()
