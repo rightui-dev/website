@@ -1,0 +1,67 @@
+shape Viewport
+  width: number
+  height: number
+  prefersReducedMotion: bool
+shape CatalogEntry
+  slug: string
+  title: string
+  description: string
+  href: string
+shape DocSection
+  id: string
+  title: string
+  text: string
+  code: string
+  language: string
+shape ApiRow
+  name: string
+  type: string
+shape Page
+  title: string
+  description: string
+  kind: string
+  slug: string
+  source: string
+  code: string
+  usage: string
+  keyboard: string
+  markdown: string
+  markdownHref: string
+  sections: DocSection[]
+  api: ApiRow[]
+  importCode: string
+shape SourceFile
+  path: string
+  code: string
+  language: string
+shape ChartEntry
+  slug: string
+  title: string
+  description: string
+  source: string
+  code: string
+  fullWidth: bool
+shape CompatibilityRow
+  id: string
+  title: string
+  href: string
+  ios: string
+  macos: string
+  web: string
+  windows: string
+  android: string
+shape CompatibilityGroup
+  id: string
+  title: string
+  rows: CompatibilityRow[]
+shape CompatibilityNote
+  id: string
+  label: string
+  description: string
+  url: string
+shape CompatibilityReport
+  version: string
+  asOf: string
+  groups: CompatibilityGroup[]
+  statuses: CompatibilityNote[]
+  evidence: CompatibilityNote[]

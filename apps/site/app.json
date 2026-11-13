@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../.tooling/exact/scripts/app.schema.json",
+  "name": "rightui",
+  "short_name": "rightui",
+  "id": "dev.rightui.docs",
+  "start_url": "/",
+  "display": "standalone",
+  "app": {
+    "id": "dev.rightui.docs",
+    "name": "rightui",
+    "origin": "https://rightui.dev"
+  },
+  "host": {
+    "web": {
+      "head": [
+        {
+          "script": {
+            "type": "application/ld+json",
+            "text": "{\"@context\":\"https://schema.org\",\"@type\":\"WebSite\",\"@id\":\"https://rightui.dev/#website\",\"name\":\"rightui\",\"alternateName\":\"RightUI\",\"url\":\"https://rightui.dev/\",\"inLanguage\":\"en\"}"
+          }
+        }
+      ]
+    }
+  },
+  "deploy": {
+    "store": {
+      "web": "0"
+    }
+  },
+  "icons": [
+    {
+      "src": "assets/brand/rightui.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

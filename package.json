@@ -1,0 +1,28 @@
+{
+  "name": "rightui",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "generate": "bun tools/generate.ts",
+    "build": "bun tools/build.ts",
+    "dev": "bun run generate && EXACT_FEEDBACK=0 bun apps/site/exact.mjs serve dist --port 8792",
+    "test": "cd apps/site && EXACT_FEEDBACK=0 bun exact.mjs test web",
+    "setup": "bun tools/setup.ts",
+    "deploy": "bun run build && wrangler deploy",
+    "deploy:check": "wrangler deploy --dry-run",
+    "preview:cloudflare": "wrangler dev --port 8793",
+    "check:hosting": "bun tools/check-hosting.ts"
+  },
+  "dependencies": {
+    "@rightui/ui": "0.1.0-beta.2"
+  },
+  "engines": {
+    "bun": ">=1.4.2"
+  },
+  "devDependencies": {
+    "wrangler": "4.158.0"
+  }
+}

@@ -1,0 +1,304 @@
+test "documentation search opens a real component page"
+  size 1280x900
+  clock data
+  tap "search-open"
+  type "search-input" "Tabs"
+  type "search-input" key "Enter"
+  clock data
+  clock settle
+  expect text "page-title" == "Tabs"
+  expect tree has "tabs-demo"
+  expect no failures
+
+test "theme and mobile navigation remain usable"
+  size 390x844
+  clock data
+  tap "theme-toggle"
+  expect state theme == "dark"
+  tap "nav-toggle"
+  expect state menu == true
+  tap "nav-toggle"
+  expect state menu == false
+  expect no failures
+
+test "tabs use keyboard navigation and retain selection after resize"
+  at "/docs/components/tabs"
+  size 1280x1000
+  clock data
+  clock settle
+  type "tabs-demo-0" key "ArrowRight"
+  expect text "tabs-demo-title" == "Analytics"
+  type "tabs-demo-1" key "End"
+  expect text "tabs-demo-title" == "Settings"
+  resize 390x844
+  clock settle
+  expect text "tabs-demo-title" == "Settings"
+  expect disabled "tabs-disabled-1"
+  prefer prefers-reduced-motion reduce
+  tap "tabs-line-2"
+  expect text "tabs-line-panel" == "Reports"
+  expect no failures
+
+test "source links resolve actual Contract code"
+  at "/source?file=packages/ui/button.contract"
+  clock data
+  expect text "source-path" == "packages/ui/button.contract"
+  expect tree has "copy-code"
+  tap "copy-code"
+  expect no failures
+
+test "installation explains consumer setup"
+  at "/docs/installation"
+  clock data
+  expect text "page-title" == "Installation"
+  expect tree has "requirements"
+  expect tree has "package"
+  expect tree has "font"
+  expect tree has "example"
+  expect tree has "run"
+  expect no failures
+
+test "area charts respond to period changes and keyboard inspection"
+  at "/charts/area"
+  size 1280x1000
+  clock data
+  clock settle
+  tap "area-period-7"
+  type "chart-area-interactive" key "End"
+  clock settle
+  expect tree has "chart-area-stacked"
+  expect no failures
+
+test "login block loads without the documentation shell"
+  at "/view/login-03"
+  size 390x844
+  clock data
+  expect tree has "auth-email"
+  expect tree missing "search-open"
+  expect no failures
+
+
+test "documentation navigation keeps the sidebar mounted"
+  at "/docs/components/trace"
+  size 1280x900
+  clock data
+  clock settle
+  perf
+    tap "docs-link-calendar"
+    clock data
+    clock settle
+  expect perf built "docs-sidebar-scroll" == 0
+  expect text "page-title" == "Calendar"
+  tap "site-shell" history -1
+  clock data
+  expect text "page-title" == "Trace"
+  expect no failures
+
+test "calendar icon controls change month and respect disabled state"
+  at "/docs/components/calendar"
+  size 1280x1000
+  clock data
+  tap "dates-single-next"
+  expect text "dates-single-month" == "April 2026"
+  tap "dates-single-previous"
+  expect text "dates-single-month" == "March 2026"
+  expect disabled "dates-disabled-next"
+  expect no failures
+
+test "trace disclosure opens and closes its detail"
+  at "/docs/components/trace"
+  clock data
+  tap "content-trace-step-0"
+  expect tree has "content-trace-detail-0"
+  tap "content-trace-step-0"
+  expect tree missing "content-trace-detail-0"
+  expect no failures
+
+test "input group compact action submits the shared field"
+  at "/docs/components/input-group"
+  clock data
+  type "controls-search" "rightui"
+  tap "controls-search-action"
+  expect text "input-group-result" == "Search submitted: rightui"
+  expect no failures
+
+test "button variations preserve size and disabled behavior"
+  at "/docs/components/button"
+  clock data
+  tap "button-icon"
+  expect tree has "button-with-icon"
+  expect disabled "button-loading"
+  expect no failures
+
+
+test "resizable orientations retain independent values"
+  at "/docs/components/resizable"
+  size 1280x1000
+  clock data
+  type "resizable-horizontal-handle" key "ArrowRight"
+  expect text "resizable-horizontal-value" == "51% / 49%"
+  expect text "resizable-vertical-value" == "50% / 50%"
+  type "resizable-vertical-handle" key "ArrowDown"
+  expect text "resizable-vertical-value" == "51% / 49%"
+  type "resizable-vertical-handle" key "End"
+  expect text "resizable-vertical-value" == "80% / 20%"
+  expect no failures
+
+test "resizable RTL reverses horizontal keyboard direction"
+  at "/docs/components/resizable"
+  size 1280x1000
+  clock data
+  type "resizable-rtl-handle" key "ArrowLeft"
+  expect text "resizable-rtl-value" == "51% / 49%"
+  tap "resizable-rtl-toggle"
+  type "resizable-rtl-handle" key "ArrowRight"
+  expect text "resizable-rtl-value" == "52% / 48%"
+  expect no failures
+
+test "resizable withHandle changes the grip without disabling resizing"
+  at "/docs/components/resizable"
+  size 1280x1000
+  clock data
+  expect tree missing "resizable-horizontal-handle-grip"
+  expect tree has "resizable-handle-handle-grip"
+  tap "resizable-handle-toggle"
+  expect tree missing "resizable-handle-handle-grip"
+  type "resizable-handle-handle" key "ArrowRight"
+  expect text "resizable-handle-value" == "51% / 49%"
+  expect disabled "variation-resize-disabled-handle"
+  expect no failures
+
+
+test "documentation actions copy and dismiss their menu"
+  at "/docs/components/resizable"
+  size 1280x1000
+  clock data
+  tap "doc-actions-Resizable-copy"
+  expect text "doc-actions-Resizable-copy" == "Copied"
+  tap "doc-actions-Resizable"
+  expect tree has "doc-actions-Resizable-item-markdown"
+  type "doc-actions-Resizable-item-markdown" key "Escape"
+  expect tree missing "doc-actions-Resizable-menu"
+  expect no failures
+
+test "AI confirmation controls a local approval state"
+  at "/docs/ai-elements/confirmation"
+  clock data
+  tap "ai-confirmation-send"
+  clock +1100
+  tap "ai-confirmation-approve"
+  clock +700
+  expect text "ai-confirmation-result" == "Approved locally. No command executed."
+  tap "ai-confirmation-reset"
+  tap "ai-confirmation-send"
+  clock +1100
+  tap "ai-confirmation-deny"
+  clock +700
+  expect text "ai-confirmation-result" == "Denied. No command executed."
+  expect no failures
+
+test "AI prompt input submits typed text and clears the field"
+  at "/docs/ai-elements/prompt-input"
+  clock data
+  type "ai-prompt-input-field" "Summarize the brief"
+  tap "ai-prompt-input-send"
+  expect text "ai-prompt-input-result" == "Local submission: Summarize the brief"
+  expect disabled "ai-prompt-input-send"
+  expect no failures
+
+test "AI message actions support editing and temporary copy feedback"
+  at "/docs/ai-elements/message"
+  clock data
+  tap "ai-message-copy"
+  expect text "ai-message-copy-tip" == "Copied"
+  clock +2100
+  expect text "ai-message-copy-tip" == "Copy"
+  tap "ai-message-helpful"
+  tap "ai-message-unhelpful"
+  tap "ai-message-edit"
+  type "ai-message-editor" "How do I change the theme?"
+  tap "ai-message-editor-save"
+  expect text "ai-message-bubble" == "How do I change the theme?"
+  expect no failures
+
+test "AI reasoning replay streams before showing the answer"
+  at "/docs/ai-elements/reasoning"
+  clock data
+  expect tree has "ai-reasoning-answer"
+  tap "ai-reasoning-replay"
+  expect tree missing "ai-reasoning-answer"
+  clock +2500
+  expect tree has "ai-reasoning-0-content"
+  tap "ai-reasoning-0"
+  clock settle
+  expect tree missing "ai-reasoning-0-content"
+  clock +5700
+  expect tree has "ai-reasoning-answer"
+  expect tree has "ai-reasoning-replay"
+  prefer prefers-reduced-motion reduce
+  tap "ai-reasoning-0"
+  clock settle
+  expect tree has "ai-reasoning-0-content"
+  expect no failures
+
+test "AI chat streams a scripted turn and resets"
+  at "/docs/ai-elements/chat"
+  clock data
+  tap "ai-chat-thread-send"
+  expect disabled "ai-chat-thread-send"
+  clock +15000
+  expect tree has "ai-chat-assistant-0-reply"
+  tap "ai-chat-reset"
+  expect tree missing "ai-chat-thread"
+  expect no failures
+
+test "AI tool exposes distinct command outputs"
+  at "/docs/ai-elements/tool"
+  clock data
+  tap "ai-tool-0"
+  clock settle
+  expect text "ai-tool-0-output" == "v24.18.0"
+  tap "ai-tool-1"
+  clock settle
+  expect text "ai-tool-1-output" == "11.6.2"
+  expect no failures
+
+
+test "component installation switches package manager and source method"
+  at "/docs/components/button"
+  size 1280x1000
+  clock data
+  clock settle
+  expect tree has "github-link"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.2"
+  tap "install-button-manager-1"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.2"
+  tap "install-button-mode-1"
+  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.2 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.2.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
+  expect tree has "install-button-expand"
+  tap "install-button-expand"
+  expect text "install-button-expand" == "Collapse source"
+  tap "install-button-manager-0"
+  tap "install-button-mode-0"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.2"
+  expect no failures
+
+test "compatibility matrix exposes every catalog group and honest platform status"
+  at "/docs/compatibility"
+  size 390x844
+  clock data
+  clock settle
+  expect text "page-title" == "Compatibility"
+  expect tree has "compatibility-component-typography"
+  expect tree has "compatibility-ai-tool"
+  expect tree has "compatibility-block-signup-05"
+  expect tree has "compatibility-charts"
+  expect text "component-button-ios" == "⚠️"
+  expect text "component-button-macos" == "✅"
+  expect text "component-button-web" == "✅"
+  expect text "component-button-windows" == "❌"
+  expect text "component-button-android" == "❌"
+  resize 1280x900
+  clock settle
+  expect text "component-button-ios" == "⚠️"
+  expect no failures

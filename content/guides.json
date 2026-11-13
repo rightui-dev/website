@@ -1,0 +1,240 @@
+[
+  {
+    "route": "how_exact",
+    "title": "How Exact works",
+    "description": "A visual guide to Contract, TypeScript, Rust and rightui, with a simple comparison to Expo.",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "From your code to the screen",
+        "text": "Exact is the complete system. Contract describes the interface. TypeScript or Rust supplies your data.\n\n1. **You write:** Contract describes screens, styles, state and actions. rightui provides reusable Contract components.\n2. **Exact builds:** the compiler checks your interface and creates a compact plan describing what to show and how to respond.\n3. **Exact runs:** the runtime executes that plan. The host displays the result using the browser DOM and CSS on Web, UIKit on iOS or AppKit on macOS.\n\n**Data at runtime:** Exact asks your TypeScript or Rust data module for API calls, storage and business logic, checks the reply and updates the UI.\n\nYou can build with **Contract + TypeScript without writing Rust**. Rust also powers parts of Exact internally; that does not make it a language you must write. Web, iOS and macOS are rightui targets; see the [compatibility table](/docs/compatibility) for checks completed on each platform.",
+        "code": "",
+        "language": ""
+      },
+      {
+        "id": "roles",
+        "title": "Inside the runtime",
+        "text": "| Layer | Job |\n| --- | --- |\n| Runner | Handles events, state changes and requests to the data module. |\n| Kernel | Calculates sizes and positions on native platforms. On the web, the browser uses CSS for layout. |\n| Host | Displays the result with DOM, UIKit or AppKit. |\n\n[Exact architecture](https://github.com/expo/exact/blob/53426cf02bf986a5e781abc4f953d79989c6dc05/README.md#how-it-works)",
+        "code": "",
+        "language": ""
+      },
+      {
+        "id": "expo",
+        "title": "Coming from Expo?",
+        "text": "Expo is a framework built around React Native. Exact provides its own UI language, compiler and runtime. These are useful points of comparison, not interchangeable packages.\n\n| Role | Expo / React Native | Exact |\n| --- | --- | --- |\n| Interface | React components in JSX / TSX | Components in Contract |\n| UI state | React and JavaScript | Contract state and actions |\n| Data logic | Usually JavaScript / TypeScript | TypeScript or Rust |\n| UI library | React / React Native components | rightui Contract components |\n\nReact components cannot be imported as Contract components. rightui is written for Exact. [About the Expo framework](https://docs.expo.dev/get-started/create-a-project/)",
+        "code": "",
+        "language": ""
+      },
+      {
+        "id": "interaction",
+        "title": "One example: load products",
+        "text": "Imagine a Load products button in your app.\n\n1. **Contract + rightui:** pressing the button triggers a Contract action. The UI can show a loading state.\n2. **TypeScript or Rust:** the data module calls your API and returns product records.\n3. **Exact runtime + Contract:** Exact checks the reply against the declared shape. Contract renders the products and the host displays the result.\n\nA local interaction, like opening a menu, can stay entirely in Contract. A data request is needed only when the action needs your data module.",
+        "code": "",
+        "language": ""
+      },
+      {
+        "id": "next",
+        "title": "Start with Contract + TypeScript",
+        "text": "Use rightui for the components and app.ts for your data. Choose Rust when your project needs a Rust data source; the UI still stays in Contract.\n\nContinue with [Installation](/docs/installation), the [TypeScript example](/docs/installation/typescript) or [Rust integration](/docs/installation/rust).",
+        "code": "",
+        "language": ""
+      }
+    ]
+  },
+  {
+    "route": "installation",
+    "title": "Installation",
+    "description": "Add rightui components to your Exact app. Current release: {{UI_VERSION}} (beta).",
+    "sections": [
+      {
+        "id": "requirements",
+        "title": "Before you start",
+        "text": "Use an Exact app and Bun 1.4.2. This beta is tested with [expo/exact revision 53426cf](https://github.com/expo/exact/tree/53426cf02bf986a5e781abc4f953d79989c6dc05). If you are new to Exact, follow its [setup guide](https://github.com/expo/exact/blob/53426cf02bf986a5e781abc4f953d79989c6dc05/README.md) and create an app first. Run the following commands from your app directory. For a visual introduction to the layers, read [How Exact works](/docs/how-exact-works).",
+        "code": "",
+        "language": "sh"
+      },
+      {
+        "id": "package",
+        "title": "Install the package",
+        "text": "Install the shared component package once. Choose the package manager you use in your project. Pin the version while rightui is in beta.",
+        "code": "bun add --exact @rightui/ui@{{UI_VERSION}}\n\n# npm\nnpm install --save-exact @rightui/ui@{{UI_VERSION}}\n\n# pnpm\npnpm add --save-exact @rightui/ui@{{UI_VERSION}}\n\n# Yarn\nyarn add --exact @rightui/ui@{{UI_VERSION}}",
+        "language": "sh"
+      },
+      {
+        "id": "font",
+        "title": "Add the typeface",
+        "text": "Copy the bundled Geist font and its license into your app. Declare the font at the top of app.contract, as shown in the next step.",
+        "code": "mkdir -p assets/fonts\ncp node_modules/@rightui/ui/assets/fonts/Geist.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/OFL.txt assets/fonts/",
+        "language": "sh"
+      },
+      {
+        "id": "example",
+        "title": "Use your first component",
+        "text": "Copy this example into app.contract in a new app, or adapt the import and Button call in your existing view. The counter uses local state; the greeting comes from app.ts below.",
+        "language": "contract",
+        "source": "integrations/typescript/app.contract"
+      },
+      {
+        "id": "data",
+        "title": "Add the data module",
+        "text": "Use this as app.ts for the example. It answers the greeting requested by app.contract. The next command generates its Answer type.",
+        "source": "integrations/typescript/app.ts",
+        "language": "typescript"
+      },
+      {
+        "id": "run",
+        "title": "Start the app",
+        "text": "Run the web preview from your app directory. Press Increment to check that the component responds. For data integration, continue with the [TypeScript guide](/docs/installation/typescript) or [Rust guide](/docs/installation/rust).",
+        "code": "bun exact.mjs contract types app.contract -o app.contract.d.ts\nbun exact.mjs web",
+        "language": "sh"
+      },
+      {
+        "id": "components",
+        "title": "Add more components",
+        "text": "Browse [Components](/docs/components) for live previews, imports and props. Every component uses the same @rightui/ui package. [AI Elements](/docs/ai-elements) and [Blocks](/blocks) are source patterns you can copy and adapt.",
+        "code": "",
+        "language": "sh"
+      },
+      {
+        "id": "updating",
+        "title": "Update your version",
+        "text": "Read the [changelog](/source?file=packages/ui/CHANGELOG.md) before installing a newer beta, then build and test your app. Commit package.json and your lockfile together. To roll back, reinstall the previous exact version. Keep your Exact SDK version unchanged unless the release notes require an upgrade.",
+        "code": "# Replace <version> with the beta version you want to use\nbun add --exact @rightui/ui@<version>",
+        "language": "sh"
+      },
+      {
+        "id": "platforms",
+        "title": "Platform support",
+        "text": "Rightui targets Web, iOS and macOS. Windows and Android are not supported. See the [compatibility table](/docs/compatibility) for the checks completed for each component. Rightui remains in beta; there is no stable release yet.",
+        "code": "",
+        "language": "sh"
+      }
+    ]
+  },
+  {
+    "route": "typescript",
+    "title": "TypeScript",
+    "description": "Connect a TypeScript data source to rightui components.",
+    "sections": [
+      {
+        "id": "setup",
+        "title": "Prepare your app",
+        "text": "Complete [Installation](/docs/installation), including the font setup. The following two files form a working example. Copy their contents into app.contract and app.ts in your Exact app.",
+        "code": "",
+        "language": "sh"
+      },
+      {
+        "id": "contract",
+        "title": "Declare the UI in app.contract",
+        "text": "Button comes from @rightui/ui. The greeting resource requests a record with the shape declared above the component.",
+        "language": "contract",
+        "source": "integrations/typescript/app.contract"
+      },
+      {
+        "id": "answer",
+        "title": "Provide the data in app.ts",
+        "text": "The answer function returns the data for greeting. Exact provides the generated Answer type after the next step.",
+        "language": "typescript",
+        "source": "integrations/typescript/app.ts"
+      },
+      {
+        "id": "run",
+        "title": "Generate types and run",
+        "text": "Run these commands from your app directory. The page displays the greeting and an interactive counter.",
+        "code": "bun exact.mjs contract types app.contract -o app.contract.d.ts\nbun exact.mjs web",
+        "language": "sh"
+      }
+    ]
+  },
+  {
+    "route": "rust",
+    "title": "Rust",
+    "description": "Provide data from Rust while composing the UI in Contract.",
+    "sections": [
+      {
+        "id": "setup",
+        "title": "Start with an Exact Rust host",
+        "text": "Install @rightui/ui and its font using [Installation](/docs/installation). Your app also needs an Exact host configured for a Rust DataSource. Use the [Exact Rust data source documentation](https://github.com/expo/exact/blob/53426cf02bf986a5e781abc4f953d79989c6dc05/docs/reference.md) and its [Sparkline example](https://github.com/expo/exact/tree/53426cf02bf986a5e781abc4f953d79989c6dc05/apps/sparkline) for the host and Cargo configuration. The example below shows the data source and UI; it is not a standalone application.",
+        "code": "",
+        "language": "sh"
+      },
+      {
+        "id": "shape",
+        "title": "Declare the Contract",
+        "text": "Use this as app.contract. The greeting resource will be answered by Rust rather than app.ts. The component import is the same as in a TypeScript app.",
+        "language": "contract",
+        "source": "integrations/typescript/app.contract"
+      },
+      {
+        "id": "source",
+        "title": "Implement the data source",
+        "text": "Add this implementation to your data crate. Set app_id() to your application ID. Value record fields must follow the order of shape Greeting in Contract.",
+        "language": "rust",
+        "source": "integrations/rust/src/lib.rs"
+      },
+      {
+        "id": "host",
+        "title": "Connect the data source",
+        "text": "Register Greetings with your Exact host for both initial rendering and runtime queries, following the host configuration above. Keep exact-plan and exact-runner on the same SDK revision as your app. Rightui supplies Contract components; rendering and Rust host integration are provided by Exact.",
+        "code": "",
+        "language": "sh"
+      }
+    ]
+  },
+  {
+    "route": "theming",
+    "title": "Theming",
+    "description": "Customize the Tamber tokens used by rightui components.",
+    "sections": [
+      {
+        "id": "tokens",
+        "title": "Theme source",
+        "text": "The package declares ui.tamber as its theme. Inspect the tokens below. If you need to edit the component package itself, use the Manual installation option on a component page so your source changes live in your project rather than being overwritten in node_modules.",
+        "language": "tamber",
+        "source": "packages/ui/ui.tamber"
+      },
+      {
+        "id": "components",
+        "title": "Use component variants",
+        "text": "Button reads ui.primary, ui.primary-foreground and related theme tokens. Keep the declared props when composing controls.",
+        "language": "Contract",
+        "source": "integrations/typescript/app.contract"
+      },
+      {
+        "id": "inspect",
+        "title": "Inspect source",
+        "text": "Inspect the [theme source](/source?file=packages/ui/ui.tamber) or [Button source](/source?file=packages/ui/button.contract) to see which tokens a component uses.",
+        "code": "",
+        "language": "sh"
+      }
+    ]
+  },
+  {
+    "route": "registry",
+    "title": "Registry",
+    "description": "Browse the source catalog for components, blocks and charts.",
+    "sections": [
+      {
+        "id": "catalog",
+        "title": "Browse the catalog",
+        "text": "Use [Components](/docs/components), [AI Elements](/docs/ai-elements), [Blocks](/blocks) and [Charts](/charts/area) to find a pattern. Each preview includes the code used to render it.",
+        "code": "",
+        "language": "sh"
+      },
+      {
+        "id": "source",
+        "title": "Use the source",
+        "text": "Install @rightui/ui through [Installation](/docs/installation), then copy the example you need. Keep relative imports and supporting files when adapting a pattern. You can also inspect the [Button source](/source?file=packages/ui/button.contract) and [theme tokens](/source?file=packages/ui/ui.tamber).",
+        "code": "use Button from \"@rightui/ui\"",
+        "language": "contract"
+      },
+      {
+        "id": "schema",
+        "title": "Read the manifest",
+        "text": "The public [registry manifest](/assets/registry/index.json) lists source paths and SHA-256 hashes. Its format is rightui-contract/v1, not the shadcn registry format. It is a source index, not an installation CLI.",
+        "code": "",
+        "language": "sh"
+      }
+    ]
+  }
+]

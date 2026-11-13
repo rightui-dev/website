@@ -1,0 +1,15 @@
+/* Exact's pinned font-size parser cannot express viewport lengths. Inline at build time. */
+#exact-root #hero-title { font-size: 2rem !important; }
+#exact-root #hero-description { font-size: 1rem !important; }
+@media (min-width: 768px) {
+  #exact-root #hero-title { font-size: 2.5rem !important; }
+  #exact-root #hero-description { font-size: 1.125rem !important; }
+}
+@media (min-width: 1200px) {
+  #exact-root #hero-title { font-size: 3rem !important; }
+}
+
+@media (min-width: 1280px) {
+  #exact-build-flow { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1fr) !important; }
+  #exact-build-flow > div > svg { transform: none !important; }
+}

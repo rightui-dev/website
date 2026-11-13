@@ -1,0 +1,12 @@
+tamber lab
+theme
+  AccentColor = light-dark(#000000, #fafafa)
+  space.xs: length = 4px
+  space.sm: length = 8px
+  space.md: length = 16px
+  space.lg: length = 24px
+  space.xl: length = 32px
+  radius.sm: length = 4px
+  radius.md: length = 8px
+  radius.lg: length = 12px
+  radius.full: length = 999px

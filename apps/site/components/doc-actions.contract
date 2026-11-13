@@ -1,0 +1,149 @@
+use MenuEntry, ButtonSegment from "@rightui/ui"
+use Hit from "./styles.contract"
+
+component DocActions
+  props
+    title: string
+    markdown: string
+    markdownHref: string
+  state groupFocused = false
+  action focusGroup
+    groupFocused = true
+  action blurGroup(e: FocusEvent)
+    match e.relatedTarget
+      case some(target)
+        groupFocused = target.startsWith(id)
+      case none
+        groupFocused = false
+  state copied = false
+  state assistantCopied = false
+  derive id = "doc-actions-" + encodeURIComponent(title)
+  derive label = "Documentation actions"
+  derive entries = [MenuEntry(id="markdown", label="View as Markdown", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://chatgpt.com/", label="Open in ChatGPT", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://claude.ai/", label="Open in Claude", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://v0.app/", label="Open in v0", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://scira.ai/", label="Open in Scira", shortcut="", disabled=false, destructive=false)]
+  action copy
+    copyText(markdown)
+    copied = true
+  state expanded = false
+  state openEpoch = 0
+  state contextFocus = false
+  derive enabled = entries.filter(item => not item.disabled)
+  action open
+    contextFocus = false
+    openEpoch = openEpoch + 1
+    expanded = true
+    showPopover(id + "-menu", source=id)
+    match first(enabled)
+      case some(item)
+        focus(id + "-item-" + item.id)
+      case none
+        focus(id + "-menu")
+  action closeMenu
+    expanded = false
+    focus(id)
+  action toggle
+    if expanded
+      closeMenu()
+    else
+      open()
+  action changed(epoch: number, e: ToggleEvent)
+    if epoch == openEpoch
+      expanded = e.newState == "open"
+      if e.newState == "open" and contextFocus
+        match first(enabled)
+          case some(item)
+            focus(id + "-item-" + item.id)
+          case none
+            focus(id + "-menu")
+      contextFocus = false
+
+  action pick(item: MenuEntry)
+    if not item.disabled and item.id != "markdown"
+      closeMenu()
+      copyText(markdown)
+      copied = true
+      assistantCopied = true
+      openURL(item.id)
+  action triggerKeys(k: string, e: KeyboardEvent)
+    if k == "ArrowDown" or k == "ArrowUp" or k == "ContextMenu" or (k == "F10" and e.shiftKey)
+      preventDefault()
+      open()
+      if k == "ArrowUp"
+        match enabled.at(enabled.length - 1)
+          case some(item)
+            focus(id + "-item-" + item.id)
+          case none
+            focus(id + "-menu")
+  action menuKeys(k: string)
+    if k == "Escape"
+      preventDefault()
+      stopPropagation()
+      closeMenu()
+    else if k == "Tab"
+      closeMenu()
+  action itemKeys(itemId: string, k: string, e: KeyboardEvent)
+    if not e.isComposing
+      let index = enabled.map(item => item.id).indexOf(itemId)
+      if k == "ArrowDown" or k == "ArrowUp" or k == "Home" or k == "End"
+        preventDefault()
+        let next = (k == "Home" ? 0 : k == "End" ? enabled.length - 1 : (index + (k == "ArrowDown" ? 1 : enabled.length - 1)) % max(1, enabled.length))
+        match enabled.at(next)
+          case some(item)
+            focus(id + "-item-" + item.id)
+          case none
+            focus(id + "-menu")
+      else if (k == "Enter" or k == " ") and itemId != "markdown"
+        preventDefault()
+        match enabled.at(index)
+          case some(item)
+            pick(item)
+          case none
+            closeMenu()
+      else if k.length == 1 and not e.metaKey and not e.ctrlKey and not e.altKey
+        match first(enabled.filter(item => item.label.toLowerCase().startsWith(k.toLowerCase())))
+          case some(item)
+            preventDefault()
+            focus(id + "-item-" + item.id)
+          case none
+            stopPropagation()
+  view
+    column min-width=0 align-items="flex-start"
+      row gap=0 align-items="center" border="1px solid ui.border" border-radius="ui.radius-control" overflow="hidden" focusin=focusGroup focusout=blurGroup box-shadow=(groupFocused ? "0 0 0 3px ui.ring" : "none")
+        ButtonSegment(id=id + "-copy", label="Copy page", disabled=false, press=copy)
+          svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+            rect x=8 y=8 width=12 height=12 rx=2
+            path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"
+          text (copied ? "Copied" : "Copy Page")
+        button id=id testId=id class=Hit press=toggle key=triggerKeys aria-label=("Actions for " + title) aria-haspopup="menu" aria-expanded=expanded aria-controls=(id + "-menu") width=32 height=32 display="flex" align-items="center" justify-content="center" border-left="1px solid ui.border" border-radius=0
+          svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+            path d="m6 9 6 6 6-6"
+      if expanded
+        for epoch in [openEpoch] key=epoch
+          column id=(id + "-menu") testId=(id + "-menu") popover="auto" toggle=changed(epoch) keycapture=menuKeys
+            role="menu" aria-label=label tabindex=-1
+            left="auto" top="auto" position-area="bottom" position-try-fallbacks="flip-block, flip-inline, flip-block flip-inline"
+            width="14rem" min-width=0 max-width="calc(100vw - 32px)" max-height="min(28rem, 70vh)" overflow="auto" box-sizing="border-box"
+            margin=4 padding=4 gap=0 border="1px solid ui.border" border-radius="ui.radius-menu" background-color="ui.surface" box-shadow="0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a"
+            column role="none" align-items="stretch" gap=0 min-width=0
+              for item in entries key=item.id
+                if item.id == "markdown"
+                  link id=(id + "-item-markdown") testId=(id + "-item-markdown") href=markdownHref target="_blank" rel="noopener" role="menuitem" tabindex=-1 key=itemKeys(item.id) class=Hit display="flex" align-items="center" gap=8 min-height=32 padding="6px 8px" font-weight=400
+                    svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+                      path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6"
+                    text item.label
+                else
+                  button id=(id + "-item-" + item.id) testId=(id + "-item-" + item.id) class=Hit
+                    role="menuitem" tabindex=-1 disabled=item.disabled press=pick(item) key=itemKeys(item.id)
+                    display="flex" width="100%" box-sizing="border-box" align-items="center" flex-wrap="wrap" gap=8 min-height=32 padding="6px 8px" border="0" border-radius="ui.radius-item" font-weight=400 background-color="transparent"
+                    color=(item.destructive ? "ui.danger" : "ui.foreground")
+                    :hover
+                      background-color="ui.muted"
+                    :focus-visible
+                      background-color="ui.muted"
+                    svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+                      path d=(item.id == "markdown" ? "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6" : "M15 3h6v6 M10 14 21 3 M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5")
+                    text item.label flex="1 1 6rem" min-width=0 text-align="left"
+                    if item.shortcut != ""
+                      text item.shortcut min-width=0 hyphens="auto" font-size="0.75rem" letter-spacing="0.1em" color="ui.muted-foreground" aria-hidden=true
+
+      if assistantCopied
+        text "Documentation copied. Paste it into your assistant." role="status" font-size="0.75rem" color="ui.muted-foreground" max-width="18rem"

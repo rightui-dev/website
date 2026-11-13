@@ -1,0 +1,196 @@
+use Paragraph, QuietLink from "./styles.contract"
+
+component ExactOverview
+  props
+    width: number
+  view
+    column gap=36 min-width=0 testId="exact-overview"
+      section id="overview" display="flex" flex-direction="column" gap=16 min-width=0
+        h2 class=SectionTitle
+          text "From your code to the screen"
+        text "Exact is the complete system. Contract describes the interface. TypeScript or Rust supplies your data." class=Paragraph
+        column border="1px solid ui.border" border-radius="ui.radius-panel" background-color="ui.sidebar" padding=16 gap=16 min-width=0
+          view display="grid" grid-template-columns="minmax(0, 1fr)" id="exact-build-flow" align-items="center" gap=8 role="group" aria-label="Build flow: Contract and rightui, Exact compiler, then the platform screen" testId="exact-build-flow"
+            column class=FlowCard
+              text "01 / YOU WRITE" class=Eyebrow
+              h3 class=CardTitle
+                text "Contract"
+              text "Screens, styles, state and actions." class=SmallText
+              row gap=6 align-items="center" padding-top=8 border-top="1px solid ui.border"
+                svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 stroke-linecap="round" aria-hidden=true
+                  path d="M12 5v14 M5 12h14"
+                text "rightui" font-weight=600 font-size="0.8125rem"
+              text "Ready-made Contract components." class=SmallText
+            FlowArrow()
+            column class=FlowCard
+              text "02 / EXACT BUILDS" class=Eyebrow
+              h3 class=CardTitle
+                text "Compiler"
+              text "Checks your interface and turns it into a compact plan." class=SmallText
+              text "The plan tells the runtime what to show and how to respond." class=SmallText
+            FlowArrow()
+            column class=FlowCard
+              text "03 / EXACT RUNS" class=Eyebrow
+              h3 class=CardTitle
+                text "Your screen"
+              Platform(name="Web", detail="Browser DOM + CSS")
+              Platform(name="iOS", detail="UIKit")
+              Platform(name="macOS", detail="AppKit")
+          column border="1px dashed ui.border" border-radius="ui.radius-control" padding=16 gap=8 min-width=0
+            text "DATA / AT RUNTIME" class=Eyebrow
+            row gap=8 align-items="center" flex-wrap="wrap"
+              text "TypeScript" font-size="0.875rem" font-weight=600
+              text "or" class=SmallText
+              text "Rust" font-size="0.875rem" font-weight=600
+            text "Your data module handles API calls, storage and business logic. Exact asks it for data, checks the reply and updates the interface." class=SmallText
+        text "You can build with Contract + TypeScript without writing Rust. Rust also powers parts of Exact internally; that does not make it a language you must write." class=Paragraph testId="exact-no-rust"
+        link href="/docs/compatibility" class=QuietLink
+          text "Web, iOS and macOS are rightui's targets. See the checks completed for each platform."
+      section id="roles" display="flex" flex-direction="column" gap=16 min-width=0
+        h2 class=SectionTitle
+          text "Inside the runtime"
+        column border="1px solid ui.border" border-radius="ui.radius-panel" overflow="hidden" min-width=0
+          RuntimeRole(name="Runner", detail="Handles events, state changes and requests to your data module.", last=false)
+          RuntimeRole(name="Kernel", detail="Calculates sizes and positions on native platforms. On the web, the browser lays out the interface with CSS.", last=false)
+          RuntimeRole(name="Host", detail="Displays the result using the browser's DOM, UIKit on iOS or AppKit on macOS.", last=true)
+        row gap=12 flex-wrap="wrap"
+          link href="https://github.com/expo/exact/blob/53426cf02bf986a5e781abc4f953d79989c6dc05/README.md#how-it-works" class=QuietLink
+            text "Read the Exact architecture"
+      section id="expo" display="flex" flex-direction="column" gap=16 min-width=0
+        h2 class=SectionTitle
+          text "Coming from Expo?"
+        text "Expo is a framework built around React Native. Exact provides its own UI language, compiler and runtime. These are useful points of comparison, not interchangeable packages." class=Paragraph
+        view border="1px solid ui.border" border-radius="ui.radius-panel" overflow="hidden" min-width=0
+          table width="100%" border-spacing=0 font-size="0.8125rem" line-height=1.6 testId="exact-expo-comparison"
+            caption text-align="left" padding=14 color="ui.muted-foreground"
+              text "Who does what in each stack"
+            thead background-color="ui.sidebar"
+              tr
+                th scope="col" class=TableCell width="24%"
+                  text "Role"
+                th scope="col" class=TableCell width="38%"
+                  text "Expo / React Native"
+                th scope="col" class=TableCell width="38%"
+                  text "Exact"
+            tbody
+              ComparisonRow(role="Interface", expo="React components in JSX / TSX", exact="Components in Contract")
+              ComparisonRow(role="UI state", expo="React and JavaScript", exact="Contract state and actions")
+              ComparisonRow(role="Data logic", expo="Usually JavaScript / TypeScript", exact="TypeScript or Rust")
+              ComparisonRow(role="UI library", expo="React / React Native components", exact="rightui Contract components")
+        text "React components cannot be imported as Contract components. rightui is written for Exact." class=SmallText
+        link href="https://docs.expo.dev/get-started/create-a-project/" class=QuietLink
+          text "About the Expo framework"
+      section id="interaction" display="flex" flex-direction="column" gap=16 min-width=0
+        h2 class=SectionTitle
+          text "One example: load products"
+        text "Imagine a Load products button in your app. Each layer has one job." class=Paragraph
+        column gap=0 min-width=0 testId="exact-interaction-flow"
+          InteractionStep(number="1", title="You press the button", owner="Contract + rightui", detail="The button triggers a Contract action. The UI can show a loading state.", last=false)
+          InteractionStep(number="2", title="Your app requests the products", owner="TypeScript or Rust", detail="The data module calls your API and returns product records.", last=false)
+          InteractionStep(number="3", title="The list appears", owner="Exact runtime + Contract", detail="Exact checks the reply against the declared shape. Contract renders the products and the host displays the result.", last=true)
+        text "A local interaction, like opening a menu, can stay entirely in Contract. A data request is needed only when the action needs your data module." class=SmallText
+      section id="next" display="flex" flex-direction="column" gap=16 min-width=0
+        h2 class=SectionTitle
+          text "Start with Contract + TypeScript"
+        text "Use rightui for the components and app.ts for your data. Choose Rust when your project needs a Rust data source; the UI still stays in Contract." class=Paragraph
+        row gap=16 flex-wrap="wrap"
+          link href="/docs/installation" class=QuietLink color="ui.foreground"
+            text "Install rightui"
+          link href="/docs/installation/typescript" class=QuietLink color="ui.foreground"
+            text "TypeScript example"
+          link href="/docs/installation/rust" class=QuietLink
+            text "Rust integration"
+
+component FlowArrow
+  view
+    view display="flex" align-items="center" justify-content="center" padding=2 color="ui.muted-foreground" aria-hidden=true
+      svg width=20 height=20 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=1.5 stroke-linecap="round" stroke-linejoin="round" transform="rotate(90deg)"
+        path d="M4 12h16 M14 6l6 6-6 6"
+
+component Platform
+  props
+    name: string
+    detail: string
+  view
+    column gap=2
+      text name font-size="0.8125rem" font-weight=600
+      text detail class=SmallText
+
+component RuntimeRole
+  props
+    name: string
+    detail: string
+    last: bool
+  view
+    row gap=16 padding=16 border-bottom=(last ? "0" : "1px solid ui.border") align-items="flex-start"
+      text name flex="0 0 4rem" font-size="0.875rem" font-weight=600
+      text detail class=SmallText flex=1 min-width=0
+
+component ComparisonRow
+  props
+    role: string
+    expo: string
+    exact: string
+  view
+    tr
+      th scope="row" class=TableCell font-weight=500
+        text role
+      td class=TableCell
+        text expo
+      td class=TableCell
+        text exact
+
+component InteractionStep
+  props
+    number: string
+    title: string
+    owner: string
+    detail: string
+    last: bool
+  view
+    row gap=16 min-width=0 align-items="stretch"
+      column align-items="center" flex="0 0 1.75rem"
+        view width="1.75rem" height="1.75rem" box-sizing="border-box" border="1px solid ui.border" border-radius="ui.radius-full" display="flex" align-items="center" justify-content="center" background-color="ui.sidebar"
+          text number font-size="0.75rem" font-weight=600
+        if not last
+          view width=1 flex=1 background-color="ui.border" margin="6px 0"
+      column gap=6 padding-bottom=(last ? 0 : 24) min-width=0 flex=1
+        h3 class=CardTitle
+          text title
+        text owner class=Eyebrow
+        text detail class=SmallText
+
+style FlowCard
+  min-width=0
+  align-self="stretch"
+  gap=10
+  padding=14
+  border="1px solid ui.border"
+  border-radius="ui.radius-control"
+  background-color="ui.background"
+style SectionTitle
+  margin=0
+  font-size="1.25rem"
+  font-weight=600
+  line-height=1.4
+style CardTitle
+  margin=0
+  font-size="0.9375rem"
+  font-weight=600
+  line-height=1.5
+style Eyebrow
+  font-size="0.6875rem"
+  font-weight=500
+  letter-spacing="0.04em"
+  line-height=1.6
+  color="ui.muted-foreground"
+style SmallText
+  font-size="0.8125rem"
+  line-height=1.65
+  color="ui.muted-foreground"
+  min-width=0
+style TableCell
+  text-align="left"
+  padding=12
+  border-bottom="1px solid ui.border"
+  overflow-wrap="anywhere"

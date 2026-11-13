@@ -1,0 +1,72 @@
+use DashboardBlock from "@rightui/registry/blocks/dashboard"
+use SidebarBlock, SidebarSettings from "@rightui/registry/blocks/sidebars"
+use AuthBlock from "@rightui/registry/blocks/auth"
+use Hit from "./styles.contract"
+use Code from "./code.contract"
+component BlockPreview
+  props
+    slug: string
+    width: number
+    reduced: bool
+  state settings = false
+  state signup = slug.startsWith("signup")
+  action showSettings
+    settings = true
+  action hideSettings
+    settings = false
+  action switchMode
+    signup = not signup
+  derive variant = (match parseNumber(slug.slice(slug.length - 2)) { case some(n) => n, case none => 1 })
+  view
+    view width="100%" min-height="100vh" background-color="ui.background" position="relative"
+      if slug == "dashboard-01"
+        DashboardBlock(narrow=(width < 768), reduced=reduced)
+      else if slug.startsWith("sidebar")
+        SidebarBlock(variant=variant, narrow=(width < 768), reduced=reduced, openSettings=showSettings)
+      else
+        AuthBlock(variant=variant, signup=signup, narrow=(width < 768), switchMode=switchMode)
+      if settings
+        SidebarSettings(id="block-settings", narrow=(width < 768), dismiss=hideSettings)
+component BlockFrame
+  props
+    slug: string
+    title: string
+    code: string
+    theme: string
+    width: number
+  state codeVisible = false
+  state size = 0
+  state mounted = false
+  action visibility(e: IntersectionObserverEntry)
+    if e.isIntersecting
+      mounted = true
+  action toggleCode
+    codeVisible = not codeVisible
+  action setSize(v: number)
+    size = v
+  view
+    column gap=16 width="100%" min-width=0 id=slug
+      row gap=12 align-items="center" flex-wrap="wrap"
+        row background-color="ui.muted" padding=3 border-radius=8
+          button class=Hit press=setSize(0) padding="5px 10px" background-color=(size == 0 ? "ui.background" : "transparent") aria-pressed=(size == 0)
+            text "Desktop" font-size="0.75rem"
+          button class=Hit press=setSize(768) padding="5px 10px" background-color=(size == 768 ? "ui.background" : "transparent") aria-pressed=(size == 768)
+            text "Tablet" font-size="0.75rem"
+          button class=Hit press=setSize(390) padding="5px 10px" background-color=(size == 390 ? "ui.background" : "transparent") aria-pressed=(size == 390)
+            text "Mobile" font-size="0.75rem"
+        text title flex=1 min-width=160 font-size="0.875rem" font-weight=500
+        button class=Hit press=toggleCode padding="6px 10px" aria-pressed=codeVisible
+          text (codeVisible ? "Preview" : "Code")
+        link class=Hit href=("/view/" + slug + "?theme=" + theme) padding="6px 8px" aria-label=("Open " + slug)
+          text "↗"
+      if codeVisible
+        Code(code=code, title=("blocks/" + slug + ".contract"), language="Contract", compact=false)
+      else
+        view background-color="ui.muted" border="1px solid ui.border" border-radius=12 padding="clamp(0px, (100vw - 599px) * 1000, 8px)" width="100%" min-width=0 box-sizing="border-box" overflow="hidden"
+          view intersect=visibility min-height=(slug == "dashboard-01" ? 1000 : 850) width="100%" max-width=(size == 0 ? "100%" : size.toString() + "px") margin="0 auto" background-color="ui.background" border-radius=8 overflow="hidden"
+            if mounted
+              iframe id=("preview-" + slug) src=("/view/" + slug + "?theme=" + theme) title=title width="100%" height=(slug == "dashboard-01" ? 1000 : 850) border="0"
+      row gap=8 align-items="center"
+        text slug font-family="monospace" font-size="0.75rem" color="ui.muted-foreground"
+        link href=("/source?file=blocks/" + slug + ".contract") class=Hit padding="4px 8px"
+          text "View source" font-size="0.75rem"

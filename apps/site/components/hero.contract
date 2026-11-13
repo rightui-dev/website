@@ -1,0 +1,21 @@
+use Hit from "./styles.contract"
+component Hero
+  props
+    title: string
+    description: string
+    primary: string
+    primaryHref: string
+    secondary: string
+    secondaryHref: string
+  view
+    section id="page-hero" padding="calc(40px + clamp(0px, (100vw - 767px) * 1000, 40px)) calc(20px + clamp(0px, (100vw - 767px) * 1000, 4px)) 48px" align-items="center" display="flex" flex-direction="column" gap=16 text-align="center"
+      link href="/docs/components/trace" class=Hit padding="2px 10px" border-radius=999 background-color="ui.muted"
+        text "Trace, Code Block and native components  →" font-size="0.75rem" line-height=1.5
+      h1 id="hero-title" min-width=0 max-width="min(64rem, 100%)" hyphens="auto" margin=0 font-weight=600 letter-spacing="-0.05em" line-height=1.1
+        text title
+      text description id="hero-description" min-width=0 max-width="min(50rem, 100%)" hyphens="auto" margin=0 line-height=1.55 text-align="center"
+      row gap=10 padding-top=10 justify-content="center"
+        link href=primaryHref class=Hit padding="7px 13px" border-radius=999 background-color="ui.primary" color="ui.primary-foreground"
+          text primary line-height=1.4
+        link href=secondaryHref class=Hit padding="7px 13px" border-radius=999 background-color="ui.muted"
+          text secondary line-height=1.4
