@@ -13,11 +13,11 @@ The website now uses the immutable npm beta directly. Its generated demo registr
 
 ## Package and data integration
 
-- **`@rightui/ui@0.1.0-beta.2` is published on npm.** Its archive SHA-512 integrity matched the reviewed release artifact. The isolated npm installation built with zero warnings and passed the Button counter test, from 0 to 1.
+- **`@rightui/ui@0.1.0-beta.3` is published on npm.** Its archive SHA-512 integrity matched the reviewed release artifact. Both the beta.3 archive and its npm installation built with zero warnings and passed the Button counter test, from 0 to 1. The npm archive integrity matched the validated local artifact.
 - The package archive and its manual extraction were separately installed in isolated Exact apps without a global rightui link. Contract types and web builds passed; the counter interaction passed. The npm, pnpm and Yarn command variants are documented but were not individually exercised as installation clients.
 - The complete Contract and TypeScript integration example built and passed one interaction test. The Rust integration passed one `cargo test`; this checks its data-source contract, not a native host launch.
 - Five version-tool tests passed, covering beta policy, required notes, synchronized versions, immutable tags and refusal to repack modified package sources under an existing release.
-- Releases remain beta. The npm registry currently resolves both `beta` and `latest` to `0.1.0-beta.2`; the registry rejected removal of the automatically created `latest` tag. No stable version is published.
+- Releases remain beta. The npm `beta` channel resolves to `0.1.0-beta.3`; the existing `latest` tag remains on `0.1.0-beta.2`. Use an exact version or `@beta` for the current beta. No stable version is published.
 
 ## Rendering checks
 
@@ -48,3 +48,7 @@ Three routes (`/docs/components/chart`, `/charts/area`, `/view/dashboard-01`) re
 Page titles, descriptions, canonical URLs, Open Graph and Twitter cards use the production origin. An original 1200×630 social PNG accompanies the site. Dedicated client-route shells preserve route-specific metadata on direct loads; the sitemap excludes source viewers and isolated block previews, and 404 responses carry noindex. Exact updates titles and descriptions during in-app navigation; other metadata is guaranteed on direct URL loads. `bun tools/check-seo.ts` validates generated heads and crawl files; passing an origin validates HTTP delivery.
 
 The SEO check passed for all 130 page heads, 102 sitemap URLs, robots.txt, the real 404 response and the 80,653-byte PNG, both in the build output and through the local Cloudflare emulator.
+
+## Clean release history
+
+The current GitHub prerelease and annotated tag are `v0.1.0-beta.3`, from the clean source history. Earlier GitHub prereleases and tags were removed after their metadata and archives were backed up and verified. Existing npm versions remain available. The beta.3 archive changes only the README, changelog and package version; all Contract components, theme tokens and font assets are byte-identical to beta.2.

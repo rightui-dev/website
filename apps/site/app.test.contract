@@ -270,17 +270,17 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.2"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.3"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.2"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.3"
   tap "install-button-mode-1"
-  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.2 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.2.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
+  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.3 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.3.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.2"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.3"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
