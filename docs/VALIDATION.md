@@ -60,3 +60,9 @@ The homepage and Installation guide share one versioned AI setup prompt, includi
 The beta.4 Accordion and AccordionMultiple render their headings, expanded content and chevrons 16px from the container edges. Browser measurements confirmed those insets at 390px, including hover, with no horizontal document overflow. ArrowDown moved focus to the next trigger. An isolated archive test and the website regression test checked single and independent expansion, keyboard activation and preserved state after resize. These are web checks; no new native validation is claimed.
 
 The beta.4 package passed isolated installation, build and Button interaction checks from both its archive and the public npm registry. The website uses the exact npm version, with no local dependency override. The 26 browser tests passed; the 12-width initial-render comparison remained stable, and local hosting/SEO checks passed 138 route checks, 130 heads and 102 sitemap URLs.
+
+## Code headers and package-manager commands
+
+Code blocks show the language once when it is also their title, while source filenames keep their separate language label. The Installation guide and all component installation panels share the same Bun/npm/pnpm/Yarn command panel. Markdown exports preserve all four commands.
+
+The 26 browser tests passed, including all four guide commands, keyboard selection, copy feedback reset and the existing Command/Manual component flow. A browser clipboard check confirmed Copy writes only the selected npm command. At 320px, the code scrolls inside its panel without document overflow, and Copy/Copied keeps the same header height. The final build passed after reserving the button width.

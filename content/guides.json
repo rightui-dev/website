@@ -64,7 +64,13 @@
         "id": "package",
         "title": "Install the package",
         "text": "Install the shared component package once. Choose the package manager you use in your project. Pin the version while rightui is in beta.",
-        "code": "bun add --exact @rightui/ui@{{UI_VERSION}}\n\n# npm\nnpm install --save-exact @rightui/ui@{{UI_VERSION}}\n\n# pnpm\npnpm add --save-exact @rightui/ui@{{UI_VERSION}}\n\n# Yarn\nyarn add --exact @rightui/ui@{{UI_VERSION}}",
+        "code": "",
+        "packageCommands": [
+          "bun add --exact @rightui/ui@{{UI_VERSION}}",
+          "npm install --save-exact @rightui/ui@{{UI_VERSION}}",
+          "pnpm add --save-exact @rightui/ui@{{UI_VERSION}}",
+          "yarn add --exact @rightui/ui@{{UI_VERSION}}"
+        ],
         "language": "sh"
       },
       {

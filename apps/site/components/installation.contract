@@ -1,6 +1,7 @@
 use TabsAdvanced from "@rightui/ui"
 use Code from "./code.contract"
 use Hit from "./styles.contract"
+use CommandPanel from "./package-commands.contract"
 
 component Installation
   props
@@ -35,13 +36,7 @@ component Installation
       TabsAdvanced(id=id + "-mode", label="Installation method", labels=["Command", "Manual"], counts=[], selected=mode, variant="line", vertical=false, compact=true, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseMode)
       column id=(id + "-mode-panel") role="tabpanel" aria-labelledby=(id + "-mode-" + mode.toString()) gap=16 min-width=0
         text "Install the shared package once in your Exact app. This version is a beta." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6
-        column border="1px solid ui.border" border-radius="ui.radius-control" overflow="hidden" background-color="ui.sidebar" min-width=0
-          row padding="8px 12px" align-items="center" justify-content="space-between" gap=12 flex-wrap="wrap" border-bottom="1px solid ui.border"
-            TabsAdvanced(id=id + "-manager", label="Package manager", labels=["Bun", "npm", "pnpm", "Yarn"], counts=[], selected=manager, variant="default", vertical=false, compact=true, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseManager)
-            button class=Hit press=copy aria-label="Copy installation command" testId=(id + "-copy") padding="4px 8px"
-              text (copied ? "Copied" : "Copy") font-size="0.75rem"
-          scroll id=(id + "-manager-panel") role="tabpanel" aria-labelledby=(id + "-manager-" + manager.toString()) overflow-x="auto" min-width=0 max-height="16rem"
-            text command testId=(id + "-command") white-space="pre" font-family="monospace" font-size="0.8125rem" line-height=1.7 padding=20 margin=0
+        CommandPanel(id=id, command=command, selected=manager, copied=copied, reduced=reduced, choose=chooseManager, copy=copy)
         text "The Exact compiler requires Bun 1.4.2, regardless of which package manager installs the package." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6
         if mode == 1
           text "Download the source package from npm, then install your editable copy as a local dependency. Keep package.json, the Contract files, ui.tamber, assets and licenses together." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6

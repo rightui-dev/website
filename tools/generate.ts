@@ -91,6 +91,11 @@ const markdownIndex=[];
 const fenced=(language:string,code:string)=>{const fence='`'.repeat(Math.max(3,...[...code.matchAll(/`+/g)].map(x=>x[0].length+1)));return `${fence}${language.toLowerCase()}\n${code}\n${fence}`;};
 for(const [name,url] of routes) {
  const p=pages[name];
+ p.sections=p.sections.map((section:any)=>{
+  const packageCommands=section.packageCommands??[];
+  if(packageCommands.length && (packageCommands.length!==4 || packageCommands.some((command:unknown)=>typeof command!=='string' || !command.trim())))throw new Error(`${name}/${section.id} must provide Bun, npm, pnpm and Yarn commands in that order.`);
+  return {...section,packageCommands,code:packageCommands.length?packageCommands.map((command:string,i:number)=>`# ${['Bun','npm','pnpm','Yarn'][i]}\n${command}`).join('\n\n'):section.code};
+ });
  const parts=[`---\ntitle: ${JSON.stringify(p.title)}\ndescription: ${JSON.stringify(p.description)}\n---`,`# ${p.title}`,p.description];
  if(p.kind==='component')parts.push('## Installation', 'Install the shared package once in your Exact app. This version is a beta.', fenced('sh', `bun add --exact @rightui/ui@${uiVersion}`), 'Or choose another package manager:', fenced('sh', `npm install --save-exact @rightui/ui@${uiVersion}\npnpm add --save-exact @rightui/ui@${uiVersion}\nyarn add --exact @rightui/ui@${uiVersion}`), 'Exact compilation uses Bun 1.4.2. Register Geist using the [font setup guide](/docs/installation#font).', '### Manual source setup', 'Install an editable copy of the complete package:', fenced('sh', `mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@${uiVersion} --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-${uiVersion}.tgz -C vendor/rightui-ui --strip-components=1\nbun add file:./vendor/rightui-ui`), 'Keep package.json, the Contract files, ui.tamber, assets and licenses together.', '### Import', fenced('contract', p.importCode));
  if(p.usage)parts.push('## Usage',p.usage);

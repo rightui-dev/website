@@ -6,14 +6,16 @@ component Code
     language: string
     compact: bool
   state copied = false
+  derive heading = title.trim() == "" ? language : title
   action copy
     copyText(code)
     copied = true
   view
     column min-width=0 width="100%" border="1px solid ui.border" border-radius=12 overflow="hidden" background-color="ui.sidebar" box-sizing="border-box"
       row flex-wrap="wrap" padding="8px 16px" align-items="center" gap=12 border-bottom="1px solid ui.border"
-        text title flex="1 1 10rem" min-width=0 overflow-wrap="anywhere" font-size="0.75rem" color="ui.muted-foreground"
-        text language font-size="0.75rem" color="ui.muted-foreground"
+        text heading flex="1 1 10rem" min-width=0 overflow-wrap="anywhere" font-size="0.75rem" color="ui.muted-foreground"
+        if language.trim() != "" and language.trim().toLowerCase() != heading.trim().toLowerCase()
+          text language font-size="0.75rem" color="ui.muted-foreground"
         button class=Hit press=copy aria-label="Copy code" padding="4px 8px" testId="copy-code"
           text (copied ? "Copied" : "Copy") font-size="0.75rem"
       scroll overflow-x="auto" max-height=(compact ? "18rem" : "36rem")

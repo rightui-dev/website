@@ -10,6 +10,7 @@ use ChartDemo from "./generated/charts.contract"
 use AIDemo from "./generated/ai-demos.contract"
 use DocActions from "./components/doc-actions.contract"
 use Installation from "./components/installation.contract"
+use PackageCommands from "./components/package-commands.contract"
 use AIInstallPrompt from "./components/ai-install-prompt.contract"
 use Compatibility from "./components/compatibility.contract"
 use ExactOverview from "./components/exact-overview.contract"
@@ -150,7 +151,9 @@ component RightUI
                           h2 font-size="1.25rem" font-weight=600 margin=0
                             text section.title
                           text section.text class=Paragraph
-                          if section.code != ""
+                          if section.packageCommands.length > 0
+                            PackageCommands(id="commands-" + section.id, commands=section.packageCommands, reduced=viewport.prefersReducedMotion)
+                          else if section.code != ""
                             Code(code=section.code, title=section.title, language=section.language, compact=false)
                       view display="grid" grid-template-columns=(viewport.width < 700 ? "1fr" : "1fr 1fr") gap=16
                         for item in aiCatalog key=item.slug
@@ -208,7 +211,9 @@ component RightUI
                               text section.title
                             if section.text != ""
                               text section.text class=Paragraph markup="markdown"
-                            if section.code != ""
+                            if section.packageCommands.length > 0
+                              PackageCommands(id="commands-" + section.id, commands=section.packageCommands, reduced=viewport.prefersReducedMotion)
+                            else if section.code != ""
                               Code(code=section.code, title=section.language, language=section.language, compact=false)
                     row border-top="1px solid ui.border" padding-top=24 margin-top=24 gap=16 justify-content="space-between"
                       link href="/docs/installation" class=QuietLink
