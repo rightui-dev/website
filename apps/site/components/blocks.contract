@@ -1,8 +1,9 @@
+use uiFontFamily, CodeBlockAdvanced from "@rightui/ui"
 use DashboardBlock from "@rightui/registry/blocks/dashboard"
 use SidebarBlock, SidebarSettings from "@rightui/registry/blocks/sidebars"
 use AuthBlock from "@rightui/registry/blocks/auth"
 use Hit from "./styles.contract"
-use Code from "./code.contract"
+use SourceFile from "./shapes.contract"
 component BlockPreview
   props
     slug: string
@@ -27,46 +28,113 @@ component BlockPreview
         AuthBlock(variant=variant, signup=signup, narrow=(width < 768), switchMode=switchMode)
       if settings
         SidebarSettings(id="block-settings", narrow=(width < 768), dismiss=hideSettings)
+
+component BlockIcon
+  props
+    kind: string
+  view
+    svg width=18 height=18 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true flex-shrink=0
+      if kind == "desktop"
+        rect x=3 y=3 width=18 height=13 rx=2
+        path d="M8 21h8m-4-5v5"
+      else if kind == "tablet"
+        rect x=5 y=2 width=14 height=20 rx=2
+        path d="M12 18h.01"
+      else if kind == "mobile"
+        rect x=7 y=2 width=10 height=20 rx=2
+        path d="M12 18h.01"
+      else if kind == "reload"
+        path d="M20 7v5h-5M4 17a8 8 0 1 0 2-11l-2 2"
+      else if kind == "open"
+        path d="M15 3h6v6m0-6L10 14M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"
+      else if kind == "folder"
+        path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11H3Z"
+      else
+        path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Zm0 0v6h6"
+
 component BlockFrame
   props
     slug: string
     title: string
-    code: string
+    files: SourceFile[]
     theme: string
+    scheme: string
     width: number
+    nativeApp: bool
   state codeVisible = false
   state size = 0
+  state revision = 0
   state mounted = false
+  state selected = 0
+  state folderOpen = true
   action visibility(e: IntersectionObserverEntry)
     if e.isIntersecting
       mounted = true
-  action toggleCode
-    codeVisible = not codeVisible
+  action showPreview
+    codeVisible = false
+  action showCode
+    codeVisible = true
   action setSize(v: number)
     size = v
+  action reload
+    revision = revision + 1
+  action chooseFile(index: number)
+    selected = index
+  action toggleFolder
+    folderOpen = not folderOpen
+  inject
+    uiFont: string
+  derive fullPage = "/view/" + slug + "?" + theme
   view
-    column gap=16 width="100%" min-width=0 id=slug
-      row gap=12 align-items="center" flex-wrap="wrap"
-        row background-color="ui.muted" padding=3 border-radius=8
-          button class=Hit press=setSize(0) padding="5px 10px" background-color=(size == 0 ? "ui.background" : "transparent") aria-pressed=(size == 0)
-            text "Desktop" font-size="0.75rem"
-          button class=Hit press=setSize(768) padding="5px 10px" background-color=(size == 768 ? "ui.background" : "transparent") aria-pressed=(size == 768)
-            text "Tablet" font-size="0.75rem"
-          button class=Hit press=setSize(390) padding="5px 10px" background-color=(size == 390 ? "ui.background" : "transparent") aria-pressed=(size == 390)
-            text "Mobile" font-size="0.75rem"
-        text title flex=1 min-width=160 font-size="0.875rem" font-weight=500
-        button class=Hit press=toggleCode padding="6px 10px" aria-pressed=codeVisible
-          text (codeVisible ? "Preview" : "Code")
-        link class=Hit href=("/view/" + slug + "?theme=" + theme) padding="6px 8px" aria-label=("Open " + slug)
-          text "↗"
+    column gap="ui.space-16" width="100%" min-width=0 id=slug
+      row gap="ui.space-12" align-items="center" flex-wrap="wrap" padding="0 clamp(0px, (1100px - 100vw) * 1000, ui.space-16)"
+        row background-color="ui.muted" padding="ui.space-3" border-radius="ui.radius-item"
+          button testId=(slug + "-preview-tab") class=Hit press=showPreview padding="ui.space-5 ui.space-10" background-color=(not codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=(not codeVisible)
+            text "Preview" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          button testId=(slug + "-code-tab") class=Hit press=showCode padding="ui.space-5 ui.space-10" background-color=(codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=codeVisible
+            text "Code" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text title flex=1 min-width=160 font-size="ui.text-sm" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        if not nativeApp and width >= 1100
+          row gap="ui.space-4" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-item" padding="ui.space-3"
+            button testId=(slug + "-desktop") class=Hit press=setSize(0) padding="ui.space-6" background-color=(size == 0 ? "ui.muted" : "transparent") aria-label="Desktop" aria-pressed=(size == 0)
+              BlockIcon(kind="desktop")
+            button testId=(slug + "-tablet") class=Hit press=setSize(768) padding="ui.space-6" background-color=(size == 768 ? "ui.muted" : "transparent") aria-label="Tablet" aria-pressed=(size == 768)
+              BlockIcon(kind="tablet")
+            button testId=(slug + "-mobile") class=Hit press=setSize(390) padding="ui.space-6" background-color=(size == 390 ? "ui.muted" : "transparent") aria-label="Mobile" aria-pressed=(size == 390)
+              BlockIcon(kind="mobile")
+            link testId=("open-block-" + slug) class=Hit href=fullPage target="_blank" rel="noopener noreferrer" padding="ui.space-6" aria-label="Open in new tab"
+              BlockIcon(kind="open")
+            button testId=(slug + "-reload") class=Hit press=reload padding="ui.space-6" aria-label="Reload preview"
+              BlockIcon(kind="reload")
+        else
+          link testId=("open-block-" + slug) class=Hit href=fullPage target=(nativeApp ? "_self" : "_blank") rel="noopener noreferrer" padding="ui.space-6 ui.space-8" display="flex" gap="ui.space-8" align-items="center"
+            text (nativeApp ? "Open block" : "Open in new tab") font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            BlockIcon(kind="open")
       if codeVisible
-        Code(code=code, title=("blocks/" + slug + ".contract"), language="Contract", compact=false)
+        view testId=(slug + "-source-browser") display="flex" flex-direction=(width < 700 ? "column" : "row") border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-card" overflow="hidden" min-width=0 background-color="ui.muted"
+          column width=(width < 700 ? "100%" : "16rem") flex-shrink=0 min-width=0 gap="ui.space-4" padding="ui.space-12" box-sizing="border-box"
+            text "Files" font-size="ui.text-sm" color="ui.muted-foreground" padding="ui.space-8" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            button class=Hit press=toggleFolder display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8" aria-expanded=folderOpen
+              svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true transform=(folderOpen ? "rotate(90deg)" : "none")
+                path d="m9 5 7 7-7 7"
+              BlockIcon(kind="folder")
+              text "blocks" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            if folderOpen
+              for file, index in files key=file.path
+                button testId=(slug + "-file-" + index.toString()) class=Hit press=chooseFile(index) display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8 ui.space-8 ui.space-8 ui.space-24" background-color=(selected == index ? "ui.border" : "transparent") border-radius="ui.radius-item" aria-pressed=(selected == index) text-align="left"
+                  BlockIcon(kind="file")
+                  text file.path.slice(7) font-size="ui.text-sm" overflow-wrap="anywhere" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          view flex=1 min-width=0 background-color="ui.background"
+            match files.at(selected)
+              case some(file)
+                CodeBlockAdvanced(id=("block-code-" + slug), title=file.path, language=file.language, code=file.code, lines=[], numbers=true, startLine=1, showDownload=true, maxHeight=700, compact=false, variant="default")
+              case none
+                text "Select a file" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      else if nativeApp or width < 1100
+        link testId=(slug + "-image-link") href=fullPage target=(nativeApp ? "_self" : "_blank") rel="noopener noreferrer" display="block" width="100%" aria-label=("Open " + title)
+          image ("assets/blocks/" + slug + "-" + scheme + ".png") alt=(title + " — desktop preview") width="100%" aspect-ratio="8 / 5" object-fit="cover"
       else
-        view background-color="ui.muted" border="1px solid ui.border" border-radius=12 padding="clamp(0px, (100vw - 599px) * 1000, 8px)" width="100%" min-width=0 box-sizing="border-box" overflow="hidden"
-          view intersect=visibility min-height=(slug == "dashboard-01" ? 1000 : 850) width="100%" max-width=(size == 0 ? "100%" : size.toString() + "px") margin="0 auto" background-color="ui.background" border-radius=8 overflow="hidden"
+        view background-color="ui.muted" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-card" padding="ui.space-8" width="100%" min-width=0 box-sizing="border-box" overflow="hidden"
+          view intersect=visibility min-height=(slug == "dashboard-01" ? 1000 : 850) width="100%" max-width=(size == 0 ? "100%" : size.toString() + "px") margin="0 auto" background-color="ui.background" border-radius="ui.radius-item" overflow="hidden"
             if mounted
-              iframe id=("preview-" + slug) src=("/view/" + slug + "?theme=" + theme) title=title width="100%" height=(slug == "dashboard-01" ? 1000 : 850) border="0"
-      row gap=8 align-items="center"
-        text slug font-family="monospace" font-size="0.75rem" color="ui.muted-foreground"
-        link href=("/source?file=blocks/" + slug + ".contract") class=Hit padding="4px 8px"
-          text "View source" font-size="0.75rem"
+              iframe id=("preview-" + slug) src=(fullPage + "&preview=" + revision.toString()) title=title width="100%" height=(slug == "dashboard-01" ? 1000 : 850) border="0"

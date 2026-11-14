@@ -1,33 +1,38 @@
-use Hit from "./styles.contract"
+use uiFontFamily from "@rightui/ui"
+use ButtonContent, DisclosureButton from "@rightui/ui"
 
 component AIInstallPrompt
   props
     title: string
     description: string
     prompt: string
-  state copied = false
+  derive copied = uiCopiedId == "ai-install-prompt" and uiCopiedText == prompt
   state expanded = false
   action copy
-    copyText(prompt)
-    copied = true
+    uiCopyCode("ai-install-prompt", prompt)
   action toggle
     expanded = not expanded
+  inject
+    uiFont: string
+    uiCopiedId: string
+    uiCopiedText: string
+    uiCopyCode: action
   view
-    column testId="ai-install-prompt" min-width=0 gap=16 padding=24 border="1px solid ui.border" border-radius="ui.radius-panel" background-color="ui.background" box-sizing="border-box"
-      row gap=16 align-items="center" flex-wrap="wrap"
-        column flex="1 1 16rem" min-width=0 gap=8
-          h2 margin=0 font-size="1.25rem" font-weight=600 letter-spacing="-0.025em"
-            text title
-          text description margin=0 font-size="0.875rem" line-height=1.6 color="ui.muted-foreground"
-        button id="ai-install-copy" testId="ai-install-copy" class=Hit press=copy aria-label="Copy installation prompt" display="flex" align-items="center" justify-content="center" gap=8 padding="9px 13px" min-height=40 border="1px solid ui.border" flex-shrink=0
-          svg width=16 height=16 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+    column testId="ai-install-prompt" min-width=0 gap="ui.space-16" padding="ui.space-24" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" background-color="ui.background" box-sizing="border-box"
+      row gap="ui.space-16" align-items="center" flex-wrap="wrap"
+        column flex="1 1 16rem" min-width=0 gap="ui.space-8"
+          h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold" letter-spacing="ui.tracking-heading"
+            text title font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text description margin="ui.space-0" font-size="ui.text-sm" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        ButtonContent(id="ai-install-copy", label="Copy installation prompt", variant="outline", size="default", disabled=false, press=copy)
+          svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
             rect x=8 y=8 width=12 height=12 rx=2
             path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"
-          text (copied ? "Copied" : "Copy prompt") role="status" aria-live="polite"
+          text (copied ? "Copied" : "Copy prompt") role="status" aria-live="polite" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       row
-        button id="ai-install-toggle" testId="ai-install-toggle" class=Hit press=toggle aria-expanded=expanded aria-controls="ai-install-text" display="flex" align-items="center" gap=8 padding="6px 8px" margin-left=-8
-          text (expanded ? "Hide prompt" : "View prompt") font-size="0.8125rem"
-          svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 rotate=(expanded ? "180deg" : "0deg") aria-hidden=true
+        DisclosureButton(id="ai-install-toggle", label=(expanded ? "Hide prompt" : "View prompt"), variant="ghost", controls="ai-install-text", expanded=expanded, icon=false, press=toggle)
+          text (expanded ? "Hide prompt" : "View prompt") font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" rotate=(expanded ? "180deg" : "0deg") aria-hidden=true
             path d="m6 9 6 6 6-6"
-      column id="ai-install-text" testId="ai-install-text" display=(expanded ? "flex" : "none") min-width=0 padding=16 border="1px solid ui.border" border-radius="ui.radius-item" background-color="ui.sidebar"
-        text prompt testId="ai-install-prompt-text" white-space="pre-wrap" overflow-wrap="anywhere" font-family="monospace" font-size="0.8125rem" line-height=1.7 margin=0
+      column id="ai-install-text" testId="ai-install-text" display=(expanded ? "flex" : "none") min-width=0 padding="ui.space-16" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-item" background-color="ui.sidebar"
+        text prompt testId="ai-install-prompt-text" white-space="pre-wrap" overflow-wrap="anywhere" font-family="ui.font-code" font-size="ui.text-caption" line-height="ui.leading-prompt" margin="ui.space-0"

@@ -15,7 +15,13 @@ test "theme and mobile navigation remain usable"
   prefer prefers-color-scheme light
   clock data
   tap "theme-toggle"
+  expect state themeOpen == true
+  tap "quick-scheme-1"
   expect state theme == "dark"
+  tap "quick-palette-3"
+  expect state uiPreset == "rose"
+  type "quick-palette-3" key "Escape"
+  expect state themeOpen == false
   tap "nav-toggle"
   expect state menu == true
   tap "nav-toggle"
@@ -44,8 +50,8 @@ test "source links resolve actual Contract code"
   at "/source?file=packages/ui/button.contract"
   clock data
   expect text "source-path" == "packages/ui/button.contract"
-  expect tree has "copy-code"
-  tap "copy-code"
+  expect tree has "source-code-copy"
+  tap "source-code-copy"
   expect no failures
 
 test "installation explains consumer setup"
@@ -57,18 +63,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.2.0-beta.1"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.5"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.2.0-beta.1"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.1.0-beta.5"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.2.0-beta.1"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.1.0-beta.5"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.2.0-beta.1"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.2.0-beta.1"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -76,14 +82,21 @@ test "installation explains consumer setup"
   expect text "ai-install-copy" == "Copied"
   expect no failures
 
-test "homepage links the project status and credits Exact"
+test "homepage opens native downloads and keeps unavailable platforms disabled"
   size 390x844
   clock data
   expect tree has "made-with-exact"
   expect tree missing "ai-install-copy"
-  tap "project-status"
+  tap "try-appdrop"
   clock data
-  expect text "page-title" == "Compatibility"
+  expect tree has "try-page"
+  expect tree has "try-mac"
+  expect disabled "try-android"
+  expect disabled "try-windows"
+  tap "try-iphone"
+  clock data
+  expect tree has "iphone-install"
+  expect tree has "iphone-appdrop-link"
   expect no failures
 
 
@@ -228,6 +241,8 @@ test "documentation actions copy and dismiss their menu"
   clock data
   tap "doc-actions-Resizable-copy"
   expect text "doc-actions-Resizable-copy" == "Copied"
+  clock +3000
+  expect text "doc-actions-Resizable-copy" == "Copy Page"
   tap "doc-actions-Resizable"
   expect tree has "doc-actions-Resizable-item-markdown"
   type "doc-actions-Resizable-item-markdown" key "Escape"
@@ -323,17 +338,26 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.2.0-beta.1"
+  tap "install-button-copy"
+  expect text "install-button-copy" == "Copied"
+  clock +2999
+  expect text "install-button-copy" == "Copied"
+  clock +1
+  expect text "install-button-copy" == "Copy"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.5"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.2.0-beta.1"
   tap "install-button-mode-1"
-  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.5 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.5.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
+  expect text "install-button-command-line-0" == "mkdir -p vendor/rightui vendor/rightui-ui"
+  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.2.0-beta.1 --pack-destination vendor/rightui"
+  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.2.0-beta.1.tgz -C vendor/rightui-ui --strip-components=1"
+  expect text "install-button-command-line-3" == "npm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.2.0-beta.1"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -395,9 +419,157 @@ test "code block preserves tokenized text and confirms copying after wrap"
   tap "content-codeblock-wrap"
   tap "content-codeblock-copy"
   expect text "content-codeblock-copy-status" == "Copied to clipboard"
+  clock +2999
+  expect text "content-codeblock-copy-status" == "Copied to clipboard"
+  clock +1
+  expect text "content-codeblock-copy-status" == ""
+  tap "content-codeblock-copy"
+  clock +2000
+  tap "content-codeblock-copy"
+  clock +2999
+  expect text "content-codeblock-copy-status" == "Copied to clipboard"
+  clock +1
+  expect text "content-codeblock-copy-status" == ""
   resize 390x844
   clock settle
   expect text "content-codeblock-line-11" == "  return result.toUIMessageStreamResponse()"
   tap "content-codeblock-wrap"
   expect text "code-diff-line-2" == "  return `Hello, ${name}!`"
+  expect no failures
+
+
+test "theme settings apply independently and export a reusable configuration"
+  at "/themes?theme=dark&preset=neutral&density=comfortable&radius=default&font=sans"
+  size 1280x1000
+  clock data
+  tap "theme-preset-2"
+  tap "theme-density-1"
+  tap "theme-radius-1"
+  tap "theme-font-1"
+  clock data
+  expect state uiPreset == "forest"
+  expect state uiDensity == "compact"
+  expect state uiRadius == "sharp"
+  expect state uiFont == "serif"
+  tap "preview-forest-save"
+  expect text "preview-forest-save" == "Saved"
+  tap "copy-theme"
+  expect text "copy-theme" == "Theme copied"
+  tap "theme-preset-1"
+  clock data
+  expect text "copy-theme" == "Copy theme"
+  tap "theme-preset-3"
+  clock data
+  expect state uiPreset == "rose"
+  expect state uiDensity == "compact"
+  expect state uiFont == "serif"
+  tap "copy-theme"
+  expect text "copy-theme" == "Theme copied"
+  tap "theme-preset-4"
+  clock data
+  expect state uiPreset == "amber"
+  expect state uiRadius == "sharp"
+  expect text "copy-theme" == "Copy theme"
+  expect no failures
+
+test "system URL appearance can be explicitly toggled and remembered"
+  at "/themes?theme=system&preset=forest&density=compact&radius=sharp&font=serif"
+  size 1280x900
+  prefer prefers-color-scheme light
+  clock data
+  tap "theme-toggle"
+  tap "quick-scheme-1"
+  expect state theme == "dark"
+  tap "quick-scheme-0"
+  expect state theme == "light"
+  tap "quick-scheme-2"
+  expect state theme == "system"
+  tap "quick-palette-4"
+  expect state uiPreset == "amber"
+  expect state uiDensity == "compact"
+  expect state uiRadius == "sharp"
+  expect state uiFont == "serif"
+  tap "quick-font-2"
+  expect state uiFont == "mono"
+  tap "quick-radius-2"
+  expect state uiRadius == "round"
+  expect state uiDensity == "compact"
+  expect state uiPreset == "amber"
+  tap "quick-font-0"
+  expect state uiFont == "sans"
+  tap "quick-radius-0"
+  expect state uiRadius == "default"
+  tap "customize-theme"
+  clock data
+  expect state themeOpen == false
+  expect tree has "theme-preset-4"
+  expect no failures
+
+
+test "violet palette keeps the quick font and corner choices"
+  at "/docs/components/switch?theme=dark&preset=neutral&font=sans&radius=default"
+  size 390x844
+  clock data
+  tap "theme-toggle"
+  tap "quick-font-1"
+  tap "quick-radius-2"
+  tap "quick-palette-5"
+  expect state uiPreset == "violet"
+  expect state uiFont == "serif"
+  expect state uiRadius == "round"
+  type "quick-palette-5" key "Escape"
+  expect state themeOpen == false
+  expect text "page-title" == "Switch"
+  expect no failures
+
+
+test "mobile block catalog shows desktop photos and real source files"
+  at "/blocks"
+  size 390x844
+  clock data
+  clock settle
+  expect tree has "dashboard-01-image-link"
+  expect tree missing "preview-dashboard-01"
+  tap "dashboard-01-code-tab"
+  clock settle
+  expect tree has "dashboard-01-source-browser"
+  expect text "block-code-dashboard-01-title" == "blocks/dashboard-01.contract"
+  tap "dashboard-01-file-1"
+  clock settle
+  expect text "block-code-dashboard-01-title" == "blocks/dashboard.contract"
+  tap "dashboard-01-preview-tab"
+  expect tree has "dashboard-01-image-link"
+  expect no failures
+
+test "mobile dashboard menu opens above content and can reopen"
+  at "/view/dashboard-01"
+  size 390x844
+  clock data
+  clock settle
+  tap "dashboard-sidebar"
+  clock settle
+  tap "dashboard-nav-Analytics"
+  expect text "dashboard-notice" == "Analytics selected."
+  tap "dashboard-sidebar-close"
+  clock settle
+  tap "dashboard-sidebar"
+  clock settle
+  tap "dashboard-nav-Projects"
+  expect text "dashboard-notice" == "Projects selected."
+  tap "dashboard-sidebar-close"
+  expect no failures
+
+test "mobile sidebar block opens and closes repeatedly"
+  at "/view/sidebar-03"
+  size 390x844
+  clock data
+  clock settle
+  tap "block-sidebar-03-trigger"
+  clock settle
+  tap "block-sidebar-03-doc-0-0"
+  tap "block-sidebar-03-mobile-close"
+  expect text "block-sidebar-03-current" == "Installation"
+  tap "block-sidebar-03-trigger"
+  clock settle
+  tap "block-sidebar-03-mobile-close"
   expect no failures

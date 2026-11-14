@@ -1,0 +1,13 @@
+// Static spacers resolve responsive theme tokens without duplicating slot content.
+component PageInsets
+  props
+    docs: bool
+  slot
+  view
+    row flex=1 min-height=0 min-width=0 width="100%" align-items="stretch"
+      if docs
+        view aria-hidden=true flex-shrink=0 width="max(ui.space-24, calc(clamp(0px, (100vw - 1023px) * 1000, 20rem) + max(0px, (100vw - 96rem) / 2)))"
+      column flex=1 min-height=0 min-width=0
+        children
+      if docs
+        view aria-hidden=true flex-shrink=0 width="max(ui.space-24, calc((100vw - 96rem) / 2 + ui.space-24))"

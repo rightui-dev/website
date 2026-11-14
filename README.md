@@ -37,11 +37,11 @@ rightui/
 
 Edit `tools/app.contract.template`, not generated `apps/site/app.contract`. `tools/generate.ts` reads the library sources and creates the routes, catalog, Markdown documents, demo dispatchers and source viewer data. Generated files and build artifacts are excluded from Git. Every demo imports the shared Contract library; the site does not maintain a separate copy of the components.
 
-The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui@0.1.0-beta.5` is published on npm.
+The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui@0.2.0-beta.1` is published on npm.
 
 ## Platform scope and validation
 
-rightui targets **web, iOS and macOS only**. Windows, Android and Linux are outside its current support scope. This repository builds the web documentation; the native showcase is in the UI repository.
+rightui targets **web, iOS and macOS only**. Windows, Android and Linux are outside its current support scope. This repository compiles the documentation site and its native demo from the same Contract sources. The older standalone showcase remains in the UI repository.
 
 Web and targeted macOS checks have passed. iOS validation is incomplete; no successful iOS build or device check is claimed. Platform targets do not imply exhaustive component validation or stable upstream APIs; Exact is pre-1.0. See [validation](docs/VALIDATION.md) and the [native guide](https://github.com/rightui-dev/ui/blob/main/docs/NATIVE.md).
 
@@ -56,3 +56,39 @@ The UI version shown on the site and in installation commands follows the librar
 ## Hosting
 
 The production domain is [rightui.dev](https://rightui.dev). See [Deployment](docs/DEPLOYMENT.md) for the Cloudflare account, reproducible build, route checks and publication commands. Source repository visibility is independent of the public site.
+
+
+## Local review against unpublished UI changes
+
+Use Bun 1.4.2 and keep the `components` checkout beside this website:
+
+```sh
+bun run preview:local
+```
+
+The script packs the current UI candidate, installs a content-addressed local archive, builds the site and serves `http://localhost:8792`. It never publishes, pushes or deploys. The `/themes` page previews and exports the same configuration used by the public package. Package manifests retain the exact candidate version; the local lockfile points to the ignored `.local-preview/` archive while reviewing. Run the preview command again after library edits. Before an authorized release, restore the lockfile to the published exact npm version and verify installation from the registry.
+
+Local preview is intended for future unpublished changes. Released website builds always install the exact npm version, without a local archive override.
+
+
+## Native demo from the site
+
+Run builds sequentially; do not edit app inputs or run the web tests during a native build.
+
+```sh
+EXACT_IDENTITY=- bun run native:mac
+# Run only once the local iOS toolchain is ready:
+bun run native:ios
+```
+
+The build script generates the shared site with native navigation enabled, packages it as
+`dev.rightui` / `RightUI`, then restores the web manifest and generated web source in `finally`.
+The native block catalog opens each block as real Contract UI on its own page with Back.
+It never mounts the browser simulator. The Mac command above produces a local ad-hoc-signed
+bundle; distribution signing and notarization are separate steps.
+
+On the web, block previews use an iframe at viewport widths of 1100px and above. Smaller
+widths show checked-in desktop captures from `apps/site/assets/blocks` (neutral theme,
+light and dark, Sans). The full-page links retain the selected live theme. The Code tab
+lists each block entry and its transitive registry source imports; `@rightui/ui` stays an
+external package dependency.

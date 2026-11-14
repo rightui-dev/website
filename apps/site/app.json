@@ -5,6 +5,13 @@
   "id": "dev.rightui.docs",
   "start_url": "/",
   "display": "standalone",
+  "data": [
+    "rightui-font",
+    "rightui-font-choice",
+    "rightui-font-ready",
+    "rightui-font-scope",
+    "rightui-availability"
+  ],
   "app": {
     "id": "dev.rightui.docs",
     "name": "rightui",

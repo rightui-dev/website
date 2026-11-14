@@ -1,5 +1,5 @@
-use TabsAdvanced from "@rightui/ui"
-use Hit from "./styles.contract"
+use uiFontFamily from "@rightui/ui"
+use TabsAdvanced, ButtonContent, CodeBlockSurface, CodeBlockHeader, CodeBlockBody from "@rightui/ui"
 
 component PackageCommands
   props
@@ -7,14 +7,16 @@ component PackageCommands
     commands: string[]
     reduced: bool
   state selected = 0
-  state copied = false
+  inject
+    uiCopiedId: string
+    uiCopiedText: string
+    uiCopyCode: action
+  derive copied = uiCopiedId == id and uiCopiedText == command
   derive command = match commands.at(selected) { case some(value) => value, case none => "" }
   action choose(value: number)
     selected = value
-    copied = false
   action copy
-    copyText(command)
-    copied = true
+    uiCopyCode(id, command)
   view
     CommandPanel(id=id, command=command, selected=selected, copied=copied, reduced=reduced, choose=choose, copy=copy)
 
@@ -27,11 +29,13 @@ component CommandPanel
     reduced: bool
     choose: action
     copy: action
+  inject
+    uiFont: string
   view
-    column border="1px solid ui.border" border-radius="ui.radius-control" overflow="hidden" background-color="ui.sidebar" min-width=0
-      row padding="8px 12px" align-items="center" justify-content="space-between" gap=12 flex-wrap="wrap" border-bottom="1px solid ui.border"
+    CodeBlockSurface(id=id, compact=false, variant="default", ai=false)
+      CodeBlockHeader(compact=false)
         TabsAdvanced(id=id + "-manager", label="Package manager", labels=["Bun", "npm", "pnpm", "Yarn"], counts=[], selected=selected, variant="default", vertical=false, compact=true, disabledIndices=[], direction="ltr", reduced=reduced, choose=choose)
-        button class=Hit press=copy aria-label="Copy installation command" testId=(id + "-copy") padding="4px 8px" min-width=56
-          text (copied ? "Copied" : "Copy") font-size="0.75rem"
-      scroll id=(id + "-manager-panel") role="tabpanel" aria-labelledby=(id + "-manager-" + selected.toString()) overflow-x="auto" min-width=0 max-height="16rem"
-        text command testId=(id + "-command") white-space="pre" font-family="monospace" font-size="0.8125rem" line-height=1.7 padding=20 margin=0
+        ButtonContent(id=id + "-copy", label="Copy installation command", variant="ghost", size="sm", disabled=false, press=copy)
+          text (copied ? "Copied" : "Copy") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      view id=(id + "-manager-panel") testId=(id + "-command") role="tabpanel" aria-labelledby=(id + "-manager-" + selected.toString()) min-width=0
+        CodeBlockBody(id=id + "-command", heading="Installation command", code=command, lines=[], numbers=false, diff=false, startLine=1, maxHeight=256, compact=false, variant="default", wrapped=false)

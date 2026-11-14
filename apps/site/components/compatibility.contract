@@ -1,62 +1,67 @@
+use uiFontFamily from "@rightui/ui"
 use CompatibilityReport, CompatibilityGroup from "./shapes.contract"
 use QuietLink, Paragraph from "./styles.contract"
 
 component Compatibility
   props
     report: CompatibilityReport
+  inject
+    uiFont: string
   view
-    column gap=32 min-width=0
-      column gap=12 id="status"
-        h2 margin=0 font-size="1.25rem" font-weight=600
-          text "Reading this table"
-        text ("Evidence for rightui " + report.version + ", recorded " + report.asOf + ". Partial checks do not certify every variant. Built only means compilation succeeded, without a targeted interaction result.") class=Paragraph
-        text "iOS validation is incomplete. Windows and Android are not supported. Hover a symbol or use a screen reader to read its status." class=Paragraph
+    column gap="ui.space-32" min-width=0
+      column gap="ui.space-12" id="status"
+        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+          text "Reading this table" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text ("Evidence for rightui " + report.version + ", recorded " + report.asOf + ". Partial checks do not certify every variant. Built only means compilation succeeded, without a targeted interaction result.") class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "iOS validation is incomplete. Windows and Android are not supported. Hover a symbol or use a screen reader to read its status." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for status in report.statuses key=status.id
-          column gap=4
-            text status.label font-weight=500 font-size="0.875rem"
-            text status.description color="ui.muted-foreground" font-size="0.8125rem" line-height=1.6
+          column gap="ui.space-4"
+            text status.label font-weight="ui.weight-medium" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text status.description color="ui.muted-foreground" font-size="ui.text-caption" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       for group in report.groups key=group.id
-        column gap=16 id=group.id min-width=0
-          h2 margin=0 font-size="1.25rem" font-weight=600
-            text (group.title + " (" + group.rows.length.toString() + ")")
+        column gap="ui.space-16" id=group.id min-width=0
+          h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+            text (group.title + " (" + group.rows.length.toString() + ")") font-family=uiFontFamily(uiFont) data-rightui-font="body"
           Matrix(group=group)
-      column gap=16 id="evidence"
-        h2 margin=0 font-size="1.25rem" font-weight=600
-          text "Validation evidence"
+      column gap="ui.space-16" id="evidence"
+        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+          text "Validation evidence" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for item in report.evidence key=item.id
-          column gap=4 id=("evidence-" + item.id)
+          column gap="ui.space-4" id=("evidence-" + item.id)
             link href=item.url class=QuietLink
-              text item.label
-            text item.description font-size="0.8125rem" line-height=1.6 color="ui.muted-foreground"
+              text item.label font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text item.description font-size="ui.text-caption" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
 
 component Matrix
   props
     group: CompatibilityGroup
+  inject
+    uiFont: string
   view
-    scroll overflow-x="auto" max-height="80vh" min-width=0 max-width="100%" border="1px solid ui.border" border-radius="ui.radius-panel" tabindex=0 aria-label=(group.title + " compatibility table")
-      table width="100%" min-width="44rem" border-spacing=0 font-size="0.75rem" line-height=1.5 testId=("compatibility-" + group.id)
-        caption text-align="left" padding=12 color="ui.muted-foreground"
-          text (group.title + " — targeted validation status by platform")
+    scroll overflow-x="auto" max-height="80vh" min-width=0 max-width="100%" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" tabindex=0 aria-label=(group.title + " compatibility table")
+      table width="100%" min-width="44rem" border-spacing=0 font-size="ui.text-xs" line-height="ui.leading-normal" testId=("compatibility-" + group.id)
+        caption text-align="left" padding="ui.space-12" color="ui.muted-foreground"
+          text (group.title + " — targeted validation status by platform") font-family=uiFontFamily(uiFont) data-rightui-font="body"
         thead
           tr
-            th scope="col" text-align="left" padding=12 border-bottom="1px solid ui.border"
-              text "Component"
+            th scope="col" text-align="left" padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border"
+              text "Component" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             for platform in ["iOS", "macOS", "Web", "Windows", "Android"] key=platform
-              th scope="col" text-align="left" padding=12 border-bottom="1px solid ui.border"
-                text platform
+              th scope="col" text-align="left" padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border"
+                text platform font-family=uiFontFamily(uiFont) data-rightui-font="body"
         tbody
           for row in group.rows key=row.id
             tr testId=("compatibility-" + row.id)
-              th scope="row" text-align="left" padding=12 border-bottom="1px solid ui.border" font-weight=500 min-width="10rem"
+              th scope="row" text-align="left" padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" font-weight="ui.weight-medium" min-width="10rem"
                 link href=row.href class=QuietLink color="ui.foreground"
-                  text row.title
-              td padding=12 border-bottom="1px solid ui.border" testId=(row.id + "-ios") title=row.ios aria-label=row.ios
-                text (row.ios.startsWith("✅") ? "✅" : row.ios.startsWith("⚠️") ? "⚠️" : "❌")
-              td padding=12 border-bottom="1px solid ui.border" testId=(row.id + "-macos") title=row.macos aria-label=row.macos
-                text (row.macos.startsWith("✅") ? "✅" : row.macos.startsWith("⚠️") ? "⚠️" : "❌")
-              td padding=12 border-bottom="1px solid ui.border" testId=(row.id + "-web") title=row.web aria-label=row.web
-                text (row.web.startsWith("✅") ? "✅" : row.web.startsWith("⚠️") ? "⚠️" : "❌")
-              td padding=12 border-bottom="1px solid ui.border" testId=(row.id + "-windows") title=row.windows aria-label=row.windows
-                text (row.windows.startsWith("✅") ? "✅" : row.windows.startsWith("⚠️") ? "⚠️" : "❌")
-              td padding=12 border-bottom="1px solid ui.border" testId=(row.id + "-android") title=row.android aria-label=row.android
-                text (row.android.startsWith("✅") ? "✅" : row.android.startsWith("⚠️") ? "⚠️" : "❌")
+                  text row.title font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-ios") title=row.ios aria-label=row.ios
+                text (row.ios.startsWith("✅") ? "✅" : row.ios.startsWith("⚠️") ? "⚠️" : "❌") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-macos") title=row.macos aria-label=row.macos
+                text (row.macos.startsWith("✅") ? "✅" : row.macos.startsWith("⚠️") ? "⚠️" : "❌") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-web") title=row.web aria-label=row.web
+                text (row.web.startsWith("✅") ? "✅" : row.web.startsWith("⚠️") ? "⚠️" : "❌") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-windows") title=row.windows aria-label=row.windows
+                text (row.windows.startsWith("✅") ? "✅" : row.windows.startsWith("⚠️") ? "⚠️" : "❌") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-android") title=row.android aria-label=row.android
+                text (row.android.startsWith("✅") ? "✅" : row.android.startsWith("⚠️") ? "⚠️" : "❌") font-family=uiFontFamily(uiFont) data-rightui-font="body"

@@ -2,8 +2,13 @@ import type { Answer, Result, Sources } from './app.contract.d.ts';
 import { pages, sources as sourceFiles } from './generated/index';
 import catalog from './generated/nav';
 import aiCatalog from './generated/ai-nav';
+import themeExports from './generated/theme-exports';
 export const grants = '';
 const sources: Sources = {
+  loadTheme: async ([preset, density, radius, font]) => {
+    const load = themeExports[`${preset}/${density}/${radius}/${font}` as keyof typeof themeExports];
+    return {code: load ? (await load()).default : ''};
+  },
   loadCatalog: () => catalog,
   loadAI: () => aiCatalog,
   loadCompatibility: async () => (await import('./generated/compatibility')).default,

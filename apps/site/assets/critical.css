@@ -1,20 +1,17 @@
-/* Exact's pinned font-size parser cannot express viewport lengths. Inline at build time. */
+/* Generated from @rightui/ui/theme. */
+#exact-root [data-rightui-availability="available"] { position: relative; overflow: visible; }
+#exact-root [data-rightui-availability="available"]::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background-color: inherit; pointer-events: none; animation-name: rightui-availability-sonar; animation-duration: 1800ms; animation-timing-function: ease; animation-iteration-count: infinite; }
+@keyframes rightui-availability-sonar { 0% { transform: scale(1); opacity: 0.4; } 75%, 100% { transform: scale(2.8); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #exact-root [data-rightui-availability="available"]::after { animation: none; opacity: 0; } }
 #exact-root #hero-title { font-size: 2rem !important; }
 #exact-root #hero-description { font-size: 1rem !important; }
 @media (min-width: 768px) {
   #exact-root #hero-title { font-size: 2.5rem !important; }
   #exact-root #hero-description { font-size: 1.125rem !important; }
 }
-@media (min-width: 1200px) {
-  #exact-root #hero-title { font-size: 3rem !important; }
-}
-
+@media (min-width: 1200px) { #exact-root #hero-title { font-size: 3rem !important; } }
 @media (min-width: 1280px) {
   #exact-build-flow { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1fr) !important; }
   #exact-build-flow > div > svg { transform: none !important; }
 }
-
-@media (max-width: 359px) {
-  #navbar-wordmark { display: none !important; }
-  #navbar-home { gap: 0 !important; }
-}
+@media (max-width: 359px) { #navbar-wordmark { display: none !important; } #navbar-home { gap: 0 !important; } }

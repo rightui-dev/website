@@ -21,8 +21,9 @@ export function repairSSRImages(html: string, qrSource?: string): string {
       tag = tag.replace(/\bsrc="[^"]*"/, `src="data:image/svg+xml,${encodeURIComponent(qrSource)}" data-rightui-inline-asset="assets/home/exact-qr.svg"`);
       tag = tag.replace(/\bloading="lazy"/, 'loading="eager"');
     }
-    if (attr('id') === 'navbar-logo') {
-      for (const [name, value] of Object.entries({ loading: 'eager', decoding: 'sync', width: '28', height: '28' })) {
+    if (attr('id') === 'navbar-logo' || attr('id') === 'appdrop-logo') {
+      const size = attr('id') === 'navbar-logo' ? '28' : '24';
+      for (const [name, value] of Object.entries({ loading: 'eager', decoding: 'sync', width: size, height: size })) {
         const attribute = new RegExp(`\\s${name}="[^"]*"`, 'g');
         tag = tag.replace(attribute, '').replace(/>$/, ` ${name}="${value}">`);
       }

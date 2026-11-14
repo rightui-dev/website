@@ -14,10 +14,13 @@
     "deploy": "bun run build && wrangler deploy",
     "deploy:check": "wrangler deploy --dry-run",
     "preview:cloudflare": "wrangler dev --port 8793",
-    "check:hosting": "bun tools/check-hosting.ts"
+    "check:hosting": "bun tools/check-hosting.ts",
+    "preview:local": "bun tools/local-preview.ts",
+    "native:mac": "bun tools/build-native.ts mac",
+    "native:ios": "bun tools/build-native.ts ios"
   },
   "dependencies": {
-    "@rightui/ui": "0.1.0-beta.5"
+    "@rightui/ui": "0.2.0-beta.1"
   },
   "engines": {
     "bun": ">=1.4.2"

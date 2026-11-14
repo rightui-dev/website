@@ -30,3 +30,5 @@ Run `bun run build`, validate Cloudflare routing locally, then `bun run deploy:c
 Visible header assets and above-the-fold content must render in initial HTML, without waiting for JavaScript activation. Use appropriately sized eager images, reserve dimensions, and verify the rendered page before and after activation. Do not ship delayed logo appearance, placeholder flashes or layout shifts.
 
 Resolve the saved color scheme before the first paint on every HTML route, including client shells. Keep the early bootstrap and Exact runtime theme priority aligned; verify persisted dark mode through activation before shipping theme changes.
+
+Selectable presets need all compiled mode rules in the initial HTML response or a render-blocking head stylesheet. Exact can prune unused rules from prerendered pages and reset modes at activation: preserve the initial choices through that handoff, then let application actions own them. Check palette and control dimensions through activation as well as light/dark appearance.

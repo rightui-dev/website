@@ -1,3 +1,4 @@
+use uiFontFamily from "@rightui/ui"
 use TabsAdvanced from "@rightui/ui"
 use Code from "./code.contract"
 use Hit from "./styles.contract"
@@ -13,7 +14,6 @@ component Installation
     reduced: bool
   state mode = 0
   state manager = 0
-  state copied = false
   state expanded = false
   derive archive = "./vendor/rightui/rightui-ui-" + version + ".tgz"
   derive installer = manager == 0 ? "bun add " : manager == 1 ? "npm install " : manager == 2 ? "pnpm add " : "yarn add "
@@ -21,30 +21,34 @@ component Installation
   derive command = mode == 0 ? installer + exactFlag + "@rightui/ui@" + version : "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@" + version + " --pack-destination vendor/rightui\ntar -xzf " + archive + " -C vendor/rightui-ui --strip-components=1\n" + installer + "file:./vendor/rightui-ui"
   action chooseMode(value: number)
     mode = value
-    copied = false
   action chooseManager(value: number)
     manager = value
-    copied = false
   action copy
-    copyText(command)
-    copied = true
+    uiCopyCode(id, command)
   action toggleSource
     expanded = not expanded
+  derive copied = uiCopiedId == id and uiCopiedText == command
+  inject
+    uiFont: string
+    uiCopiedId: string
+    uiCopiedText: string
+    uiCopyCode: action
   view
-    section id="installation" min-width=0 display="flex" flex-direction="column" gap=16
-      h2 "Installation" margin=0 font-size="1.25rem" font-weight=600
+    section id="installation" min-width=0 display="flex" flex-direction="column" gap="ui.space-16"
+      h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+        text "Installation" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       TabsAdvanced(id=id + "-mode", label="Installation method", labels=["Command", "Manual"], counts=[], selected=mode, variant="line", vertical=false, compact=true, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseMode)
-      column id=(id + "-mode-panel") role="tabpanel" aria-labelledby=(id + "-mode-" + mode.toString()) gap=16 min-width=0
-        text "Install the shared package once in your Exact app. This version is a beta." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6
+      column id=(id + "-mode-panel") role="tabpanel" aria-labelledby=(id + "-mode-" + mode.toString()) gap="ui.space-16" min-width=0
+        text "Install the shared package once in your Exact app. This version is a beta." font-size="ui.text-sm" color="ui.muted-foreground" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         CommandPanel(id=id, command=command, selected=manager, copied=copied, reduced=reduced, choose=chooseManager, copy=copy)
-        text "The Exact compiler requires Bun 1.4.2, regardless of which package manager installs the package." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6
+        text "The Exact compiler requires Bun 1.4.2, regardless of which package manager installs the package." font-size="ui.text-sm" color="ui.muted-foreground" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         if mode == 1
-          text "Download the source package from npm, then install your editable copy as a local dependency. Keep package.json, the Contract files, ui.tamber, assets and licenses together." font-size="0.875rem" color="ui.muted-foreground" line-height=1.6
-          row align-items="center" justify-content="space-between" gap=12
-            text "Component source" font-size="0.875rem" font-weight=500
-            button class=Hit press=toggleSource aria-expanded=expanded testId=(id + "-expand") padding="4px 8px"
-              text (expanded ? "Collapse source" : "Expand source") font-size="0.75rem"
-          Code(code=sourceCode, title=sourcePath, language="contract", compact=not expanded)
-        link href="/docs/installation#font" font-size="0.875rem" color="ui.foreground"
-          text "Register Geist before using components (required for both installation methods)."
-      Code(code=importCode, title="Import", language="contract", compact=true)
+          text "Download the source package from npm, then install your editable copy as a local dependency. Keep package.json, the Contract files, ui.tamber, assets and licenses together." font-size="ui.text-sm" color="ui.muted-foreground" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          row align-items="center" justify-content="space-between" gap="ui.space-12"
+            text "Component source" font-size="ui.text-sm" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            button class=Hit press=toggleSource aria-expanded=expanded testId=(id + "-expand") padding="ui.space-4 ui.space-8"
+              text (expanded ? "Collapse source" : "Expand source") font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          Code(id=id + "-source-code", code=sourceCode, title=sourcePath, language="contract", compact=not expanded)
+        link href="/docs/installation" font-size="ui.text-sm" color="ui.foreground"
+          text "Complete the font, app metadata and root provider setup (required for both installation methods)." font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      Code(id=id + "-import-code", code=importCode, title="Import", language="contract", compact=true)

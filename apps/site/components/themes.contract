@@ -1,0 +1,144 @@
+use uiFontFamily from "@rightui/ui"
+use Button, ButtonContent, Input, Checkbox, Switch, CardFrame, CardHeader, CardTitle, CardDescription, CardContent, Badge, TabsAdvanced, CodeBlockAdvanced, Heading, Paragraph, RadioGroupAdvanced, Separator from "@rightui/ui"
+
+component ThemeSample
+  props
+    id: string
+    reduced: bool
+  state name = ""
+  state checked = true
+  state enabled = true
+  state saved = false
+  action edit(value: string)
+    name = value
+  action check(value: bool)
+    checked = value
+  action toggle(value: bool)
+    enabled = value
+  action save
+    saved = not saved
+  view
+    CardFrame(id=id)
+      CardHeader(id=id + "-header")
+        CardTitle(id=id + "-title", title="Make it yours", level=2)
+        CardDescription(id=id + "-description", description="The same public components, with your theme.")
+      CardContent(id=id + "-content")
+        column gap="ui.space-16"
+          Input(id=id + "-name", label="Project name", value=name, placeholder="My Exact app", error="", disabled=false, edit=edit)
+          Checkbox(id=id + "-check", label="Email updates", checked=checked, disabled=false, change=check)
+          Switch(id=id + "-switch", label="Notifications", checked=enabled, disabled=false, reduced=reduced, change=toggle)
+          row gap="ui.space-8" flex-wrap="wrap" align-items="center"
+            Button(id=id + "-save", label=(saved ? "Saved" : "Save changes"), variant="primary", disabled=false, press=save)
+            Badge(label="Preview", variant="secondary")
+
+component ThemePage
+  props
+    preset: string
+    palettes: string[]
+    paletteLabels: string[]
+    density: string
+    radius: string
+    font: string
+    code: string
+    reduced: bool
+    choose: action
+  derive copied = code != "" and uiCopiedId == "theme-configuration" and uiCopiedText == code
+  action copy
+    uiCopyCode("theme-configuration", code)
+  action choosePreset(value: number)
+    choose((match palettes.at(value) { case some(v) => v, case none => "neutral" }), density, radius, font)
+  action chooseDensity(value: number)
+    choose(preset, value == 1 ? "compact" : "comfortable", radius, font)
+  action chooseRadius(value: number)
+    choose(preset, density, (match ["default", "sharp", "round"].at(value) { case some(v) => v, case none => "default" }), font)
+  action chooseFont(value: number)
+    choose(preset, density, radius, (match ["sans", "serif", "mono"].at(value) { case some(v) => v, case none => "sans" }))
+  inject
+    uiFont: string
+    uiCopiedId: string
+    uiCopiedText: string
+    uiCopyCode: action
+  view
+    main max-width="80rem" margin="0 auto" padding="ui.space-40 ui.space-24 ui.space-64" width="100%" box-sizing="border-box"
+      column gap="ui.space-32"
+        column gap="ui.space-12"
+          h1 class=Heading
+            text "Themes" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Choose a palette, shape and rhythm. The site and its examples use the same RightUI configuration." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Light, dark and system appearance stay independent of your preset." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        column gap="ui.space-16"
+          text "Palette" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          TabsAdvanced(id="theme-preset", label="Palette", labels=paletteLabels, counts=[], selected=palettes.indexOf(preset), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=choosePreset)
+          row gap="ui.space-24" flex-wrap="wrap"
+            column gap="ui.space-8"
+              text "Density" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              TabsAdvanced(id="theme-density", label="Density", labels=["Comfortable", "Compact"], counts=[], selected=(density == "compact" ? 1 : 0), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseDensity)
+            column gap="ui.space-8"
+              text "Corners" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              TabsAdvanced(id="theme-radius", label="Corners", labels=["Neutral", "Sharp", "Rounded"], counts=[], selected=["default", "sharp", "round"].indexOf(radius), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseRadius)
+            column gap="ui.space-8"
+              text "Typeface" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              TabsAdvanced(id="theme-font", label="Typeface", labels=["Sans", "Serif", "Mono"], counts=[], selected=["sans", "serif", "mono"].indexOf(font), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseFont)
+        view display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 18rem), 1fr))" gap="ui.space-24" align-items="start"
+          for option in palettes key=option
+            column gap="ui.space-12" -exact-mode=`ui-preset=${option}`
+              text option text-transform="capitalize" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              ThemeSample(id="preview-" + option, reduced=reduced)
+              Button(id="apply-" + option, label=(option == preset ? "Selected" : "Apply " + option), variant="outline", disabled=(option == preset), press=choose(option, density, radius, font))
+        column gap="ui.space-12"
+          h2 margin=0
+            text "Use this theme" font-size="ui.text-xl" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Copy this configuration into app.tamber. Keep the Geist and Newsreader font declarations and provide uiFont=\"theme\" at your app root, as shown in Installation. Your app controls light, dark or system separately with setScheme()." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          Button(id="copy-theme", label=(copied ? "Theme copied" : "Copy theme"), variant="primary", disabled=(code == ""), press=copy)
+          text (copied ? "Theme copied to clipboard" : "") role="status" aria-live="polite" font-family=uiFontFamily(uiFont) data-rightui-font="body" font-size="ui.text-sm"
+          view inert=(code == "") aria-busy=(code == "") min-width="0px"
+            CodeBlockAdvanced(id="theme-export", title="app.tamber", language="Tamber", code=code, lines=[], numbers=false, startLine=1, showDownload=true, maxHeight=320, compact=false, variant="default")
+          text "RightUI controls use these shared tokens. System menus, native scrollbars and media keep their platform or content appearance. The system accent uses the initial preset; the exported fixed theme includes its matching accent." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+
+component QuickThemeControls
+  props
+    scheme: string
+    preset: string
+    radius: string
+    font: string
+    palettes: string[]
+    paletteLabels: string[]
+    chooseScheme: action
+    choosePreset: action
+    chooseFont: action
+    chooseRadius: action
+    customize: action
+  inject
+    uiFont: string
+  derive schemeLabel = scheme == "dark" ? "Dark" : scheme == "light" ? "Light" : "System"
+  derive presetLabel = (match paletteLabels.at(palettes.indexOf(preset)) { case some(label) => label, case none => "Neutral" })
+  derive fontLabel = font == "serif" ? "Serif" : font == "mono" ? "Mono" : "Sans"
+  derive radiusLabel = radius == "sharp" ? "Sharp" : radius == "round" ? "Rounded" : "Neutral"
+  action selectScheme(label: string)
+    chooseScheme(label.toLowerCase())
+  action selectFont(label: string)
+    chooseFont(label.toLowerCase())
+  action selectRadius(label: string)
+    chooseRadius(label == "Sharp" ? "sharp" : label == "Rounded" ? "round" : "default")
+  action selectPalette(label: string)
+    match palettes.at(paletteLabels.indexOf(label))
+      case some(value)
+        choosePreset(value)
+      case none
+        preventDefault()
+  view
+    column gap="ui.space-16"
+      column gap="ui.space-8"
+        text "Appearance" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        RadioGroupAdvanced(id="quick-scheme", label="Appearance mode", options=["Light", "Dark", "System"], value=schemeLabel, disabled=false, required=false, descriptionId="", change=selectScheme, variant="segmented")
+      column gap="ui.space-8"
+        text "Palette" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        RadioGroupAdvanced(id="quick-palette", label="Color palette", options=paletteLabels, value=presetLabel, disabled=false, required=false, descriptionId="", change=selectPalette, variant="segmented")
+      column gap="ui.space-8"
+        text "Typeface" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        RadioGroupAdvanced(id="quick-font", label="Typeface", options=["Sans", "Serif", "Mono"], value=fontLabel, disabled=false, required=false, descriptionId="", change=selectFont, variant="segmented")
+      column gap="ui.space-8"
+        text "Corners" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        RadioGroupAdvanced(id="quick-radius", label="Corners", options=["Neutral", "Sharp", "Rounded"], value=radiusLabel, disabled=false, required=false, descriptionId="", change=selectRadius, variant="segmented")
+      Separator(vertical=false)
+      Button(id="customize-theme", label="Customize theme", variant="outline", disabled=false, press=customize)

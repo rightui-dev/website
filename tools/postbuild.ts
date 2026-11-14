@@ -1,12 +1,18 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { repairSSRImages, assertNavbarFirstPaint } from './ssr-images';
 import { prepareSEO, clientTarget, socialDetails } from './seo';
 import { withInitialTheme } from './theme';
+import { withClipboardFallback } from './clipboard';
+import { compiledModeCSS, withCompiledModeStyles, withSSRModeBootstrap } from './ssr-modes';
 
 const root = resolve(import.meta.dir, '..');
 const dist = resolve(root, 'dist');
+if (statSync(resolve(dist, 'app.js')).size > 25 * 1024 * 1024) {
+  throw new Error('app.js exceeds the Cloudflare 25 MiB asset limit. Check for duplicated Contract slots before deployment.');
+}
+writeFileSync(resolve(dist, 'rightui-modes.css'), compiledModeCSS(readFileSync(resolve(dist, 'style.css'), 'utf8')));
 function insertHead(html: string, markup: string) {
   if (html.includes('</head>')) return html.replace('</head>', `${markup}</head>`);
   const rootTag = '<div id="exact-root">';
@@ -31,7 +37,10 @@ for (const page of pages) {
 writeFileSync(resolve(dist, 'llms.txt'), `# rightui\n\n> Exact UI components and patterns. Local documentation with real Contract source.\n\n${pages.filter(p=>p.url!=='/source').map(p=>`- [${p.title}](${p.markdownHref}): ${p.description}`).join('\n')}\n`);
 console.log(`Published and checked ${pages.length} Markdown documents and llms.txt.`);
 
+const fontPaths = [...readFileSync(resolve(root, 'apps/site/app.contract'), 'utf8').matchAll(/^\s+\d+(?: \d+)?(?: italic)? = "([^"\n]+\.(?:ttf|otf|woff2?))"/gm)].map(match=>match[1]);
+if (!fontPaths.length) throw new Error('No declared font resources found. Review the application font declarations.');
 const criticalCSS = readFileSync(resolve(root, "apps/site/assets/critical.css"), "utf8");
+copyFileSync(resolve(root, "apps/site/assets/critical.css"), resolve(dist, "assets/critical.css"));
 const qrSource = readFileSync(resolve(dist, 'assets/home/exact-qr.svg'), 'utf8');
 const navbarLogo = readFileSync(resolve(root, 'apps/site/assets/brand/rightui-navbar.png'));
 if (navbarLogo.length > 8192 || navbarLogo.readUInt32BE(16) !== 56 || navbarLogo.readUInt32BE(20) !== 56) {
@@ -47,13 +56,13 @@ function fixFontDisplay(dir: string) {
     else if (/\.(html|css)$/.test(entry.name)) {
       const source = readFileSync(path, 'utf8');
       let next = source.replace(/@font-face\s*\{[^}]*\}/g, face => {
-        if (!face.includes('assets/fonts/Geist.ttf')) return face;
+        if (!fontPaths.some(path => face.includes(path))) return face;
         if (!/font-display\s*:\s*(optional|swap)/.test(face)) return face;
         fontFaces++;
         return face.replace(/font-display\s*:\s*optional/g, 'font-display:swap');
       });
       if (entry.name.endsWith('.html')) {
-        next = withInitialTheme(socialDetails(repairSSRImages(next, qrSource)));
+        next = withCompiledModeStyles(withSSRModeBootstrap(withInitialTheme(withClipboardFallback(socialDetails(repairSSRImages(next, qrSource))))));
         if (assertNavbarFirstPaint(next, inlineLogo)) firstPaintLogos++;
         next = next.replace(/<style data-rightui-critical>[\s\S]*?<\/style>\n?/g, '');
         next = insertHead(next, `<style data-rightui-critical>${criticalCSS}</style>`);
@@ -67,8 +76,8 @@ if (firstPaintLogos === 0 || !readFileSync(resolve(dist, 'app.js'), 'utf8').incl
   throw new Error('Navbar logo must share its inline source between initial HTML and the Exact runtime.');
 }
 console.log(`Checked ${firstPaintLogos} embedded navbar logos for first paint and runtime source parity.`);
-if (fontFaces === 0) throw new Error('The generated Geist face changed; review font loading before publishing.');
-console.log(`Enabled font swapping for ${fontFaces} generated Geist faces.`);
+if (fontFaces === 0) throw new Error('Declared font faces were not emitted; review font loading.');
+console.log(`Enabled font swapping for ${fontFaces} declared font faces.`);
 
 const routes = JSON.parse(readFileSync(resolve(dist, 'routes.json'), 'utf8')).routes as { name: string; pattern: string; render: string; notfound: boolean }[];
 if (routes.some(route => route.render === 'request' || /[:*]/.test(route.pattern))) {

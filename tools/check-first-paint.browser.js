@@ -12,7 +12,7 @@
       const timeout = setTimeout(() => reject(new Error('First-paint frame timed out')), 15000);
       element.onload = () => { clearTimeout(timeout); resolve(); };
     });
-    element.src = '/?first-paint-audit=' + (scripts ? 'active' : 'static');
+    element.src = '/?theme=system&preset=neutral&density=comfortable&radius=default&font=sans&first-paint-audit=' + (scripts ? 'active' : 'static');
     frames.push(element);
     document.body.append(element);
     await loaded;

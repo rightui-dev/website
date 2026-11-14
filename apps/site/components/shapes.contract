@@ -67,3 +67,13 @@ shape CompatibilityReport
   groups: CompatibilityGroup[]
   statuses: CompatibilityNote[]
   evidence: CompatibilityNote[]
+
+shape ThemeExport
+  code: string
+
+shape BlockEntry
+  slug: string
+  title: string
+  source: string
+  code: string
+  files: SourceFile[]

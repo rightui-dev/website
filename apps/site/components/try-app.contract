@@ -1,0 +1,123 @@
+use uiFontFamily from "@rightui/ui"
+use Hit, QuietLink, Heading from "./styles.contract"
+
+use AppDropMark from "../generated/appdrop-brand.contract"
+
+component ArrowRight
+  view
+    svg width=16 height=16 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true flex-shrink=0
+      path d="M5 12h14m-6-6 6 6-6 6"
+
+component TryApp
+  inject
+    uiFont: string
+  view
+    main testId="try-page" padding="clamp(ui.space-48, 8vw, ui.space-96) ui.space-24 ui.space-96" display="flex" flex-direction="column" align-items="center" gap="ui.space-40" min-width=0
+      column align-items="center" gap="ui.space-16" text-align="center" width="100%" max-width="42rem"
+        row align-items="center" gap="ui.space-10" color="ui.muted-foreground" font-size="ui.text-sm"
+          AppDropMark()
+          text "RightUI avec AppDrop" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        h1 testId="try-title" class=Heading
+          text "Essayez RightUI sur votre appareil." font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "Explorez les composants dans une application native. Choisissez votre plateforme pour commencer." font-size="ui.text-md" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      view testId="try-platforms" display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 18rem), 1fr))" gap="ui.space-16" width="100%" max-width="48rem"
+        link href="/try/iphone" testId="try-iphone" class=PlatformCard
+          PlatformContent(platform="iphone", title="Essayer sur mon iPhone", description="Installez la démo avec AppDrop.", available=true)
+        link href="https://appdrop.app/api/drops/wcfnk49huy/file?revision=2&build=macos" target="_blank" rel="noopener noreferrer" testId="try-mac" class=PlatformCard
+          PlatformContent(platform="mac", title="Essayer sur mon Mac", description="Mac avec puce Apple · macOS 14 ou ultérieur.", available=true)
+        button disabled=true aria-disabled=true cursor="not-allowed" testId="try-android" class=PlatformCard
+          PlatformContent(platform="android", title="Essayer sur mon Android", description="Pas encore disponible.", available=false)
+        button disabled=true aria-disabled=true cursor="not-allowed" testId="try-windows" class=PlatformCard
+          PlatformContent(platform="windows", title="Essayer sur mon Windows", description="Pas encore disponible.", available=false)
+      column align-items="center" gap="ui.space-12" max-width="36rem" text-align="center"
+        text "Sur iPhone, AppDrop vous guide dans la configuration avant la première installation. Sur Mac, une autorisation dans Réglages Système → Confidentialité et sécurité peut être nécessaire pour ouvrir la démo." color="ui.muted-foreground" font-size="ui.text-caption" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        link href="/docs/compatibility" class=QuietLink text-decoration="underline"
+          text "Consulter la compatibilité des composants" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+
+component TryIPhone
+  inject
+    uiFont: string
+  view
+    main testId="iphone-install" padding="clamp(ui.space-48, 8vw, ui.space-96) ui.space-24 ui.space-96" display="flex" flex-direction="column" align-items="center" gap="ui.space-32" min-width=0
+      column align-items="center" gap="ui.space-16" text-align="center" width="100%" max-width="36rem"
+        row align-items="center" gap="ui.space-10" color="ui.muted-foreground" font-size="ui.text-sm"
+          AppDropMark()
+          text "RightUI sur iPhone" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        h1 class=Heading
+          text "Scannez. Installez. Explorez." font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "Scannez ce QR code avec votre iPhone, puis suivez les étapes dans AppDrop pour installer la démo." color="ui.muted-foreground" font-size="ui.text-md" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      view padding="ui.space-16" background-color="#ffffff" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel"
+        image "assets/brand/appdrop-iphone-qr.svg" width=208 height=208 alt="QR code du lien AppDrop pour installer RightUI sur iPhone"
+      column gap="ui.space-12" align-items="center" text-align="center" max-width="32rem"
+        text "Vous êtes déjà sur votre iPhone ?" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        link href="https://appdrop.app/d/wcfnk49huy" target="_blank" rel="noopener noreferrer" testId="iphone-appdrop-link" class=Hit display="flex" align-items="center" gap="ui.space-10" padding="ui.space-12 ui.space-20" border-radius="ui.radius-full" background-color="ui.primary" color="ui.primary-foreground"
+          text "Ouvrir AppDrop sur mon iPhone" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          ArrowRight()
+        text "AppDrop nécessite une configuration initiale avec votre compte Apple." font-size="ui.text-xs" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      link href="/try" class=QuietLink text-decoration="underline"
+        text "Choisir un autre appareil" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+
+component PlatformContent
+  props
+    platform: string
+    title: string
+    description: string
+    available: bool
+  inject
+    uiFont: string
+  view
+    column gap="ui.space-24" width="100%" min-width=0
+      row align-items="center" justify-content="space-between" gap="ui.space-16"
+        PlatformIcon(platform=platform)
+        row align-items="center" gap="ui.space-8"
+          text (available ? "Disponible" : "À venir") font-size="ui.text-xs" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          view testId=(platform + "-availability-dot") data-rightui-availability=(available ? "available" : "unavailable") animation-duration="ui.duration-availability" animation-timing-function="ui.easing" aria-hidden=true width="ui.space-6" height="ui.space-6" flex-shrink=0 border-radius="ui.radius-full" background-color=(available ? "ui.success" : "ui.danger")
+      column gap="ui.space-8" min-width=0
+        row align-items="center" justify-content="space-between" gap="ui.space-12"
+          text title font-size="ui.text-md" font-weight="ui.weight-semibold" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          if available
+            ArrowRight()
+        text description font-size="ui.text-caption" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+
+component PlatformIcon
+  props
+    platform: string
+  view
+    svg width=32 height=32 viewBox=(platform == "iphone" ? "0 0 34.8262 57.7285" : platform == "mac" ? "0 0 65.5488 56.7402" : "0 0 24 24") fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true
+      if platform == "iphone"
+        path d="M7.32617 57.6855L27.1133 57.6855C31.6035 57.6855 34.4609 54.9355 34.4609 50.5957L34.4609 7.08984C34.4609 2.75 31.6035 0 27.1133 0L7.32617 0C2.83594 0 0 2.75 0 7.08984L0 50.5957C0 54.9355 2.83594 57.6855 7.32617 57.6855ZM7.79883 53.8828C5.17773 53.8828 3.80273 52.5508 3.80273 50.0371L3.80273 7.64844C3.80273 5.13477 5.17773 3.80273 7.79883 3.80273L26.6621 3.80273C29.2617 3.80273 30.6367 5.13477 30.6367 7.64844L30.6367 50.0371C30.6367 52.5508 29.2617 53.8828 26.6621 53.8828ZM11.4297 51.8848L23.0312 51.8848C23.7188 51.8848 24.1914 51.4121 24.1914 50.7246C24.1914 50.0371 23.7188 49.5645 23.0312 49.5645L11.4297 49.5645C10.7637 49.5645 10.2695 50.0371 10.2695 50.7246C10.2695 51.4121 10.7637 51.8848 11.4297 51.8848ZM13.9648 9.19531L20.5176 9.19531C21.5059 9.19531 22.2793 8.42188 22.2793 7.41211C22.2793 6.44531 21.5059 5.67188 20.5176 5.67188L13.9648 5.67188C12.9551 5.67188 12.1816 6.44531 12.1816 7.41211C12.1816 8.42188 12.9551 9.19531 13.9648 9.19531Z" fill="currentColor" fill-opacity=0.85 stroke="none"
+      else if platform == "mac"
+        path d="M5.67188 47.1367L59.5117 47.1367C63.0352 47.1367 65.1836 44.9883 65.1836 41.4648L65.1836 7.49805C65.1836 3.97461 63.0352 1.82617 59.5117 1.82617L5.67188 1.82617C2.14844 1.82617 0 3.97461 0 7.49805L0 41.4648C0 44.9883 2.14844 47.1367 5.67188 47.1367ZM5.07031 35.3633C4.21094 35.3633 3.80273 34.998 3.80273 34.0742L3.80273 7.58398C3.80273 6.38086 4.55469 5.62891 5.75781 5.62891L59.4258 5.62891C60.6289 5.62891 61.3809 6.38086 61.3809 7.58398L61.3809 34.0742C61.3809 34.998 60.9727 35.3633 60.1133 35.3633ZM23.998 53.9902L41.1855 53.9902L41.1855 46.793L23.998 46.793ZM23.7188 56.7402L41.4648 56.7402C42.5176 56.7402 43.377 55.9023 43.377 54.8496C43.377 53.7754 42.5176 52.916 41.4648 52.916L23.7188 52.916C22.666 52.916 21.8066 53.7754 21.8066 54.8496C21.8066 55.9023 22.666 56.7402 23.7188 56.7402Z" fill="currentColor" fill-opacity=0.85 stroke="none"
+      else if platform == "android"
+        path d="m7 3 2 3m8-3-2 3M5 12a7 7 0 0 1 14 0v5H5Zm3 5v4m8-4v4M2 12v5m20-5v5"
+        path d="M9 10h.01M15 10h.01" stroke-width="ui.stroke-standard"
+      else
+        rect x=3 y=3 width=7 height=7 rx=0.5
+        rect x=14 y=3 width=7 height=7 rx=0.5
+        rect x=3 y=14 width=7 height=7 rx=0.5
+        rect x=14 y=14 width=7 height=7 rx=0.5
+
+style PlatformCard
+  appearance="none"
+  outline="none"
+  display="flex"
+  box-sizing="border-box"
+  min-width=0
+  padding="ui.space-24"
+  text-align="left"
+  text-decoration="none"
+  color="ui.foreground"
+  background-color="ui.background"
+  border-width="ui.border-width"
+  border-style="solid"
+  border-color="ui.border"
+  border-radius="ui.radius-panel"
+  cursor="pointer"
+  :hover
+    background-color="ui.muted"
+  :focus-visible
+    box-shadow="ui.shadow-focus"
+  :disabled
+    color="ui.muted-foreground"
+    background-color="ui.muted"
+    opacity="ui.opacity-disabled"

@@ -1,6 +1,21 @@
-// Exact's persisted root states are JSON values at `exact.state.<name>`.
-// Keep this read aligned with state theme and the pinned SDK's persist adapter.
-export const themeBootstrap = `(()=>{let theme="system";try{const stored=JSON.parse(localStorage.getItem("exact.state.theme"));if(stored==="light"||stored==="dark")theme=stored}catch{}const query=new URLSearchParams(location.search).get("theme");if(query==="light"||query==="dark")theme=query;document.documentElement.style.colorScheme=theme==="system"?"":theme})()`;
+import { themeOptions, themeAxes, defaultTheme } from '@rightui/ui/theme';
+
+// Exact persists JSON root states under these names. URL previews never write storage.
+export const themeBootstrap = `(()=>{
+  const options=${JSON.stringify(themeOptions)},axes=${JSON.stringify(themeAxes)},defaults=${JSON.stringify(defaultTheme)},query=new URLSearchParams(location.search);
+  const read=(name,fallback)=>{try{return JSON.parse(localStorage.getItem("exact.state."+name))??fallback}catch{return fallback}};
+  let theme=read("theme","system");const choice=query.get("theme");
+  if(["light","dark","system"].includes(choice))theme=choice;
+  const root=document.documentElement;
+  root.style.colorScheme=theme==="light"||theme==="dark"?theme:"";
+  const settings={};
+  for(const key of Object.keys(options)){
+    const stored=read("ui"+key[0].toUpperCase()+key.slice(1),defaults[key]),requested=query.get(key);
+    settings[key]=options[key].includes(requested)?requested:options[key].includes(stored)?stored:defaults[key];
+  }
+  root.setAttribute("data-x-modes",Object.keys(axes).map(key=>axes[key]+"="+settings[key]).join(","));
+  root.setAttribute("data-rightui-font-choice",settings.font);
+})()`;
 
 /** Run before styles, the activation loader and any visible markup on every URL. */
 export function withInitialTheme(html: string) {

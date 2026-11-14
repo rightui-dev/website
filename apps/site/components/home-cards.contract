@@ -1,46 +1,18 @@
-use Button, Switch from "@rightui/ui"
-
-style MosaicCard
-  padding=20
-  border-radius=24
-  border="1px solid ui.border"
-  background-color="ui.surface"
-  color="ui.foreground"
-  gap=24
-  min-width=0
-  box-sizing="border-box"
-
-style MosaicMuted
-  padding=16
-  border-radius=12
-  background-color="ui.muted"
-  gap=12
-
-style MosaicButton
-  appearance="none"
-  font-family="inherit"
-  height=32
-  padding="0 12px"
-  border="1px solid ui.border"
-  border-radius=999
-  background-color="ui.surface"
-  color="ui.foreground"
-  font-size=14
-  font-weight=500
-  cursor="pointer"
+use uiFontFamily from "@rightui/ui"
+use Button, ButtonContent, ButtonSegment, InputControl, TextareaControl, Badge, RadioControl, CheckboxControl, SwitchControl, Switch, ProgressTrack, InputStyle, FeatureCardStyle as MosaicCard, InsetCardStyle as MosaicMuted, Hit from "@rightui/ui"
 
 component HomeCards
   props
     width: number
+    nativeApp: bool
     reduced: bool
+    openDialog: action
   state name = ""
   state message = ""
   state compact = true
-  state dialog = false
   state fruit = "apple"
   state alerts = true
-  state actionX = 0
-  state actionY = 0
+  derive quickItems = ["Mute conversation", "Mark as read", "Block user", "Delete conversation"]
   state tab = "Overview"
   state selected = "Analytics"
   state saved = 65
@@ -54,30 +26,46 @@ component HomeCards
   state messages = ["Hey! How can I help you today?", "I'd like to explore the components."]
   action selectFruit(value: string)
     fruit = value
-  action toggleAlerts
-    alerts = not alerts
-  action toggleCompact
-    compact = not compact
+  action fruitKey(item: string, key: string)
+    if key == " " or key == "Enter"
+      preventDefault()
+      selectFruit(item)
+    else if key == "ArrowRight" or key == "ArrowDown" or key == "ArrowLeft" or key == "ArrowUp"
+      preventDefault()
+      let next = item == "apple" ? "banana" : "apple"
+      selectFruit(next)
+      focus("home-fruit-" + next)
+    else if key == "Home" or key == "End"
+      preventDefault()
+      let next = key == "Home" ? "apple" : "banana"
+      selectFruit(next)
+      focus("home-fruit-" + next)
+  action toggleAlerts(value: bool)
+    alerts = value
+  action toggleCompact(value: bool)
+    compact = value
   action quickActions
-    let bounds = frame("home-actions")
-    actionX = max(8, bounds.x + bounds.width - 180)
-    actionY = bounds.y + bounds.height + 8
     showPopover("home-actions-panel", source="home-actions")
+    focus("home-action-0")
   action quickAction(value: string)
     selected = value
     hidePopover("home-actions-panel")
+    focus("home-actions")
+  action quickKeys(index: number, key: string)
+    if key == "Escape"
+      preventDefault()
+      hidePopover("home-actions-panel")
+      focus("home-actions")
+    else if key == "ArrowDown" or key == "ArrowUp" or key == "Home" or key == "End"
+      preventDefault()
+      let next = key == "Home" ? 0 : key == "End" ? quickItems.length - 1 : (index + (key == "ArrowDown" ? 1 : quickItems.length - 1)) % quickItems.length
+      focus("home-action-" + next.toString())
   action editName(v: string)
     name = v
   action editMessage(v: string)
     message = v
   action toggle(v: bool)
     compact = v
-  action openDialog
-    dialog = true
-    showModal("home-confirmation")
-  action closeDialog
-    dialog = false
-    close("home-confirmation")
   action selectTab(v: string)
     tab = v
   action selectItem(v: string)
@@ -106,170 +94,165 @@ component HomeCards
       messages = messages.concat([draft])
       draft = ""
   // CSS sizes the columns before the viewport resource activates.
+  inject
+    uiFont: string
   view
-    view padding=24 background-color="ui.muted" color="ui.foreground"
-      row id="home-mosaic" gap=0 max-width=1900 margin="0 auto" align-items="flex-start"
-        column id="home-column-controls" flex="1 1 0%" gap=24 min-width=0
-          column class=MosaicCard min-height=318 gap=24
-            row gap=8
-              button class=MosaicButton press=openDialog background-color="ui.primary" color="ui.primary-foreground"
-                text "Button →"
-              button class=MosaicButton press=openDialog background-color="ui.muted" border="0"
-                text "Secondary"
-              button class=MosaicButton press=openDialog
-                text "Outline"
-            column gap=12
-              input value=name input=editName placeholder="Name" aria-label="Name" height=32 padding="0 12px" border="0" border-radius=999 background-color="ui.muted" color="ui.foreground" font-family="inherit" box-sizing="border-box"
-              textarea value=message input=editMessage placeholder="Message" aria-label="Message" height=64 min-height=64 padding="8px 12px" border="0" border-radius=16 background-color="ui.muted" color="ui.foreground" font-family="inherit" resize="none" box-sizing="border-box"
-            row gap=8 height=20 align-items="center"
-              text "Badge" background-color="ui.primary" color="ui.primary-foreground" padding="2px 8px" border-radius=999 font-size=12
-              text "Secondary" background-color="ui.muted" padding="2px 8px" border-radius=999 font-size=12
-              row gap=8 margin-left="auto" align-items="center" role="radiogroup" aria-label="Fruit preference"
+    view padding="ui.space-24" background-color="ui.muted" color="ui.foreground"
+      row id="home-mosaic" gap="ui.space-0" max-width=1900 margin="ui.space-0 auto" align-items="flex-start"
+        column id="home-column-controls" flex="1 1 0%" gap="ui.space-24" min-width=0
+          column class=MosaicCard min-height=318 gap="ui.space-24"
+            row gap="ui.space-8" flex-wrap="wrap"
+              ButtonContent(id="home-primary", label="Button", variant="primary", size="sm", disabled=false, press=openDialog)
+                text "Button →" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              ButtonContent(id="home-secondary", label="Secondary", variant="secondary", size="sm", disabled=false, press=openDialog)
+                text "Secondary" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              ButtonContent(id="home-outline", label="Outline", variant="outline", size="sm", disabled=false, press=openDialog)
+                text "Outline" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            column gap="ui.space-12"
+              InputControl(id="home-name", label="Name", value=name, placeholder="Name", disabled=false, edit=editName)
+              TextareaControl(error="", descriptionId="", id="home-message", label="Message", value=message, placeholder="Message", disabled=false, edit=editMessage)
+            row gap="ui.space-8" align-items="center" flex-wrap="wrap"
+              Badge(label="Badge", variant="primary")
+              Badge(label="Secondary", variant="secondary")
+              row gap="ui.space-8" margin-left="auto" align-items="center" role="radiogroup" aria-label="Fruit preference"
                 for item in ["apple", "banana"] key=item
-                  button appearance="none" role="radio" aria-checked=(fruit == item) aria-label=item press=selectFruit(item) width=16 height=16 padding=0 border=(fruit == item ? "4px solid ui.primary" : "1px solid ui.border") border-radius="50%" background-color=(fruit == item ? "ui.surface" : "ui.border") cursor="pointer"
-                    :focus-visible
-                      box-shadow="0 0 0 3px ui.ring"
-              button appearance="none" role="checkbox" aria-checked=alerts aria-label="Enable email alerts" press=toggleAlerts width=16 height=16 padding=0 border="1px solid ui.border" border-radius=4 background-color=(alerts ? "ui.primary" : "ui.surface") color="ui.primary-foreground" cursor="pointer"
-                text (alerts ? "✓" : "") font-size=12
-              button appearance="none" role="switch" aria-checked=compact aria-label="Compact notifications" press=toggleCompact width=32 height=18 padding=0 border="0" border-radius=999 background-color=(compact ? "ui.primary" : "ui.border") position="relative" cursor="pointer"
-                view width=16 height=16 border-radius="50%" position="absolute" left=1 top=1 background-color="ui.surface" translate=(compact ? "14px 0px" : "0px 0px") transition=(reduced ? "none" : "translate 160ms ease-out")
-            row gap=0 justify-content="space-between"
-              button class=MosaicButton press=openDialog
-                text "Alert Dialog"
-              row gap=0
-                button class=MosaicButton press=openDialog border-radius="999px 0 0 999px"
-                  text "Button Group"
-                button id="home-actions" class=MosaicButton press=quickActions border-radius="0 999px 999px 0" aria-label="Open quick actions"
-                  text "⌃"
-          view display="grid" grid-template-columns="repeat(2, minmax(0, 1fr))" gap=16
+                  RadioControl(id="home-fruit-" + item, label=item, checked=(fruit == item), disabled=false, tabIndex=(fruit == item ? 0 : -1), press=selectFruit(item), keys=fruitKey(item))
+              CheckboxControl(id="home-alerts", label="Enable email alerts", checked=alerts, disabled=false, change=toggleAlerts)
+              SwitchControl(id="home-compact", label="Compact notifications", checked=compact, disabled=false, reduced=reduced, change=toggleCompact)
+            row gap="ui.space-8" justify-content="space-between" flex-wrap="wrap"
+              ButtonContent(id="home-dialog", label="Alert Dialog", variant="outline", size="sm", disabled=false, press=openDialog)
+                text "Alert Dialog" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              row gap="ui.space-0" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-control" overflow="hidden"
+                ButtonSegment(id="home-button-group", label="Button Group", disabled=false, press=openDialog)
+                  text "Button Group" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                ButtonSegment(id="home-actions", label="Open quick actions", disabled=false, press=quickActions)
+                  svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
+                    path d="m6 9 6 6 6-6"
+          view display="grid" grid-template-columns="repeat(2, minmax(0, 1fr))" gap="ui.space-16"
             for group in ["Planning", "Support", "Overview", "Account"] key=group
-              column class=MosaicCard padding=16 gap=8
-                text group font-size=12 color="ui.muted-foreground"
+              column class=MosaicCard padding="ui.space-16" gap="ui.space-8"
+                text group font-size="ui.text-xs" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
                 for item in (group == "Planning" ? ["Documents", "Budget", "Reports", "Goals", "Calendar"] : group == "Support" ? ["Help Center", "Docs", "Contact Us", "Status", "Community"] : group == "Overview" ? ["Analytics", "Transactions", "Investments", "Accounts", "Spending"] : ["Profile", "Billing", "Notifications", "Security", "Appearance"]) key=item
-                  button press=selectItem(item) padding="7px 8px" border="0" border-radius=8 text-align="left" background-color=(selected == item ? "ui.muted" : "transparent") color="ui.foreground"
-                    text item font-size=13
+                  button class=Hit press=selectItem(item) aria-current=(selected == item ? "true" : "false") padding="ui.space-7 ui.space-8" border="0" border-radius="ui.radius-md" text-align="left" background-color=(selected == item ? "ui.muted" : "transparent") color="ui.foreground"
+                    text item font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           column class=MosaicCard
-            text "Savings Targets" font-weight=600
-            text "Local demo milestones. Adjust the progress below." color="ui.muted-foreground" font-size=14
+            text "Savings Targets" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text "Local demo milestones. Adjust the progress below." color="ui.muted-foreground" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             for target in ["Retirement", "Real Estate"] key=target
               column class=MosaicMuted
-                text target font-size=12
-                text (target == "Retirement" ? "$420,000" : "$85,000") font-size=30 font-weight=600
-                view height=6 border-radius=8 background-color="ui.border"
-                  view height=6 width=(target == "Retirement" ? `${saved}%` : "32%") background-color="ui.primary" border-radius=8
-                text (target == "Retirement" ? `${saved}% achieved` : "32% achieved") font-size=13
+                text target font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                text (target == "Retirement" ? "$420,000" : "$85,000") font-size="ui.text-3xl" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                ProgressTrack(id="home-progress-" + target, label=target, value=(target == "Retirement" ? saved : 32))
+                text (target == "Retirement" ? `${saved}% achieved` : "32% achieved") font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             Button(id="home-save", label="Add demo savings", variant="outline", disabled=saved == 100, press=save)
-        column id="home-column-activity" flex="1 1 0%" gap=24 min-width=0 max-width="clamp(0px, (100vw - 1023px) * 1000, 100vw)" max-height="max(0px, (100vw - 1023px) * 1000000)" margin-left="clamp(0px, (100vw - 1023px) * 1000, 24px)" overflow="hidden" inert=(width < 1024)
-          column class=MosaicCard
-            column gap=8
-              text "Contribution History" font-weight=600
-              text "Last 6 months of activity" color="ui.muted-foreground" font-size=14
-            row height=200 gap=12 align-items="flex-end" role="img" aria-label="Demo contributions: December 800, January 1100, February 900, March 1300, April 750"
-              for month in ["Dec", "Jan", "Feb", "Mar", "Apr"] key=month
-                column flex=1 gap=8 justify-content="flex-end"
-                  view height=(month == "Dec" ? 120 : month == "Jan" ? 165 : month == "Feb" ? 135 : month == "Mar" ? 175 : 112) background-color=(month == "Dec" ? "#d4d4d4" : month == "Jan" ? "#a3a3a3" : month == "Feb" ? "#737373" : month == "Mar" ? "#525252" : "#404040") border-radius=8
-                  text month font-size=12 text-align="center" color="ui.muted-foreground"
-            row gap=12
-              column class=MosaicMuted flex=1
-                text "UPCOMING" font-size=11
-                text "May 2024" font-weight=600
-                text "Scheduled" font-size=13
-              column class=MosaicMuted flex=1
-                text "SAVINGS PLAN" font-size=11
-                text "Accelerated" font-weight=600
-                text "Recurring" font-size=13
-            Button(id="home-report", label=(report ? "Close Report" : "View Full Report"), variant="primary", disabled=false, press=showReport)
-            if report
-              text "Demo total: $4,850 across five contributions." font-size=14
-          column class=MosaicCard
-            text "Claimable Balance" font-size=14 color="ui.muted-foreground"
-            text "$1,211.29" font-size=36 font-weight=600
-            text "● Pending Setup · Demo" font-size=12
-            column class=MosaicMuted
-              row justify-content="space-between" gap=12
-                text "Net Royalties" font-size=13
-                text "$1,248.75" font-size=13
-              row justify-content="space-between" gap=12
-                text "Processing Fee" font-size=13
-                text "−$37.46" font-size=13
-              row justify-content="space-between" gap=12
-                text "Total Ready to Claim" font-size=13
-                text "$1,211.29 USD" font-size=13
-            text "Illustrative balance only. No bank connection or distribution." font-size=13 color="ui.muted-foreground"
-          column class=MosaicCard
-            Button(id="home-dividends", label=(dismissed ? "Show Dividend Income" : "Q2 Dividend Income ×"), variant="ghost", disabled=false, press=dismiss)
-            if not dismissed
-              text "Quarterly demo payouts across sample holdings." font-size=14 color="ui.muted-foreground"
-              for holding in ["Vanguard · 450 Shares", "S&P 500 VOO · 112 Shares", "Apple AAPL · 85 Shares", "Realty Income · 320 Shares"] key=holding
-                row class=MosaicMuted justify-content="space-between"
-                  text holding font-size=13
-                  svg width=80 height=28 viewBox="0 0 80 28" fill="none" aria-hidden=true
-                    polyline points=(holding.startsWith("Vanguard") ? "0,22 9,17 18,19 28,12 36,16 47,9 57,12 66,5 80,2" : holding.startsWith("Apple") ? "0,16 9,20 18,12 28,16 36,8 47,11 57,4 66,8 80,2" : "0,23 9,21 18,14 28,18 36,12 47,15 57,7 66,10 80,4") stroke="ui.foreground" stroke-width=1.5
-        column id="home-column-goals" flex="1 1 0%" gap=24 min-width=0 max-width="clamp(0px, (100vw - 1399px) * 1000, 100vw)" max-height="max(0px, (100vw - 1399px) * 1000000)" margin-left="clamp(0px, (100vw - 1399px) * 1000, 24px)" overflow="hidden" inert=(width < 1400)
-          column class=MosaicCard
-            text "Set a new milestone" font-weight=600
-            text "Define a demo target and pace your savings." font-size=14 color="ui.muted-foreground"
-            text "Goal Name" font-size=14
-            input value=goal input=editGoal placeholder="e.g. New Car, Home Downpayment" aria-label="Goal Name" padding=10 border="1px solid ui.input" border-radius=8
-            text "Target Amount" font-size=14
-            input value=amount input=editAmount aria-label="Target Amount" padding=10 border="1px solid ui.input" border-radius=8
-            text "Target Date" font-size=14
-            input value=date input=editDate aria-label="Target Date" padding=10 border="1px solid ui.input" border-radius=8
-            Button(id="home-create", label="Create Goal", variant="primary", disabled=goal.trim() == "", press=create)
-            Button(id="home-cancel", label="Cancel", variant="outline", disabled=false, press=cancel)
-            if created
-              text `Demo goal created: ${goal} · ${amount} · ${date}` font-size=14
-          column class=MosaicCard
-            text "Payout Threshold" font-weight=600
-            text "Demo settings" color="ui.muted-foreground"
-            Switch(id="home-payout", label="Automatic payouts", checked=compact, disabled=false, reduced=reduced, change=toggle)
-          column class=MosaicCard
-            text "Account Access" font-weight=600
-            text "Manage local demo preferences." color="ui.muted-foreground"
-            Button(id="home-access", label="Manage access", variant="outline", disabled=false, press=openDialog)
-        column id="home-column-chat" flex="1 1 0%" gap=24 min-width=0 max-width="clamp(0px, (100vw - 767px) * 1000, 100vw)" max-height="max(0px, (100vw - 767px) * 1000000)" margin-left="clamp(0px, (100vw - 767px) * 1000, 24px)" overflow="hidden" inert=(width < 768)
-          column class=MosaicCard align-items="center" height=350 padding="44px 20px 20px" text-align="center" gap=24 aria-label="Demonstration QR code linking to Exact on GitHub"
-            link href="https://github.com/expo/exact" aria-label="Open Exact on GitHub" width=194 height=194 padding=16 border="1px solid #e5e5e5" border-radius=12 background-color="#ffffff" box-sizing="border-box"
-              image "assets/home/exact-qr.svg" width=160 height=160 alt="QR code: https://github.com/expo/exact"
-            column gap=8
-              text "Explore Exact on your mobile device" font-weight=600 font-size=16
-              text "Explore Exact on GitHub by scanning this demo code." font-size=14 color="ui.muted-foreground"
-          column class=MosaicCard
-            text "Chat" font-weight=600
-            for entry in messages key=entry
-              text entry padding=12 border-radius=16 background-color="ui.muted" font-size=14
-            input value=draft input=editDraft submit=sendMessage placeholder="Type a message…" aria-label="Chat message" padding=10 border="1px solid ui.input" border-radius=8
-            Button(id="home-send", label="Send message ↑", variant="primary", disabled=draft.trim() == "", press=sendMessage)
-          column class=MosaicCard
-            text "Home › Account › Payments" font-size=13 color="ui.muted-foreground"
-            for payment in ["Change transfer limit", "Scheduled transfers", "Recurring card payments"] key=payment
-              button press=selectItem(payment) padding=16 border="0" border-radius=12 background-color="ui.muted" color="ui.foreground" text-align="left"
-                text `${payment} →`
-            text `Selected: ${selected}` font-size=12 color="ui.muted-foreground"
-        column id="home-column-settings" flex="1 1 0%" gap=24 min-width=0 max-width="clamp(0px, (100vw - 1899px) * 1000, 100vw)" max-height="max(0px, (100vw - 1899px) * 1000000)" margin-left="clamp(0px, (100vw - 1899px) * 1000, 24px)" overflow="hidden" inert=(width < 1900)
-          column class=MosaicCard
-            text "Distribute. Track. Grow." font-size=24 font-weight=600
-            text "Explore your local demo workspace." color="ui.muted-foreground"
-            Button(id="home-start", label="Get started", variant="primary", disabled=false, press=openDialog)
-          column class=MosaicCard
-            text "Notification Settings" font-weight=600
-            Switch(id="home-notify", label="Email notifications", checked=compact, disabled=false, reduced=reduced, change=toggle)
-          column class=MosaicCard
-            text "Power Usage" font-weight=600
-            svg width="100%" height=120 viewBox="0 0 280 120" role="img" aria-label="Demo power usage by day"
-              for value, index in [30, 45, 75, 50, 100, 65, 88] key=index
-                rect x=(index * 40) y=(120 - value) width=28 height=value rx=6 fill="ui.foreground"
-      column id="home-actions-panel" popover="auto" role="menu" aria-label="Quick actions" position="absolute" left=actionX top=actionY margin=0 width=180 padding=4 border="1px solid ui.border" border-radius=10 background-color="ui.surface" color="ui.foreground" box-shadow="0 4px 12px ui.shadow"
-        text "Quick Actions" font-size=12 font-weight=500 padding="6px 8px"
-        for item in ["Mute conversation", "Mark as read", "Block user", "Delete conversation"] key=item
-          button appearance="none" role="menuitem" press=quickAction(item) border="0" background-color="transparent" color="ui.foreground" padding="7px 8px" text-align="left" border-radius=6 font-family="Geist" font-size=13 cursor="pointer"
+        if not nativeApp or width >= 1024
+          column id="home-column-activity" flex="1 1 0%" gap="ui.space-24" min-width=0 max-width="clamp(0px, (100vw - 1023px) * 1000, 100vw)" max-height="max(0px, (100vw - 1023px) * 1000000)" margin-left="clamp(0px, (100vw - 1023px) * 1000, ui.space-24)" overflow="hidden" inert=(width < 1024)
+            column class=MosaicCard
+              column gap="ui.space-8"
+                text "Contribution History" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                text "Last 6 months of activity" color="ui.muted-foreground" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              row height=200 gap="ui.space-12" align-items="flex-end" role="img" aria-label="Demo contributions: December 800, January 1100, February 900, March 1300, April 750"
+                for month in ["Dec", "Jan", "Feb", "Mar", "Apr"] key=month
+                  column flex=1 gap="ui.space-8" justify-content="flex-end"
+                    view height=(month == "Dec" ? 120 : month == "Jan" ? 165 : month == "Feb" ? 135 : month == "Mar" ? 175 : 112) background-color=(month == "Dec" ? "ui.chart-1" : month == "Jan" ? "ui.chart-2" : month == "Feb" ? "ui.chart-3" : month == "Mar" ? "ui.chart-4" : "ui.chart-5") border-radius="ui.radius-md"
+                    text month font-size="ui.text-xs" text-align="center" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              row gap="ui.space-12"
+                column class=MosaicMuted flex=1
+                  text "UPCOMING" font-size="ui.text-2xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "May 2024" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "Scheduled" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                column class=MosaicMuted flex=1
+                  text "SAVINGS PLAN" font-size="ui.text-2xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "Accelerated" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "Recurring" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              Button(id="home-report", label=(report ? "Close Report" : "View Full Report"), variant="primary", disabled=false, press=showReport)
+              if report
+                text "Demo total: $4,850 across five contributions." font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            column class=MosaicCard
+              text "Claimable Balance" font-size="ui.text-sm" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "$1,211.29" font-size="ui.text-4xl" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "● Pending Setup · Demo" font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              column class=MosaicMuted
+                row justify-content="space-between" gap="ui.space-12"
+                  text "Net Royalties" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "$1,248.75" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                row justify-content="space-between" gap="ui.space-12"
+                  text "Processing Fee" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "−$37.46" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                row justify-content="space-between" gap="ui.space-12"
+                  text "Total Ready to Claim" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                  text "$1,211.29 USD" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Illustrative balance only. No bank connection or distribution." font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            column class=MosaicCard
+              Button(id="home-dividends", label=(dismissed ? "Show Dividend Income" : "Q2 Dividend Income ×"), variant="ghost", disabled=false, press=dismiss)
+              if not dismissed
+                text "Quarterly demo payouts across sample holdings." font-size="ui.text-sm" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                for holding in ["Vanguard · 450 Shares", "S&P 500 VOO · 112 Shares", "Apple AAPL · 85 Shares", "Realty Income · 320 Shares"] key=holding
+                  row class=MosaicMuted justify-content="space-between"
+                    text holding font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                    svg width="ui.space-80" height="ui.space-28" viewBox="0 0 80 28" fill="none" aria-hidden=true
+                      polyline points=(holding.startsWith("Vanguard") ? "0,22 9,17 18,19 28,12 36,16 47,9 57,12 66,5 80,2" : holding.startsWith("Apple") ? "0,16 9,20 18,12 28,16 36,8 47,11 57,4 66,8 80,2" : "0,23 9,21 18,14 28,18 36,12 47,15 57,7 66,10 80,4") stroke="ui.chart-1" stroke-width="ui.stroke-medium"
+        if not nativeApp or width >= 1400
+          column id="home-column-goals" flex="1 1 0%" gap="ui.space-24" min-width=0 max-width="clamp(0px, (100vw - 1399px) * 1000, 100vw)" max-height="max(0px, (100vw - 1399px) * 1000000)" margin-left="clamp(0px, (100vw - 1399px) * 1000, ui.space-24)" overflow="hidden" inert=(width < 1400)
+            column class=MosaicCard
+              text "Set a new milestone" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Define a demo target and pace your savings." font-size="ui.text-sm" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Goal Name" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              InputControl(id="home-goal", label="Goal Name", value=goal, placeholder="e.g. New Car, Home Downpayment", disabled=false, edit=editGoal)
+              text "Target Amount" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              InputControl(id="home-amount", label="Target Amount", value=amount, placeholder="", disabled=false, edit=editAmount)
+              text "Target Date" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              InputControl(id="home-date", label="Target Date", value=date, placeholder="", disabled=false, edit=editDate)
+              Button(id="home-create", label="Create Goal", variant="primary", disabled=goal.trim() == "", press=create)
+              Button(id="home-cancel", label="Cancel", variant="outline", disabled=false, press=cancel)
+              if created
+                text `Demo goal created: ${goal} · ${amount} · ${date}` font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            column class=MosaicCard
+              text "Payout Threshold" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Demo settings" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              Switch(id="home-payout", label="Automatic payouts", checked=compact, disabled=false, reduced=reduced, change=toggle)
+            column class=MosaicCard
+              text "Account Access" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Manage local demo preferences." color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              Button(id="home-access", label="Manage access", variant="outline", disabled=false, press=openDialog)
+        if not nativeApp or width >= 768
+          column id="home-column-chat" flex="1 1 0%" gap="ui.space-24" min-width=0 max-width="clamp(0px, (100vw - 767px) * 1000, 100vw)" max-height="max(0px, (100vw - 767px) * 1000000)" margin-left="clamp(0px, (100vw - 767px) * 1000, ui.space-24)" overflow="hidden" inert=(width < 768)
+            column class=MosaicCard align-items="center" min-height=350 padding="ui.space-44 ui.space-20 ui.space-20" text-align="center" gap="ui.space-24" aria-label="Demonstration QR code linking to Exact on GitHub"
+              link href="https://github.com/expo/exact" aria-label="Open Exact on GitHub" display="flex" padding="ui.space-16" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-card" background-color="ui.media-paper" box-sizing="border-box"
+                image "assets/home/exact-qr.svg" width=160 height=160 alt="QR code: https://github.com/expo/exact"
+              column gap="ui.space-8"
+                text "Explore Exact on your mobile device" font-weight="ui.weight-semibold" font-size="ui.text-base" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                text "Explore Exact on GitHub by scanning this demo code." font-size="ui.text-sm" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            column class=MosaicCard
+              text "Chat" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              for entry in messages key=entry
+                text entry padding="ui.space-12" border-radius="ui.radius-2xl" background-color="ui.muted" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              input id="home-draft" class=InputStyle value=draft input=editDraft submit=sendMessage placeholder="Type your message..." aria-label="Message"
+              Button(id="home-send", label="Send message ↑", variant="primary", disabled=draft.trim() == "", press=sendMessage)
+            column class=MosaicCard
+              text "Home › Account › Payments" font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              for payment in ["Change transfer limit", "Scheduled transfers", "Recurring card payments"] key=payment
+                button class=Hit press=selectItem(payment) padding="ui.space-16" border="0" border-radius="ui.radius-card" background-color="ui.muted" color="ui.foreground" text-align="left"
+                  text `${payment} →` font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text `Selected: ${selected}` font-size="ui.text-xs" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        if not nativeApp or width >= 1900
+          column id="home-column-settings" flex="1 1 0%" gap="ui.space-24" min-width=0 max-width="clamp(0px, (100vw - 1899px) * 1000, 100vw)" max-height="max(0px, (100vw - 1899px) * 1000000)" margin-left="clamp(0px, (100vw - 1899px) * 1000, ui.space-24)" overflow="hidden" inert=(width < 1900)
+            column class=MosaicCard
+              text "Distribute. Track. Grow." font-size="ui.text-2xl" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Explore your local demo workspace." color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              Button(id="home-start", label="Get started", variant="primary", disabled=false, press=openDialog)
+            column class=MosaicCard
+              text "Notification Settings" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              Switch(id="home-notify", label="Email notifications", checked=compact, disabled=false, reduced=reduced, change=toggle)
+            column class=MosaicCard
+              text "Power Usage" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              svg width="100%" height=120 viewBox="0 0 280 120" role="img" aria-label="Demo power usage by day"
+                for value, index in [30, 45, 75, 50, 100, 65, 88] key=index
+                  rect x=(index * 40) y=(120 - value) width=28 height=value rx="ui.radius-sm" fill="ui.chart-1"
+      column id="home-actions-panel" popover="auto" role="menu" aria-label="Quick actions" position="absolute" left="auto" top="auto" position-area="bottom span-left" position-try-fallbacks="flip-block, flip-inline" margin="ui.space-4" width="14rem" max-width="calc(100vw - ui.space-32)" padding="ui.space-4" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-lg" background-color="ui.surface" color="ui.foreground" box-shadow="ui.shadow-menu"
+        text "Quick Actions" font-size="ui.text-xs" font-weight="ui.weight-medium" padding="ui.space-6 ui.space-8" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        for item, index in quickItems key=item
+          button class=Hit id=("home-action-" + index.toString()) role="menuitem" tabindex=-1 press=quickAction(item) key=quickKeys(index) border="0" background-color="transparent" color="ui.foreground" padding="ui.space-7 ui.space-8" text-align="left" border-radius="ui.radius-sm" font-size="ui.text-caption" cursor="pointer"
             :hover
               background-color="ui.muted"
-            text item
-      dialog id="home-confirmation" closedby="any" aria-label="Allow accessory to connect?" width="min(400px, calc(100vw - 32px))" padding=24 border="1px solid ui.border" border-radius=24 background-color="ui.surface" color="ui.foreground" font-family="Geist"
-        column gap=20
-          text "Allow accessory to connect?" font-size=20 font-weight=600
-          text "Do you want to allow the sample USB accessory to connect?" color="ui.muted-foreground" font-size=14
-          row gap=8 justify-content="flex-end"
-            Button(id="home-deny", label="Don't allow", variant="outline", disabled=false, press=closeDialog)
-            Button(id="home-allow", label="Allow", variant="primary", disabled=false, press=closeDialog)
+            text item font-family=uiFontFamily(uiFont) data-rightui-font="body"

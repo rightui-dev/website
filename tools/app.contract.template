@@ -1,9 +1,17 @@
+use uiFontFamily from "@rightui/ui"
 font "Geist"
   100 900 = "assets/fonts/Geist.ttf"
-use Viewport, CatalogEntry, Page, SourceFile, ChartEntry, CompatibilityReport from "./components/shapes.contract"
-use Hit, QuietLink, Heading, Paragraph from "./components/styles.contract"
+  100 900 italic = "assets/fonts/Geist-Italic.ttf"
+font "Newsreader"
+  200 800 = "assets/fonts/Newsreader.ttf"
+  200 800 italic = "assets/fonts/Newsreader-Italic.ttf"
+use Viewport, CatalogEntry, Page, SourceFile, ChartEntry, BlockEntry, CompatibilityReport, ThemeExport from "./components/shapes.contract"
+use Hit, QuietLink, Heading, Paragraph, Button, ModalFrame, PopoverFrame, DisclosureButton, ButtonContent, InputControl, InputStyle, DialogFrame, MarkdownDocument, parseMarkdown from "@rightui/ui"
+use ThemePage, QuickThemeControls from "./components/themes.contract"
+use PageInsets from "./components/page-insets.contract"
 use Code from "./components/code.contract"
 use Hero from "./components/hero.contract"
+use TryApp, TryIPhone from "./components/try-app.contract"
 use BlockPreview, BlockFrame from "./components/blocks.contract"
 use ComponentDemo from "./generated/demos.contract"
 use ChartDemo from "./generated/charts.contract"
@@ -14,7 +22,7 @@ use PackageCommands from "./components/package-commands.contract"
 use AIInstallPrompt from "./components/ai-install-prompt.contract"
 use Compatibility from "./components/compatibility.contract"
 use ExactOverview from "./components/exact-overview.contract"
-use GitHubIcon, NpmIcon, ThemeIcon from "./components/header-icons.contract"
+use GitHubIcon, NpmIcon, ThemeIcon, SearchIcon from "./components/header-icons.contract"
 // HOME_IMPORT
 routes nav
 // GENERATED_ROUTES
@@ -23,20 +31,47 @@ component RightUI
   resource catalog = loadCatalog() as shape CatalogEntry[] else empty()
   resource aiCatalog = loadAI() as shape CatalogEntry[] else empty()
   resource charts = loadCharts() when top(nav).name == "area" as shape ChartEntry[] else empty()
-  resource blocks = loadBlocks() when top(nav).name.startsWith("blocks") as shape ChartEntry[] else empty()
+  resource blocks = loadBlocks() when top(nav).name.startsWith("blocks") as shape BlockEntry[] else empty()
   resource page = loadPage(top(nav).name) as shape Page else empty()
   resource source = loadSource(top(nav).name == "source" ? searchParam(top(nav), "file") : page.source) when top(nav).name == "source" or top(nav).name.startsWith("component_") as shape SourceFile else empty()
   resource compatibility = loadCompatibility() when top(nav).name == "compatibility" as shape CompatibilityReport else empty()
+  resource themeExport = loadTheme(preset, density, radius, fontChoice) when top(nav).name == "themes" as shape ThemeExport else empty()
   state theme = "system" persist
+  state uiPreset = "neutral" persist
+  state uiDensity = "comfortable" persist
+  state uiRadius = "default" persist
+  state uiFont = "sans" persist
   state menu = false
+  state themeReady = false
+  state themeOpen = false
+  state themeEpoch = 0
+  state searchOpen = false
+  state homeDialog = false
   state query = ""
   state activeHit = 0
   state showCode = false
+  state copiedId = ""
+  state copiedText = ""
+  state copyVersion = 0
   state demoTime = 0
   state demoUntil = 0
   provide
+    uiFont = fontChoice
+    uiCopiedId = copiedId
+    uiCopiedText = copiedText
+    uiCopyCode = copyCode
     rightuiDemoTime = demoTime
     rightuiRunDemo = runDemo
+  action copyCode(id: string, text: string)
+    copyText(text)
+    copiedId = id
+    copiedText = text
+    copyVersion = copyVersion + 1
+  action clearCopyFeedback
+    copiedId = ""
+    copiedText = ""
+  task clearCopy when copiedId != "" key=copyVersion
+    after(3000, clearCopyFeedback)
   action runDemo(duration: number)
     demoUntil = max(demoUntil, demoTime + duration)
   action tickDemo
@@ -44,45 +79,127 @@ component RightUI
   task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace")
     every(32, tickDemo)
   state headerHeight = 64
+  state titlebarHeight = 32
+  state forwardLocations: string[] = []
+  action measureTitlebar(w: number, h: number)
+    titlebarHeight = h
   action measureHeader(w: number, h: number)
     headerHeight = h
   // CSS viewport lengths draw the shell before activation; measured width gates focus and demos.
+  derive nativeApp = {{NATIVE_APP}}
+  derive nativeMac = {{NATIVE_MAC}}
+  derive chromeHeight = nativeMac ? titlebarHeight : 0
+  derive canGoBack = stack(nav).length > 1 or page.kind == "view"
+  derive canGoForward = forwardLocations.length > 0
   derive mobile = viewport.width < 1024
   derive doc = ["how_exact", "installation", "typescript", "rust", "theming", "registry", "components", "compatibility"].includes(top(nav).name) or top(nav).name.startsWith("component_") or top(nav).name.startsWith("ai_")
   derive searchEntries = [CatalogEntry(slug="how_exact", title="How Exact works", description="Understand Contract, RightUI, TypeScript and Rust", href="/docs/how-exact-works"), CatalogEntry(slug="compatibility", title="Compatibility", description="Platform validation for every component", href="/docs/compatibility"), CatalogEntry(slug="installation", title="Installation", description="Set up rightui", href="/docs/installation"), CatalogEntry(slug="typescript", title="TypeScript", description="TypeScript data integration", href="/docs/installation/typescript"), CatalogEntry(slug="rust", title="Rust", description="Rust data integration", href="/docs/installation/rust"), CatalogEntry(slug="theming", title="Theming", description="Theme tokens and dark mode", href="/docs/theming"), CatalogEntry(slug="blocks", title="Blocks", description="Ready-to-use layouts", href="/blocks"), CatalogEntry(slug="area", title="Area Charts", description="Charts and graphs", href="/charts/area")].concat(catalog).concat(aiCatalog)
   derive matches = searchEntries.filter(c => (c.title + " " + c.description).toLowerCase().includes(query.toLowerCase())).slice(0, 10)
   derive themeQuery = searchParam(top(nav), "theme")
-  derive scheme = themeQuery == "dark" or themeQuery == "light" ? themeQuery : (theme == "dark" or theme == "light" ? theme : "system")
+  derive scheme = ["dark", "light", "system"].includes(themeQuery) ? themeQuery : (theme == "dark" or theme == "light" ? theme : "system")
   derive effectiveTheme = scheme == "system" ? (viewport.prefersColorScheme == "dark" ? "dark" : "light") : scheme
-  task theming key=scheme
+  derive presetQuery = searchParam(top(nav), "preset")
+  derive densityQuery = searchParam(top(nav), "density")
+  derive radiusQuery = searchParam(top(nav), "radius")
+  derive fontQuery = searchParam(top(nav), "font")
+  derive preset = {{THEME_PRESETS}}.includes(presetQuery) ? presetQuery : ({{THEME_PRESETS}}.includes(uiPreset) ? uiPreset : "neutral")
+  derive density = ["comfortable", "compact"].includes(densityQuery) ? densityQuery : (uiDensity == "compact" ? "compact" : "comfortable")
+  derive radius = ["default", "sharp", "round"].includes(radiusQuery) ? radiusQuery : (["default", "sharp", "round"].includes(uiRadius) ? uiRadius : "default")
+  derive fontChoice = {{THEME_FONTS}}.includes(fontQuery) ? fontQuery : ({{THEME_FONTS}}.includes(uiFont) ? uiFont : "sans")
+  derive themeSearch = `theme=${effectiveTheme}&preset=${preset}&density=${density}&radius=${radius}&font=${fontChoice}`
+  task theming key=`${scheme}/${preset}/${density}/${radius}/${fontChoice}`
     change(applyTheme)
   action applyTheme
     setScheme(scheme)
-  action toggleTheme
-    let next = effectiveTheme == "dark" ? "light" : "dark"
-    if themeQuery == "dark" or themeQuery == "light"
+    setMode("ui-preset", preset)
+    setMode("ui-density", density)
+    setMode("ui-radius", radius)
+    themeReady = true
+  action chooseTheme(p: string, d: string, r: string, f: string)
+    uiPreset = p
+    uiDensity = d
+    uiRadius = r
+    uiFont = f
+    let url = top(nav).url
+    let hash = fragment(top(nav))
+    let queryAt = url.indexOf("?")
+    let path = queryAt < 0 ? url : url.slice(0, queryAt)
+    let remaining = queryAt < 0 ? "" : url.slice(queryAt + 1).split("&").filter(part => not ["preset", "density", "radius", "font"].includes((match part.split("=").at(0) { case some(k) => k, case none => "" }))).join("&")
+    nav = replace(nav, path + `?preset=${p}&density=${d}&radius=${r}&font=${f}` + (remaining == "" ? "" : "&" + remaining) + (hash == "" ? "" : "#" + hash))
+    setMode("ui-preset", p)
+    setMode("ui-density", d)
+    setMode("ui-radius", r)
+  action chooseScheme(next: string)
+    theme = next
+    if ["dark", "light", "system"].includes(themeQuery)
       let url = top(nav).url
       let hash = fragment(top(nav))
       let queryAt = url.indexOf("?")
       let remainingQuery = url.slice(queryAt + 1).split("&").filter(part => part != "theme" and not part.startsWith("theme=")).join("&")
       nav = replace(nav, url.slice(0, queryAt) + "?theme=" + next + (remainingQuery == "" ? "" : "&" + remainingQuery) + (hash == "" ? "" : "#" + hash))
-    else
-      theme = next
     setScheme(next)
+  action chooseQuickPreset(value: string)
+    chooseTheme(value, density, radius, fontChoice)
+  action chooseQuickFont(value: string)
+    chooseTheme(preset, density, radius, value)
+  action chooseQuickRadius(value: string)
+    chooseTheme(preset, density, value, fontChoice)
+  action toggleThemeMenu
+    if themeOpen
+      themeOpen = false
+    else
+      menu = false
+      searchOpen = false
+      homeDialog = false
+      themeEpoch = themeEpoch + 1
+      themeOpen = true
+      showPopover("theme-settings", source="theme-toggle")
+      focus("quick-scheme-" + ["light", "dark", "system"].indexOf(scheme).toString())
+  action closeThemeMenu(epoch: number)
+    if epoch == themeEpoch
+      themeOpen = false
   action follow(url: string)
+    themeOpen = false
     query = ""
     activeHit = 0
     menu = false
     showCode = false
-    close("site-search")
-    nav = go(nav, url)
+    searchOpen = false
+    homeDialog = false
+    if url.startsWith("/") and not url.startsWith("//")
+      let target = go(nav, url)
+      let entry = top(target)
+      let next = entry.url
+      let extra = nativeMac and stack(target).length < stack(nav).length ? "" : (searchParam(entry, "theme") == "" ? "&theme=" + scheme : "") + (searchParam(entry, "preset") == "" ? "&preset=" + preset : "") + (searchParam(entry, "density") == "" ? "&density=" + density : "") + (searchParam(entry, "radius") == "" ? "&radius=" + radius : "") + (searchParam(entry, "font") == "" ? "&font=" + fontChoice : "")
+      let hash = fragment(entry)
+      let location = next + (next.includes("?") ? extra : (extra == "" ? "" : "?" + extra.slice(1))) + (hash == "" ? "" : "#" + hash)
+      if nativeMac
+        let destination = go(nav, location)
+        if stack(destination).length < stack(nav).length
+          forwardLocations = stack(nav).slice(stack(destination).length).map(e => e.url + (fragment(e) == "" ? "" : "#" + fragment(e))).concat(forwardLocations)
+        else if location != top(nav).url + (fragment(top(nav)) == "" ? "" : "#" + fragment(top(nav)))
+          forwardLocations = (match forwardLocations.at(0) { case some(ahead) => ahead == location, case none => false }) ? forwardLocations.slice(1) : []
+      nav = go(nav, location)
+    else
+      nav = go(nav, url)
   action toggleMenu
+    themeOpen = false
     menu = not menu
+  action openHomeDialog
+    themeOpen = false
+    searchOpen = false
+    homeDialog = true
+    focus("home-confirmation-cancel")
+  action closeHomeDialog
+    homeDialog = false
+    focus("home-dialog")
   action openSearch
-    showModal("site-search")
+    themeOpen = false
+    homeDialog = false
+    searchOpen = true
     focus("search-input")
   action closeSearch
-    close("site-search")
+    searchOpen = false
     focus("search-open")
   action search(v: string)
     query = v
@@ -101,265 +218,340 @@ component RightUI
         case none
           activeHit = 0
   action keys(k: string, e: KeyboardEvent)
+    if nativeMac and e.metaKey and k == "["
+      preventDefault()
+      navigateBack()
+    if nativeMac and e.metaKey and k == "]"
+      preventDefault()
+      navigateForward()
     if (e.metaKey or e.ctrlKey) and k.toLowerCase() == "k"
       preventDefault()
       openSearch()
+  action returnToBlocks
+    if stack(nav).length > 1
+      nav = back(nav)
+    else
+      nav = replace(nav, "/blocks?" + themeSearch)
+  action navigateBack
+    if stack(nav).length > 1
+      forwardLocations = [top(nav).url + (fragment(top(nav)) == "" ? "" : "#" + fragment(top(nav)))].concat(forwardLocations)
+      themeOpen = false
+      menu = false
+      searchOpen = false
+      homeDialog = false
+      showCode = false
+      nav = back(nav)
+    else if page.kind == "view"
+      follow("/blocks")
+  action navigateForward
+    match forwardLocations.at(0)
+      case some(location)
+        follow(location)
+      case none
+        forwardLocations = []
+  action openWebsite
+    openURL("https://rightui.dev" + top(nav).url + (fragment(top(nav)) == "" ? "" : "#" + fragment(top(nav))))
   action toggleCode
     showCode = not showCode
   view
-    view id="site-shell" testId="site-shell" navigationKey=`${top(nav).id}` navigationBack="back" navigate=follow key=keys width="100%" height="100%" background-color="ui.background" color="ui.foreground" font-family="Geist, system-ui, sans-serif" -webkit-font-smoothing="antialiased"
+    view id="site-shell" testId="site-shell" data-rightui-font-choice=fontChoice data-rightui-font-ready=themeReady navigationKey=`${top(nav).id}` navigationBack="back" navigate=follow key=keys viewport-fit=(nativeMac ? "cover" : "auto") width="100%" height="100%" background-color="ui.background" color="ui.foreground" -webkit-font-smoothing="antialiased"
+      if nativeMac
+        row id="mac-titlebar" testId="mac-titlebar" resize=measureTitlebar position="absolute" top=0 left=0 right=0 height="max(32px, env(titlebar-area-height, 0px))" padding-left="env(titlebar-area-x, 0px)" padding-right="ui.space-8" box-sizing="border-box" align-items="center" z-index=60
+          row gap="ui.space-2" align-items="center"
+            button id="back" testId="mac-back" class=Hit press=navigateBack disabled=(not canGoBack) aria-label="Go back" title="Go back" width="ui.space-28" height="ui.space-28" padding="ui.space-0" display="flex" align-items="center" justify-content="center"
+              svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true
+                path d="m12 5-7 7 7 7m-7-7h14"
+            button testId="mac-forward" class=Hit press=navigateForward disabled=(not canGoForward) aria-label="Go forward" title="Go forward" width="ui.space-28" height="ui.space-28" padding="ui.space-0" display="flex" align-items="center" justify-content="center"
+              svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true
+                path d="m12 5 7 7-7 7m7-7H5"
+          view flex=1
+          button testId="mac-website" class=Hit press=openWebsite aria-label="Open this page on rightui.dev" title="Open in browser" width="ui.space-28" height="ui.space-28" padding="ui.space-0" display="flex" align-items="center" justify-content="center"
+            svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" aria-hidden=true
+              circle cx=12 cy=12 r=9
+              path d="M3 12h18M12 3c5 5 5 13 0 18M12 3c-5 5-5 13 0 18"
+          row position="absolute" left=150 right=150 top=0 bottom=0 justify-content="center" align-items="center" pointer-events="none" min-width=0
+            text (page.kind == "home" ? "rightui" : page.title) testId="mac-title" font-size="ui.text-caption" font-weight="ui.weight-medium" font-family=uiFontFamily(fontChoice) data-rightui-font="body" white-space="nowrap" overflow="hidden" text-overflow="ellipsis"
+      view display="none" aria-hidden=true
+        text "Sans" id="rightui-font-sans" font-family="ui.font-sans"
+        text "Serif" id="rightui-font-serif" font-family="ui.font-serif"
+        text "Mono" id="rightui-font-mono" font-family="ui.font-mono"
+        text "Theme" id="rightui-font-theme" font-family="ui.font-body"
       for e in stack(nav).slice(-1) key=e.id
-        column navigationKey=`${e.id}` navigationScroll="page-content" position="absolute" inset=0 navigationBar="none" padding-top=(top(nav).name.startsWith("view_") ? 0 : headerHeight) padding-left=(doc ? "max(24px, calc(clamp(0px, (100vw - 1023px) * 1000, 20rem) + max(0px, (100vw - 96rem) / 2)))" : "0px") padding-right=(doc ? "max(24px, calc((100vw - 96rem) / 2 + 24px))" : "0px") box-sizing="border-box"
+        column inert=(searchOpen or homeDialog) navigationKey=`${e.id}` navigationScroll="page-content" position="absolute" inset=0 navigationBar="none" padding-top=(chromeHeight + (top(nav).name.startsWith("view_") ? 0 : headerHeight)) box-sizing="border-box"
           if e.name == "notfound"
             head title="Page not found — rightui" status=404 robots="noindex, follow"
           else
             head title=(page.title + " — rightui") description=page.description canonical=(page.kind == "home" ? "/" : page.markdownHref.slice(0, -3)) image="https://rightui.dev/assets/brand/rightui-og.png" robots=(page.kind == "view" or page.kind == "source" ? "noindex, follow" : "index, follow, max-image-preview:large")
-          scroll id="page-content" testId="page-content" flex=1 min-height=0 overflow-x="hidden"
-            if page.kind == "home"
-              main
-                Hero(title="The Foundation for your Design System", description="Composable, accessible components with thoughtful defaults. Build your own Exact component library with code you can customize, extend, and make your own.", primary="Get Started", primaryHref="/docs/installation", secondary="View Components", secondaryHref="/docs/components")
-                row testId="made-with-exact" padding="0 24px 24px" gap=4 justify-content="center" flex-wrap="wrap" color="ui.muted-foreground" font-size="0.8125rem"
-                  text "This site is 100% made with"
-                  link href="https://github.com/expo/exact" target="_blank" rel="noopener noreferrer" class=QuietLink text-decoration="underline"
-                    text "Exact"
-                // HOME_CARDS
-            else if doc
-              row padding="calc(32px + clamp(0px, (100vw - 1023px) * 1000, 16px)) 0 64px" gap=0 align-items="flex-start" box-sizing="border-box"
-                main id="docs-article" testId="docs-article" flex=1 min-width=0 max-width="max(40rem, calc((1280px - 100vw) * 1000))"
-                  column gap=24
-                    column gap=12
-                      row align-items="center" justify-content="space-between" gap=16 flex-wrap="wrap"
-                        h1 class=Heading testId="page-title" flex="1 1 12rem"
-                          text page.title
-                        DocActions(title=page.title, markdown=page.markdown, markdownHref=page.markdownHref)
-                      text page.description color="ui.muted-foreground" font-size="1rem" line-height=1.5
-                    if page.kind == "compatibility"
-                      Compatibility(report=compatibility)
-                    else if top(nav).name == "how_exact"
-                      ExactOverview(width=viewport.width)
-                    else if page.kind == "index"
-                      h2 margin="12px 0 0" font-size="1.25rem" font-weight=600
-                        text "All Components"
-                      view display="grid" grid-template-columns=(viewport.width < 600 ? "1fr 1fr" : "1fr 1fr 1fr") gap="12px 24px"
-                        for item in catalog key=item.slug
-                          link href=item.href class=Hit padding="8px 12px" font-size="0.9375rem"
-                            text item.title
-                    else if page.kind == "ai-index"
-                      for section in page.sections key=section.id
-                        column gap=12 id=section.id
-                          h2 font-size="1.25rem" font-weight=600 margin=0
-                            text section.title
-                          text section.text class=Paragraph
-                          if section.packageCommands.length > 0
-                            PackageCommands(id="commands-" + section.id, commands=section.packageCommands, reduced=viewport.prefersReducedMotion)
-                          else if section.code != ""
-                            Code(code=section.code, title=section.title, language=section.language, compact=false)
-                      view display="grid" grid-template-columns=(viewport.width < 700 ? "1fr" : "1fr 1fr") gap=16
-                        for item in aiCatalog key=item.slug
-                          link href=item.href class=Hit padding=24 border="1px solid ui.border" display="flex" flex-direction="column" align-items="flex-start" gap=8
-                            text item.title font-weight=500
-                            text item.description color="ui.muted-foreground" line-height=1.5 font-size="0.875rem"
-                    else if page.kind == "component" or page.kind == "ai"
-                      column border="1px solid ui.border" border-radius="ui.radius-2xl" overflow="hidden"
-                        view padding="calc(20px + clamp(0px, (100vw - 599px) * 1000, 20px))" min-height=288 width="100%" box-sizing="border-box" display="flex" align-items="center" justify-content="center" overflow-x="auto"
-                          if page.kind == "ai"
-                            AIDemo(slug=page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
-                          else
-                            ComponentDemo(slug=page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
-                        if showCode
-                          Code(code=page.code, title=(page.kind == "ai" ? page.source : "examples/" + page.slug + ".contract"), language="Contract", compact=true)
-                        else
-                          row justify-content="center" border-top="1px solid ui.border" background-color="ui.sidebar" padding=16
-                            button class=Hit press=toggleCode padding="6px 12px" border="1px solid ui.border" background-color="ui.background"
-                              text "View Code"
-                      if page.kind == "component"
-                        Installation(id="install-" + page.slug, version="{{UI_VERSION}}", sourcePath=page.source, sourceCode=source.code, importCode=page.importCode, reduced=viewport.prefersReducedMotion)
-                      column gap=16 id="usage"
-                        h2 font-size="1.25rem" font-weight=600 margin=0
-                          text "Usage"
-                        text page.usage class=Paragraph
-                        row gap=12 flex-wrap="wrap"
-                          link href=("/source?file=" + (page.kind == "ai" ? page.source : "examples/" + page.slug + ".contract")) class=Hit padding="6px 10px" background-color="ui.muted"
-                            text "Example source ↗"
-                          link href=("/source?file=" + page.source) class=Hit padding="6px 10px" border="1px solid ui.border"
-                            text "Component source ↗"
-                          if page.kind == "ai"
-                            link href="/docs/ai-elements#demo-clock" class=Hit padding="6px 10px" border="1px solid ui.border"
-                              text "Demo runtime ↗"
-                      if page.keyboard != ""
-                        column gap=12 id="keyboard"
-                          h2 font-size="1.25rem" font-weight=600 margin=0
-                            text "Keyboard"
-                          text page.keyboard class=Paragraph
-                      if page.api.length > 0
-                        column gap=16 id="api"
-                          h2 font-size="1.25rem" font-weight=600 margin=0
-                            text "API Reference"
-                          text "Properties from the component source. State lives in your component; actions receive the updated value." class=Paragraph
-                          for prop in page.api key=prop.name
-                            row gap=16 border-bottom="1px solid ui.border" padding="10px 0" flex-wrap="wrap"
-                              text prop.name flex="1 1 13rem" font-size="0.8125rem" font-family="monospace" overflow-wrap="anywhere"
-                              text prop.type flex="1 1 8rem" color="ui.muted-foreground" font-family="monospace" font-size="0.8125rem" overflow-wrap="anywhere"
-                    else
-                      for section in page.sections key=section.id
-                        column gap=16 id=section.id testId=section.id padding-top=16
-                          if section.id == "ai-setup"
-                            AIInstallPrompt(title=section.title, description=section.text, prompt=section.code)
-                          else
-                            h2 font-size="1.25rem" font-weight=600 letter-spacing="-0.025em" margin=0
-                              text section.title
-                            if section.text != ""
-                              text section.text class=Paragraph markup="markdown"
+          if nativeApp and not nativeMac and page.kind == "view"
+            row padding="ui.space-8 ui.space-16" background-color="ui.background" align-items="center" flex-shrink=0
+              button id="back" testId="block-back" class=Hit press=returnToBlocks display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8"
+                svg width=16 height=16 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
+                  path d="m12 5-7 7 7 7m-7-7h14"
+                text "Back" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+          PageInsets(docs=doc)
+            scroll id="page-content" testId="page-content" flex=1 min-height=0 overflow-x="hidden"
+              if page.kind == "home"
+                main
+                  Hero(title="The Foundation for your Design System", description="Composable, accessible components with thoughtful defaults. Build your own Exact component library with code you can customize, extend, and make your own.", primary="Get Started", primaryHref="/docs/installation", secondary="View Components", secondaryHref="/docs/components")
+                  row testId="made-with-exact" padding="ui.space-0 ui.space-24 calc(ui.space-64 + clamp(0px, (100vw - 767px) * 1000, ui.space-32))" gap="ui.space-4" justify-content="center" flex-wrap="wrap" color="ui.muted-foreground" font-size="ui.text-caption"
+                    text "This site is 100% made with" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    link href="https://github.com/expo/exact" target="_blank" rel="noopener noreferrer" class=QuietLink text-decoration="underline"
+                      text "Exact" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                  // HOME_CARDS
+              else if page.kind == "try"
+                TryApp()
+              else if page.kind == "try-iphone"
+                TryIPhone()
+              else if page.kind == "themes"
+                ThemePage(preset=preset, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, density=density, radius=radius, font=fontChoice, code=(current(themeExport) ? themeExport.code : ""), reduced=viewport.prefersReducedMotion, choose=chooseTheme)
+              else if doc
+                row padding="calc(ui.space-32 + clamp(0px, (100vw - 1023px) * 1000, ui.space-16)) 0 ui.space-64" gap="ui.space-0" align-items="flex-start" box-sizing="border-box"
+                  main id="docs-article" testId="docs-article" flex=1 min-width=0 max-width="max(40rem, calc((1280px - 100vw) * 1000))"
+                    column gap="ui.space-24"
+                      column gap="ui.space-12"
+                        row align-items="center" justify-content="space-between" gap="ui.space-16" flex-wrap="wrap"
+                          h1 class=Heading testId="page-title" flex="1 1 12rem"
+                            text page.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                          DocActions(title=page.title, markdown=page.markdown, markdownHref=page.markdownHref)
+                        text page.description color="ui.muted-foreground" font-size="ui.text-base" line-height="ui.leading-normal" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      if page.kind == "compatibility"
+                        Compatibility(report=compatibility)
+                      else if top(nav).name == "how_exact"
+                        ExactOverview(width=viewport.width)
+                      else if page.kind == "index"
+                        h2 margin="ui.space-12 ui.space-0 ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+                          text "All Components" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        view display="grid" grid-template-columns=(viewport.width < 600 ? "1fr 1fr" : "1fr 1fr 1fr") gap="ui.space-12 ui.space-24"
+                          for item in catalog key=item.slug
+                            link href=item.href class=Hit padding="ui.space-8 ui.space-12" font-size="ui.text-md"
+                              text item.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      else if page.kind == "ai-index"
+                        for section in page.sections key=section.id
+                          column gap="ui.space-12" id=section.id
+                            h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
+                              text section.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            text section.text class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                             if section.packageCommands.length > 0
                               PackageCommands(id="commands-" + section.id, commands=section.packageCommands, reduced=viewport.prefersReducedMotion)
                             else if section.code != ""
-                              Code(code=section.code, title=section.language, language=section.language, compact=false)
-                    row border-top="1px solid ui.border" padding-top=24 margin-top=24 gap=16 justify-content="space-between"
-                      link href="/docs/installation" class=QuietLink
-                        text "← Get started"
-                      link href="/docs/components" class=QuietLink
-                        text "All components →"
-                nav id="docs-toc" aria-label="On this page" margin-left="clamp(0px, (100vw - 1279px) * 1000, 64px)" width="clamp(0px, (100vw - 1279px) * 1000, 12rem)" min-width=0 max-height="clamp(0px, (100vw - 1279px) * 1000, 100vh)" overflow="hidden" inert=(viewport.width < 1280) flex-shrink=0 position="sticky" top=24 display="flex" flex-direction="column" gap=12
-                  text "On This Page" font-size="0.8125rem" font-weight=500
-                  if page.kind == "component" or page.kind == "ai"
-                    if page.kind == "component"
-                      link href="#installation" class=QuietLink
-                        text "Installation"
-                    link href="#usage" class=QuietLink
-                      text "Usage"
-                    if page.keyboard != ""
-                      link href="#keyboard" class=QuietLink
-                        text "Keyboard"
-                    if page.api.length > 0
-                      link href="#api" class=QuietLink
-                        text "API Reference"
-                  else
-                    for section in page.sections key=section.id
-                      link href=("#" + section.id) class=QuietLink
-                        text section.title
-            else if page.kind == "blocks"
-              main
-                Hero(title=page.title, description=page.description, primary="Browse Blocks", primaryHref="#blocks", secondary="View Components", secondaryHref="/docs/components")
-                column max-width="96rem" margin="0 auto" padding="0 calc(16px + clamp(0px, (100vw - 599px) * 1000, 24px)) calc(64px + clamp(0px, (100vw - 599px) * 1000, 16px))" gap=40
-                  nav aria-label="Block categories" display="flex" gap=8 padding="24px 0" id="blocks"
-                    for category in ["Featured", "Sidebar", "Login", "Signup"] key=category
-                      link href=(category == "Featured" ? "/blocks" : "/blocks/" + category.toLowerCase()) class=Hit padding="4px 12px" color=(page.slug == category.toLowerCase() ? "ui.foreground" : "ui.muted-foreground")
-                        text category font-size="1rem"
-                  for block in blocks.filter(b => page.slug == "featured" ? ["dashboard-01", "sidebar-07", "sidebar-03", "login-03", "login-04"].includes(b.slug) : b.slug.startsWith(page.slug)) key=block.slug
-                    BlockFrame(slug=block.slug, title=block.title, code=block.code, theme=effectiveTheme, width=viewport.width)
-            else if page.kind == "charts"
-              main
-                Hero(title=page.title, description=page.description, primary="Browse Charts", primaryHref="#charts", secondary="Documentation", secondaryHref="/docs/components/chart")
-                column max-width="96rem" margin="0 auto" padding="0 calc(16px + clamp(0px, (100vw - 599px) * 1000, 24px)) calc(64px + clamp(0px, (100vw - 599px) * 1000, 16px))" gap=24 id="charts"
-                  row gap=16 padding="24px 0"
-                    text "Area Charts" font-size="1rem" font-weight=500
-                    link href="/docs/components/chart" class=QuietLink
-                      text "More chart components →"
-                  view display="grid" grid-template-columns=(viewport.width < 768 ? "1fr" : viewport.width < 1100 ? "1fr 1fr" : "1fr 1fr 1fr") gap=40
-                    for chart in charts key=chart.slug
-                      column min-width=0 grid-column=(chart.fullWidth ? "1 / -1" : "auto") gap=12
-                        row justify-content="space-between" align-items="center" padding="0 8px"
-                          text chart.title font-size="0.8125rem" color="ui.muted-foreground"
-                          link href=("/source?file=" + chart.source) class=Hit padding="4px 8px"
-                            text "View Code" font-size="0.75rem"
-                        ChartDemo(slug=chart.slug, width=(chart.fullWidth ? viewport.width - 80 : viewport.width < 768 ? viewport.width - 32 : viewport.width < 1100 ? (viewport.width - 120) / 2 : (min(viewport.width, 1536) - 160) / 3), reduced=viewport.prefersReducedMotion)
-            else if page.kind == "view"
-              BlockPreview(slug=page.slug, width=viewport.width, reduced=viewport.prefersReducedMotion)
-            else if page.kind == "source"
-              main max-width="68.75rem" margin="0 auto" padding="48px 24px 80px"
-                column gap=24
+                              Code(id="doc-code-" + section.id, code=section.code, title=section.title, language=section.language, compact=false)
+                        view display="grid" grid-template-columns=(viewport.width < 700 ? "1fr" : "1fr 1fr") gap="ui.space-16"
+                          for item in aiCatalog key=item.slug
+                            link href=item.href class=Hit padding="ui.space-24" border-width="ui.border-width" border-style="solid" border-color="ui.border" display="flex" flex-direction="column" align-items="flex-start" gap="ui.space-8"
+                              text item.title font-weight="ui.weight-medium" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                              text item.description color="ui.muted-foreground" line-height="ui.leading-normal" font-size="ui.text-sm" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      else if page.kind == "component" or page.kind == "ai"
+                        column border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-2xl" overflow="hidden"
+                          view padding="calc(ui.space-20 + clamp(0px, (100vw - 599px) * 1000, ui.space-20))" min-height=288 width="100%" box-sizing="border-box" display="flex" align-items="center" justify-content="center" overflow-x="auto"
+                            if page.kind == "ai"
+                              AIDemo(slug=page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
+                            else
+                              ComponentDemo(slug=page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
+                          if showCode
+                            Code(id="example-code-" + page.slug, code=page.code, title=(page.kind == "ai" ? page.source : "examples/" + page.slug + ".contract"), language="Contract", compact=true)
+                          else
+                            row justify-content="center" border-top-width="ui.border-width" border-top-style="solid" border-top-color="ui.border" background-color="ui.sidebar" padding="ui.space-16"
+                              ButtonContent(id="view-example-code", label="View Code", variant="outline", size="sm", disabled=false, press=toggleCode)
+                                text "View Code" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        if page.kind == "component"
+                          Installation(id="install-" + page.slug, version="{{UI_VERSION}}", sourcePath=page.source, sourceCode=source.code, importCode=page.importCode, reduced=viewport.prefersReducedMotion)
+                        column gap="ui.space-16" id="usage"
+                          h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
+                            text "Usage" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                          text page.usage class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                          row gap="ui.space-12" flex-wrap="wrap"
+                            link href=("/source?file=" + (page.kind == "ai" ? page.source : "examples/" + page.slug + ".contract")) class=Hit padding="ui.space-6 ui.space-10" background-color="ui.muted"
+                              text "Example source ↗" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            link href=("/source?file=" + page.source) class=Hit padding="ui.space-6 ui.space-10" border-width="ui.border-width" border-style="solid" border-color="ui.border"
+                              text "Component source ↗" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            if page.kind == "ai"
+                              link href="/docs/ai-elements#demo-clock" class=Hit padding="ui.space-6 ui.space-10" border-width="ui.border-width" border-style="solid" border-color="ui.border"
+                                text "Demo runtime ↗" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        if page.keyboard != ""
+                          column gap="ui.space-12" id="keyboard"
+                            h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
+                              text "Keyboard" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            text page.keyboard class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        if page.api.length > 0
+                          column gap="ui.space-16" id="api"
+                            h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
+                              text "API Reference" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            text "Properties from the component source. State lives in your component; actions receive the updated value." class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            for prop in page.api key=prop.name
+                              row gap="ui.space-16" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" padding="ui.space-10 ui.space-0" flex-wrap="wrap"
+                                text prop.name flex="1 1 13rem" font-size="ui.text-caption" font-family="ui.font-code" overflow-wrap="anywhere"
+                                text prop.type flex="1 1 8rem" color="ui.muted-foreground" font-family="ui.font-code" font-size="ui.text-caption" overflow-wrap="anywhere"
+                      else
+                        for section in page.sections key=section.id
+                          column gap="ui.space-16" id=section.id testId=section.id padding-top="ui.space-16"
+                            if section.id == "ai-setup"
+                              AIInstallPrompt(title=section.title, description=section.text, prompt=section.code)
+                            else
+                              h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" letter-spacing="ui.tracking-heading" margin="ui.space-0"
+                                text section.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                              if section.text != ""
+                                MarkdownDocument(id="doc-text-" + section.id, blocks=parseMarkdown(section.text))
+                              if section.packageCommands.length > 0
+                                PackageCommands(id="commands-" + section.id, commands=section.packageCommands, reduced=viewport.prefersReducedMotion)
+                              else if section.code != ""
+                                Code(id="doc-code-" + section.id, code=section.code, title=section.language, language=section.language, compact=false)
+                      row border-top-width="ui.border-width" border-top-style="solid" border-top-color="ui.border" padding-top="ui.space-24" margin-top="ui.space-24" gap="ui.space-16" justify-content="space-between"
+                        link href="/docs/installation" class=QuietLink
+                          text "← Get started" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        link href="/docs/components" class=QuietLink
+                          text "All components →" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                  nav id="docs-toc" aria-label="On this page" margin-left="clamp(0px, (100vw - 1279px) * 1000, ui.space-64)" width="clamp(0px, (100vw - 1279px) * 1000, 12rem)" min-width=0 max-height="clamp(0px, (100vw - 1279px) * 1000, 100vh)" overflow="hidden" inert=(viewport.width < 1280) flex-shrink=0 position="sticky" top="ui.space-24" display="flex" flex-direction="column" gap="ui.space-12"
+                    text "On This Page" font-size="ui.text-caption" font-weight="ui.weight-medium" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    if page.kind == "component" or page.kind == "ai"
+                      if page.kind == "component"
+                        link href="#installation" class=QuietLink
+                          text "Installation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      link href="#usage" class=QuietLink
+                        text "Usage" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      if page.keyboard != ""
+                        link href="#keyboard" class=QuietLink
+                          text "Keyboard" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      if page.api.length > 0
+                        link href="#api" class=QuietLink
+                          text "API Reference" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    else
+                      for section in page.sections key=section.id
+                        link href=("#" + section.id) class=QuietLink
+                          text section.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              else if page.kind == "blocks"
+                main
+                  Hero(title=page.title, description=page.description, primary="Browse Blocks", primaryHref="#blocks", secondary="View Components", secondaryHref="/docs/components")
+                  column max-width="96rem" margin="0 auto" padding="0 clamp(0px, (100vw - 1099px) * 1000, ui.space-40) ui.space-64" gap="ui.space-40"
+                    nav aria-label="Block categories" display="flex" gap="ui.space-8" padding="ui.space-24 clamp(0px, (1100px - 100vw) * 1000, ui.space-16)" overflow-x="auto" id="blocks"
+                      for category in ["Featured", "Sidebar", "Login", "Signup"] key=category
+                        link href=(category == "Featured" ? "/blocks" : "/blocks/" + category.toLowerCase()) class=Hit padding="ui.space-4 ui.space-12" color=(page.slug == category.toLowerCase() ? "ui.foreground" : "ui.muted-foreground")
+                          text category font-size="ui.text-base" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    for block in blocks.filter(b => page.slug == "featured" ? ["dashboard-01", "sidebar-07", "sidebar-03", "login-03", "login-04"].includes(b.slug) : b.slug.startsWith(page.slug)) key=block.slug
+                      BlockFrame(slug=block.slug, title=block.title, files=block.files, theme=themeSearch, scheme=effectiveTheme, width=viewport.width, nativeApp=nativeApp)
+              else if page.kind == "charts"
+                main
+                  Hero(title=page.title, description=page.description, primary="Browse Charts", primaryHref="#charts", secondary="Documentation", secondaryHref="/docs/components/chart")
+                  column max-width="96rem" margin="0 auto" padding="0 calc(ui.space-16 + clamp(0px, (100vw - 599px) * 1000, ui.space-24)) calc(ui.space-64 + clamp(0px, (100vw - 599px) * 1000, ui.space-16))" gap="ui.space-24" id="charts"
+                    row gap="ui.space-16" padding="ui.space-24 ui.space-0"
+                      text "Area Charts" font-size="ui.text-base" font-weight="ui.weight-medium" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      link href="/docs/components/chart" class=QuietLink
+                        text "More chart components →" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    view display="grid" grid-template-columns=(viewport.width < 768 ? "1fr" : viewport.width < 1100 ? "1fr 1fr" : "1fr 1fr 1fr") gap="ui.space-40"
+                      for chart in charts key=chart.slug
+                        column min-width=0 grid-column=(chart.fullWidth ? "1 / -1" : "auto") gap="ui.space-12"
+                          row justify-content="space-between" align-items="center" padding="ui.space-0 ui.space-8"
+                            text chart.title font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            link href=("/source?file=" + chart.source) class=Hit padding="ui.space-4 ui.space-8"
+                              text "View Code" font-size="ui.text-xs" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                          ChartDemo(slug=chart.slug, width=(chart.fullWidth ? viewport.width - 80 : viewport.width < 768 ? viewport.width - 32 : viewport.width < 1100 ? (viewport.width - 120) / 2 : (min(viewport.width, 1536) - 160) / 3), reduced=viewport.prefersReducedMotion)
+              else if page.kind == "view"
+                BlockPreview(slug=page.slug, width=viewport.width, reduced=viewport.prefersReducedMotion)
+              else if page.kind == "source"
+                main max-width="68.75rem" margin="0 auto" padding="ui.space-48 ui.space-24 ui.space-80"
+                  column gap="ui.space-24"
+                    h1 class=Heading
+                      text "Source code" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    text source.path testId="source-path" font-family="ui.font-code" color="ui.muted-foreground" overflow-wrap="anywhere"
+                    Code(id="source-code", code=source.code, title=source.path, language=source.language, compact=false)
+                    text "This is the library source used to build this version of the examples." class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    if source.path != ""
+                      link href=("https://github.com/rightui-dev/ui/blob/main/" + source.path) class=QuietLink
+                        text "View on GitHub (repository access required)" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              else
+                main padding="ui.space-64"
                   h1 class=Heading
-                    text "Source code"
-                  text source.path testId="source-path" font-family="monospace" color="ui.muted-foreground" overflow-wrap="anywhere"
-                  Code(code=source.code, title=source.path, language=source.language, compact=false)
-                  text "This is the library source used to build this version of the examples." class=Paragraph
-                  if source.path != ""
-                    link href=("https://github.com/rightui-dev/ui/blob/main/" + source.path) class=QuietLink
-                      text "View on GitHub (repository access required)"
-            else
-              main padding=64
-                h1 class=Heading
-                  text "Page not found"
-                link href="/" class=Hit padding=12
-                  text "Back to rightui"
-            if page.kind != "view"
-              footer appearance="none" padding="40px 24px" max-width="96rem" margin="0 auto" width="100%" box-sizing="border-box"
-                row gap=6 flex-wrap="wrap"
-                  text "Built with Exact. Inspired by" font-size="0.8125rem" color="ui.muted-foreground"
-                  link href="https://ui.shadcn.com" class=QuietLink
-                    text "shadcn/ui."
-                  link href="https://github.com/rightui-dev/ui" class=QuietLink
-                    text "GitHub (access required)."
-                  text "Beta · {{UI_VERSION}}" font-size="0.8125rem" color="ui.muted-foreground"
+                    text "Page not found" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                  link href="/" class=Hit padding="ui.space-12"
+                    text "Back to rightui" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              if page.kind != "view"
+                footer appearance="none" padding="ui.space-40 ui.space-24" max-width="96rem" margin="0 auto" width="100%" box-sizing="border-box"
+                  row gap="ui.space-6" flex-wrap="wrap"
+                    text "Built with Exact. Inspired by" font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    link href="https://ui.shadcn.com" class=QuietLink
+                      text "shadcn/ui." font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    link href="https://github.com/rightui-dev/ui" class=QuietLink
+                      text "GitHub (access required)." font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                    text "Beta · {{UI_VERSION}}" font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
       if not top(nav).name.startsWith("view_")
-        header position="absolute" top=0 left=0 right=0 id="site-header" testId="site-header" resize=measureHeader appearance="none" min-height=64 flex-shrink=0 background-color="ui.background" z-index=40 padding="0 24px" box-sizing="border-box"
-          row min-height=64 align-items="center" max-width="96rem" margin="0 auto" gap=8 flex-wrap="wrap"
-            button display="flex" class=Hit press=toggleMenu aria-label="Toggle navigation" aria-expanded=menu inert=(not mobile) width="clamp(0px, (1024px - 100vw) * 1000, 32px)" min-width=0 flex-shrink=0 overflow="hidden" padding=0 height=32 margin-right="calc(0px - clamp(0px, (100vw - 1023px) * 1000, 8px))" testId="nav-toggle"
-              text "☰" font-size="1.125rem"
-            link href="/" class=Hit padding="6px 8px" id="navbar-home" aria-label="rightui home" display="flex" align-items="center" gap=8
+        header inert=(searchOpen or homeDialog) position="absolute" top=chromeHeight left=0 right=0 id="site-header" testId="site-header" resize=measureHeader appearance="none" min-height=64 flex-shrink=0 background-color="ui.background" z-index=40 padding="ui.space-0 ui.space-24" box-sizing="border-box"
+          row min-height=64 align-items="center" max-width="96rem" margin="0 auto" gap="ui.space-8" flex-wrap="wrap"
+            button display="flex" align-items="center" justify-content="center" class=Hit press=toggleMenu aria-label="Toggle navigation" aria-expanded=menu inert=(not mobile) width="clamp(0px, (1100px - 100vw) * 1000, 32px)" min-width=0 flex-shrink=0 overflow="hidden" padding="ui.space-0" height="ui.control-sm" margin-right="calc(0px - clamp(0px, (100vw - 1023px) * 1000, ui.space-8))" testId="nav-toggle"
+              svg width="ui.space-18" height="ui.space-18" flex-shrink=0 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" aria-hidden=true
+                path d="M4 6h16M4 12h16M4 18h16"
+            link href="/" class=Hit padding="ui.space-6 ui.space-8" id="navbar-home" aria-label="rightui home" display="flex" align-items="center" gap="ui.space-8"
               image "{{NAVBAR_LOGO}}" id="navbar-logo" testId="navbar-logo" alt="" width=28 height=28 border-radius="ui.radius-control"
-              text "rightui" id="navbar-wordmark" font-weight=700 letter-spacing="-0.04em" font-size="1.125rem"
-            nav aria-label="Main navigation" display="flex" max-width="clamp(0px, (100vw - 1023px) * 1000, 28rem)" max-height=32 min-width=0 overflow="hidden" inert=mobile gap=2
-              for item in [CatalogEntry(slug="docs", title="Docs", description="", href="/docs/installation"), CatalogEntry(slug="components", title="Components", description="", href="/docs/components"), CatalogEntry(slug="blocks", title="Blocks", description="", href="/blocks"), CatalogEntry(slug="charts", title="Charts", description="", href="/charts/area")] key=item.slug
-                link href=item.href class=Hit padding="6px 10px" aria-current=(top(nav).url.startsWith(item.href) ? "page" : "false")
-                  text item.title
+              text "rightui" id="navbar-wordmark" font-weight="ui.weight-bold" letter-spacing="ui.tracking-display" font-size="ui.text-lg" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+            nav aria-label="Main navigation" display="flex" max-width="clamp(0px, (100vw - 1023px) * 1000, 28rem)" max-height="ui.control-sm" min-width=0 overflow="hidden" inert=mobile gap="ui.space-2"
+              for item in [CatalogEntry(slug="docs", title="Docs", description="", href="/docs/installation"), CatalogEntry(slug="components", title="Components", description="", href="/docs/components"), CatalogEntry(slug="blocks", title="Blocks", description="", href="/blocks"), CatalogEntry(slug="charts", title="Charts", description="", href="/charts/area"), CatalogEntry(slug="themes", title="Themes", description="", href="/themes")] key=item.slug
+                link href=item.href class=Hit padding="ui.space-6 ui.space-10" aria-current=(top(nav).url.startsWith(item.href) ? "page" : "false")
+                  text item.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
             view flex=1
-            button id="search-open" testId="search-open" class=Hit press=openSearch aria-label="Search documentation" aria-keyshortcuts="Meta+K Control+K" background-color="ui.muted" width="calc(2rem + clamp(0px, (100vw - 1023px) * 1000, 14rem))" flex-shrink=0 height=32 padding=0 display="flex" align-items="center" gap=0
-              text "⌕" width="clamp(0px, (1024px - 100vw) * 1000, 2rem)" min-width=0 overflow="hidden" text-align="center" font-size="0.8125rem"
-              text "Search documentation..." flex=1 min-width=0 max-width="clamp(0px, (100vw - 1023px) * 1000, 14rem)" overflow="hidden" white-space="nowrap" margin-left="clamp(0px, (100vw - 1023px) * 1000, 12px)" text-align="left" font-size="0.8125rem"
-              text "⌘ K" max-width="clamp(0px, (100vw - 1023px) * 1000, 3rem)" min-width=0 overflow="hidden" white-space="nowrap" margin-right="clamp(0px, (100vw - 1023px) * 1000, 12px)" font-size="0.6875rem" color="ui.muted-foreground"
-            view width=1 height=16 flex-shrink=0 background-color="ui.border" aria-hidden=true
-            row gap=2 align-items="center" flex-shrink=0
-              link href="https://github.com/rightui-dev/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 display="flex" align-items="center" justify-content="center" aria-label="rightui on GitHub" testId="github-link"
+            button id="search-open" testId="search-open" class=Hit press=openSearch aria-label="Search documentation" aria-keyshortcuts="Meta+K Control+K" background-color="ui.muted" width="calc(ui.control-sm + clamp(0px, (100vw - 1023px) * 1000, 14rem))" flex-shrink=0 height="ui.control-sm" padding="ui.space-0" display="flex" align-items="center" gap="ui.space-0"
+              view width="clamp(0px, (1100px - 100vw) * 1000, ui.control-sm)" min-width=0 flex-shrink=0 overflow="hidden" display="flex" align-items="center" justify-content="center"
+                SearchIcon()
+              text "Search documentation..." flex=1 min-width=0 max-width="clamp(0px, (100vw - 1023px) * 1000, 14rem)" overflow="hidden" white-space="nowrap" margin-left="clamp(0px, (100vw - 1023px) * 1000, ui.space-12)" text-align="left" font-size="ui.text-caption" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              text "⌘ K" max-width="clamp(0px, (100vw - 1023px) * 1000, 3rem)" min-width=0 overflow="hidden" white-space="nowrap" margin-right="clamp(0px, (100vw - 1023px) * 1000, ui.space-12)" font-size="ui.text-2xs" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+            view width="ui.border-width" height="ui.space-16" flex-shrink=0 background-color="ui.border" aria-hidden=true
+            row gap="ui.space-2" align-items="center" flex-shrink=0
+              link href="https://github.com/rightui-dev/ui" target="_blank" rel="noopener noreferrer" class=Hit width="ui.control-sm" height="ui.control-sm" display="flex" align-items="center" justify-content="center" aria-label="rightui on GitHub" testId="github-link"
                 GitHubIcon()
-              link href="https://www.npmjs.com/package/@rightui/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 display="flex" align-items="center" justify-content="center" aria-label="rightui on npm" title="@rightui/ui on npm" testId="npm-link"
+              link href="https://www.npmjs.com/package/@rightui/ui" target="_blank" rel="noopener noreferrer" class=Hit width="ui.control-sm" height="ui.control-sm" display="flex" align-items="center" justify-content="center" aria-label="rightui on npm" title="@rightui/ui on npm" testId="npm-link"
                 NpmIcon()
-            view width=1 height=16 flex-shrink=0 background-color="ui.border" aria-hidden=true
-            button id="theme-toggle" testId="theme-toggle" class=Hit press=toggleTheme aria-label="Toggle theme" aria-pressed=(effectiveTheme == "dark") width=32 height=32 flex-shrink=0 padding=0 display="flex" align-items="center" justify-content="center"
+            view width="ui.border-width" height="ui.space-16" flex-shrink=0 background-color="ui.border" aria-hidden=true
+            DisclosureButton(id="theme-toggle", label="Appearance settings", variant="ghost", controls="theme-settings", expanded=themeOpen, icon=true, press=toggleThemeMenu)
               ThemeIcon()
-      column id="docs-sidebar" testId="docs-sidebar" display=(doc ? "flex" : "none") inert=(not doc or mobile) width="clamp(0px, (100vw - 1023px) * 1000, 14.5rem)" overflow="hidden" flex-shrink=0 min-height=0 position="absolute" top=(headerHeight + 48) bottom=24 left="max(24px, calc((100vw - 96rem) / 2 + 24px))" box-sizing="border-box"
+            if themeOpen
+              for epoch in [themeEpoch] key=epoch
+                PopoverFrame(id="theme-settings", source="theme-toggle", label="Appearance settings", align="end", reduced=viewport.prefersReducedMotion, dismiss=closeThemeMenu(epoch))
+                  QuickThemeControls(scheme=scheme, preset=preset, radius=radius, font=fontChoice, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, chooseScheme=chooseScheme, choosePreset=chooseQuickPreset, chooseFont=chooseQuickFont, chooseRadius=chooseQuickRadius, customize=follow("/themes"))
+      column id="docs-sidebar" testId="docs-sidebar" display=(doc ? "flex" : "none") inert=(not doc or mobile or searchOpen or homeDialog) width="clamp(0px, (100vw - 1023px) * 1000, 14.5rem)" overflow="hidden" flex-shrink=0 min-height=0 position="absolute" top=(chromeHeight + headerHeight + 48) bottom="ui.space-24" left="max(ui.space-24, calc((100vw - 96rem) / 2 + ui.space-24))" box-sizing="border-box"
         scroll id="docs-sidebar-scroll" testId="docs-sidebar-scroll" flex=1 min-height=0 overflow-x="hidden"
           DocsSidebar(catalog=catalog, aiCatalog=aiCatalog, current=top(nav).name)
       if menu
-        scroll position="absolute" top=headerHeight bottom=0 left=0 right=0 background-color="ui.background" z-index=50 padding=24
-          column gap=20
-            for item in [CatalogEntry(slug="docs",title="Docs",description="",href="/docs/installation"), CatalogEntry(slug="blocks",title="Blocks",description="",href="/blocks"), CatalogEntry(slug="charts",title="Charts",description="",href="/charts/area")] key=item.slug
-              link href=item.href class=Hit padding=8
-                text item.title
+        scroll inert=(searchOpen or homeDialog) position="absolute" top=(chromeHeight + headerHeight) bottom=0 left=0 right=0 background-color="ui.background" z-index=50 padding="ui.space-24"
+          column gap="ui.space-20"
+            for item in [CatalogEntry(slug="docs",title="Docs",description="",href="/docs/installation"), CatalogEntry(slug="blocks",title="Blocks",description="",href="/blocks"), CatalogEntry(slug="charts",title="Charts",description="",href="/charts/area"), CatalogEntry(slug="themes",title="Themes",description="",href="/themes")] key=item.slug
+              link href=item.href class=Hit padding="ui.space-8"
+                text item.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
             DocsSidebar(catalog=catalog, aiCatalog=aiCatalog, current=top(nav).name)
-      dialog id="site-search" closedby="any" aria-label="Search documentation" width="min(600px, calc(100vw - 32px))" max-height="80vh" padding=0 border="1px solid ui.border" border-radius="ui.radius-panel" background-color="ui.background" color="ui.foreground" font-family="Geist, system-ui, sans-serif"
-        column
-          row gap=12 padding=16 border-bottom="1px solid ui.border" align-items="center"
-            input id="search-input" testId="search-input" value=query input=search key=searchKey placeholder="Search documentation..." aria-label="Search documentation" appearance="none" flex=1 min-width=0 background-color="transparent" border="0" color="ui.foreground" font-size="1rem" font-family="Geist, system-ui, sans-serif" outline="none"
-            button class=Hit press=closeSearch padding=6 aria-label="Close search"
-              text "Esc" font-size="0.75rem"
-          column padding=8 gap=4
-            if matches.length == 0
-              text "No results found." padding=24 text-align="center" color="ui.muted-foreground"
-            for hit, index in matches key=hit.slug
-              link href=hit.href class=Hit padding="10px 12px" background-color=(index == activeHit ? "ui.muted" : "transparent")
-                text hit.title
+      ModalFrame(id="home-confirmation", open=(homeDialog and page.kind == "home"), title="Allow accessory to connect?", description="Do you want to allow the accessory to connect to this device?", side="center", alert=true, reduced=viewport.prefersReducedMotion, focusIds=["home-confirmation-cancel", "home-confirmation-allow"], dismiss=closeHomeDialog)
+        row gap="ui.space-8" justify-content="flex-end"
+          Button(id="home-confirmation-cancel", label="Don't allow", variant="outline", disabled=false, press=closeHomeDialog)
+          Button(id="home-confirmation-allow", label="Allow", variant="primary", disabled=false, press=closeHomeDialog)
+      DialogFrame(id="site-search", open=searchOpen, reduced=viewport.prefersReducedMotion, title="Search documentation", description="Find components, guides and examples.", focusIds=["search-input"].concat(matches.map(hit => "search-hit-" + hit.slug)), dismiss=closeSearch)
+        scroll flex="1 1 auto" min-height=0
+          column gap="ui.space-12"
+            input id="search-input" testId="search-input" class=InputStyle value=query input=search key=searchKey placeholder="Search documentation..." aria-label="Search documentation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+            column gap="ui.space-4"
+              if matches.length == 0
+                text "No results found." padding="ui.space-24" text-align="center" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              for hit, index in matches key=hit.slug
+                link id=("search-hit-" + hit.slug) href=hit.href class=Hit padding="ui.space-10 ui.space-12" background-color=(index == activeHit ? "ui.muted" : "transparent")
+                  text hit.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+
 component DocsSidebar
   props
     catalog: CatalogEntry[]
     aiCatalog: CatalogEntry[]
     current: string
+  inject
+    uiFont: string
   view
-    column gap=24
-      column gap=2
-        text "Sections" font-size="0.75rem" color="ui.muted-foreground" padding="8px 12px" font-weight=500
+    column gap="ui.space-24"
+      column gap="ui.space-2"
+        text "Sections" font-size="ui.text-xs" color="ui.muted-foreground" padding="ui.space-8 ui.space-12" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for item in [CatalogEntry(slug="how_exact",title="How Exact works",description="",href="/docs/how-exact-works"),CatalogEntry(slug="installation",title="Installation",description="",href="/docs/installation"),CatalogEntry(slug="compatibility",title="Compatibility",description="",href="/docs/compatibility"),CatalogEntry(slug="typescript",title="TypeScript",description="",href="/docs/installation/typescript"),CatalogEntry(slug="rust",title="Rust",description="",href="/docs/installation/rust"),CatalogEntry(slug="components",title="Components",description="",href="/docs/components"),CatalogEntry(slug="theming",title="Theming",description="",href="/docs/theming"),CatalogEntry(slug="registry",title="Registry & source",description="",href="/docs/registry")] key=item.slug
-          link href=item.href testId=("docs-link-" + item.slug) class=Hit padding="6px 12px" align-self="flex-start" background-color=(current == item.slug ? "ui.muted" : "transparent") aria-current=(current == item.slug ? "page" : "false")
-            text item.title font-size="0.8125rem" line-height=1.4
-      column gap=2
-        text "Components" font-size="0.75rem" color="ui.muted-foreground" padding="8px 12px" font-weight=500
+          link href=item.href testId=("docs-link-" + item.slug) class=Hit padding="ui.space-6 ui.space-12" align-self="flex-start" background-color=(current == item.slug ? "ui.muted" : "transparent") aria-current=(current == item.slug ? "page" : "false")
+            text item.title font-size="ui.text-caption" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      column gap="ui.space-2"
+        text "Components" font-size="ui.text-xs" color="ui.muted-foreground" padding="ui.space-8 ui.space-12" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for item in catalog key=item.slug
-          link href=item.href testId=("docs-link-" + item.slug) class=Hit padding="6px 12px" align-self="flex-start" background-color=(current == "component_" + item.slug.replaceAll("-", "_") ? "ui.muted" : "transparent") aria-current=(current == "component_" + item.slug.replaceAll("-", "_") ? "page" : "false")
-            text item.title font-size="0.8125rem" line-height=1.4
-      column gap=2
-        text "AI Elements" font-size="0.75rem" color="ui.muted-foreground" padding="8px 12px" font-weight=500
-        link href="/docs/ai-elements" testId="docs-link-ai-introduction" class=Hit padding="6px 12px" align-self="flex-start" background-color=(current == "ai_elements" ? "ui.muted" : "transparent") aria-current=(current == "ai_elements" ? "page" : "false")
-          text "Introduction" font-size="0.8125rem" line-height=1.4
+          link href=item.href testId=("docs-link-" + item.slug) class=Hit padding="ui.space-6 ui.space-12" align-self="flex-start" background-color=(current == "component_" + item.slug.replaceAll("-", "_") ? "ui.muted" : "transparent") aria-current=(current == "component_" + item.slug.replaceAll("-", "_") ? "page" : "false")
+            text item.title font-size="ui.text-caption" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      column gap="ui.space-2"
+        text "AI Elements" font-size="ui.text-xs" color="ui.muted-foreground" padding="ui.space-8 ui.space-12" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        link href="/docs/ai-elements" testId="docs-link-ai-introduction" class=Hit padding="ui.space-6 ui.space-12" align-self="flex-start" background-color=(current == "ai_elements" ? "ui.muted" : "transparent") aria-current=(current == "ai_elements" ? "page" : "false")
+          text "Introduction" font-size="ui.text-caption" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for item in aiCatalog key=item.slug
-          link href=item.href testId=("docs-link-ai-" + item.slug) class=Hit padding="6px 12px" align-self="flex-start" background-color=(current == "ai_" + item.slug.replaceAll("-", "_") ? "ui.muted" : "transparent") aria-current=(current == "ai_" + item.slug.replaceAll("-", "_") ? "page" : "false")
-            text item.title font-size="0.8125rem" line-height=1.4
+          link href=item.href testId=("docs-link-ai-" + item.slug) class=Hit padding="ui.space-6 ui.space-12" align-self="flex-start" background-color=(current == "ai_" + item.slug.replaceAll("-", "_") ? "ui.muted" : "transparent") aria-current=(current == "ai_" + item.slug.replaceAll("-", "_") ? "page" : "false")
+            text item.title font-size="ui.text-caption" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"

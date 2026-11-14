@@ -29,6 +29,8 @@ bun run check:hosting https://rightui.dev
 bun tools/check-seo.ts https://rightui.dev
 ```
 
+Each static asset must remain below Cloudflare’s 25 MiB limit. Postbuild checks the application bundle size. Keep large Contract slots instantiated once; conditional wrapper branches can duplicate their compiled content.
+
 For an initial-render regression, run `tools/check-first-paint.browser.js` in the browser on the built site. It compares script-disabled HTML and activated Exact at every homepage breakpoint. The built HTML inlines `apps/site/assets/critical.css`; serving unprocessed Exact test output skips this delivery step.
 
 The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. Record the Cloudflare version ID from deployment output and verify `/build-info.json` before claiming that a particular revision is live.

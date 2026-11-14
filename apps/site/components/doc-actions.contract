@@ -1,3 +1,4 @@
+use uiFontFamily from "@rightui/ui"
 use MenuEntry, ButtonSegment from "@rightui/ui"
 use Hit from "./styles.contract"
 
@@ -15,14 +16,13 @@ component DocActions
         groupFocused = target.startsWith(id)
       case none
         groupFocused = false
-  state copied = false
+  derive copied = uiCopiedId == id and uiCopiedText == markdown
   state assistantCopied = false
   derive id = "doc-actions-" + encodeURIComponent(title)
   derive label = "Documentation actions"
   derive entries = [MenuEntry(id="markdown", label="View as Markdown", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://chatgpt.com/", label="Open in ChatGPT", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://claude.ai/", label="Open in Claude", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://v0.app/", label="Open in v0", shortcut="", disabled=false, destructive=false), MenuEntry(id="https://scira.ai/", label="Open in Scira", shortcut="", disabled=false, destructive=false)]
   action copy
-    copyText(markdown)
-    copied = true
+    uiCopyCode(id, markdown)
   state expanded = false
   state openEpoch = 0
   state contextFocus = false
@@ -59,8 +59,7 @@ component DocActions
   action pick(item: MenuEntry)
     if not item.disabled and item.id != "markdown"
       closeMenu()
-      copyText(markdown)
-      copied = true
+      uiCopyCode(id, markdown)
       assistantCopied = true
       openURL(item.id)
   action triggerKeys(k: string, e: KeyboardEvent)
@@ -105,45 +104,50 @@ component DocActions
             focus(id + "-item-" + item.id)
           case none
             stopPropagation()
+  inject
+    uiFont: string
+    uiCopiedId: string
+    uiCopiedText: string
+    uiCopyCode: action
   view
     column min-width=0 align-items="flex-start"
-      row gap=0 align-items="center" border="1px solid ui.border" border-radius="ui.radius-control" overflow="hidden" focusin=focusGroup focusout=blurGroup box-shadow=(groupFocused ? "0 0 0 3px ui.ring" : "none")
+      row gap="ui.space-0" align-items="center" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-control" overflow="hidden" focusin=focusGroup focusout=blurGroup box-shadow=(groupFocused ? "ui.shadow-focus" : "none")
         ButtonSegment(id=id + "-copy", label="Copy page", disabled=false, press=copy)
-          svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+          svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
             rect x=8 y=8 width=12 height=12 rx=2
             path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"
-          text (copied ? "Copied" : "Copy Page")
-        button id=id testId=id class=Hit press=toggle key=triggerKeys aria-label=("Actions for " + title) aria-haspopup="menu" aria-expanded=expanded aria-controls=(id + "-menu") width=32 height=32 display="flex" align-items="center" justify-content="center" border-left="1px solid ui.border" border-radius=0
-          svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+          text (copied ? "Copied" : "Copy Page") font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        button id=id testId=id class=Hit press=toggle key=triggerKeys aria-label=("Actions for " + title) aria-haspopup="menu" aria-expanded=expanded aria-controls=(id + "-menu") width="ui.space-32" height="ui.space-32" display="flex" align-items="center" justify-content="center" border-left-width="ui.border-width" border-left-style="solid" border-left-color="ui.border" border-radius="ui.radius-flat"
+          svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
             path d="m6 9 6 6 6-6"
       if expanded
         for epoch in [openEpoch] key=epoch
           column id=(id + "-menu") testId=(id + "-menu") popover="auto" toggle=changed(epoch) keycapture=menuKeys
             role="menu" aria-label=label tabindex=-1
             left="auto" top="auto" position-area="bottom" position-try-fallbacks="flip-block, flip-inline, flip-block flip-inline"
-            width="14rem" min-width=0 max-width="calc(100vw - 32px)" max-height="min(28rem, 70vh)" overflow="auto" box-sizing="border-box"
-            margin=4 padding=4 gap=0 border="1px solid ui.border" border-radius="ui.radius-menu" background-color="ui.surface" box-shadow="0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a"
-            column role="none" align-items="stretch" gap=0 min-width=0
+            width="14rem" min-width=0 max-width="calc(100vw - ui.space-32)" max-height="min(28rem, 70vh)" overflow="auto" box-sizing="border-box"
+            margin="ui.space-4" padding="ui.space-4" gap="ui.space-0" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-menu" background-color="ui.surface" box-shadow="ui.shadow-menu"
+            column role="none" align-items="stretch" gap="ui.space-0" min-width=0
               for item in entries key=item.id
                 if item.id == "markdown"
-                  link id=(id + "-item-markdown") testId=(id + "-item-markdown") href=markdownHref target="_blank" rel="noopener" role="menuitem" tabindex=-1 key=itemKeys(item.id) class=Hit display="flex" align-items="center" gap=8 min-height=32 padding="6px 8px" font-weight=400
-                    svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+                  link id=(id + "-item-markdown") testId=(id + "-item-markdown") href=markdownHref target="_blank" rel="noopener" role="menuitem" tabindex=-1 key=itemKeys(item.id) class=Hit display="flex" align-items="center" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" font-weight="ui.weight-regular"
+                    svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
                       path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6"
-                    text item.label
+                    text item.label font-family=uiFontFamily(uiFont) data-rightui-font="body"
                 else
                   button id=(id + "-item-" + item.id) testId=(id + "-item-" + item.id) class=Hit
                     role="menuitem" tabindex=-1 disabled=item.disabled press=pick(item) key=itemKeys(item.id)
-                    display="flex" width="100%" box-sizing="border-box" align-items="center" flex-wrap="wrap" gap=8 min-height=32 padding="6px 8px" border="0" border-radius="ui.radius-item" font-weight=400 background-color="transparent"
+                    display="flex" width="100%" box-sizing="border-box" align-items="center" flex-wrap="wrap" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" border="0" border-radius="ui.radius-item" font-weight="ui.weight-regular" background-color="transparent"
                     color=(item.destructive ? "ui.danger" : "ui.foreground")
                     :hover
                       background-color="ui.muted"
                     :focus-visible
                       background-color="ui.muted"
-                    svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=2 aria-hidden=true
+                    svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
                       path d=(item.id == "markdown" ? "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6" : "M15 3h6v6 M10 14 21 3 M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5")
-                    text item.label flex="1 1 6rem" min-width=0 text-align="left"
+                    text item.label flex="1 1 6rem" min-width=0 text-align="left" font-family=uiFontFamily(uiFont) data-rightui-font="body"
                     if item.shortcut != ""
-                      text item.shortcut min-width=0 hyphens="auto" font-size="0.75rem" letter-spacing="0.1em" color="ui.muted-foreground" aria-hidden=true
+                      text item.shortcut min-width=0 hyphens="auto" font-size="ui.text-xs" letter-spacing="ui.tracking-wide" color="ui.muted-foreground" aria-hidden=true font-family=uiFontFamily(uiFont) data-rightui-font="body"
 
       if assistantCopied
-        text "Documentation copied. Paste it into your assistant." role="status" font-size="0.75rem" color="ui.muted-foreground" max-width="18rem"
+        text "Documentation copied. Paste it into your assistant." role="status" font-size="ui.text-xs" color="ui.muted-foreground" max-width="18rem" font-family=uiFontFamily(uiFont) data-rightui-font="body"

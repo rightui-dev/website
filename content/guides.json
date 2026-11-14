@@ -50,7 +50,7 @@
         "id": "ai-setup",
         "title": "Install with your AI agent",
         "text": "Copy this prompt into any coding agent. It will check your project, install rightui and add a working component.",
-        "code": "Add rightui to this project using the official @rightui/ui npm package.\n\nRead https://rightui.dev/docs/installation.md and https://rightui.dev/llms.txt first. Follow this repository's instructions and preserve existing features, styling and uncommitted changes.\n\n1. Inspect the project. rightui provides Exact Contract components for web, iOS and macOS. Find the Exact app, its package.json, app.contract and pinned SDK. If this is not an Exact project, explain that rightui cannot be imported as React, React Native or Vue components, and ask before creating an Exact app or migrating anything.\n\n2. Install @rightui/ui@{{UI_VERSION}} as an exact dependency in the consuming app, using the project's package manager. With Bun: bun add --exact @rightui/ui@{{UI_VERSION}}. Use the published npm package; do not substitute a local checkout, Git dependency or an invented adapter. Keep the lockfile in sync. Check the documented Exact compatibility and report any mismatch before changing the SDK.\n\n3. Follow the font setup in the installation guide: copy Geist.ttf and OFL.txt from the package into the app's assets/fonts directory, then register and apply Geist in Contract if it is not already configured. Preserve an intentional existing typeface.\n\n4. Import components with Contract syntax, for example: use Button from \"@rightui/ui\". Add a small working interaction to the appropriate existing screen using the documented props. Keep UI state and actions in Contract; keep existing TypeScript or Rust data logic in its data module. Do not replace the app with a starter template.\n\n5. Run the project's build and relevant tests, then check the new interaction and responsive layout. Report the files changed, package version and checks actually completed. Distinguish web checks from native device validation, and list any remaining blockers.",
+        "code": "Add rightui to this project using the official @rightui/ui npm package.\n\nRead https://rightui.dev/docs/installation.md and https://rightui.dev/llms.txt first. Follow this repository's instructions and preserve existing features, styling and uncommitted changes.\n\n1. Inspect the project. rightui provides Exact Contract components for web, iOS and macOS. Find the Exact app, its package.json, app.contract and pinned SDK. If this is not an Exact project, explain that rightui cannot be imported as React, React Native or Vue components, and ask before creating an Exact app or migrating anything.\n\n2. Install @rightui/ui@{{UI_VERSION}} as an exact dependency in the consuming app, using the project's package manager. With Bun: bun add --exact @rightui/ui@{{UI_VERSION}}. Use the published npm package; do not substitute a local checkout, Git dependency or an invented adapter. Keep the lockfile in sync. Check the documented Exact compatibility and report any mismatch before changing the SDK.\n\n3. Follow the font setup in the installation guide: copy Geist.ttf, Geist-Italic.ttf, Newsreader.ttf, Newsreader-Italic.ttf, OFL.txt, OFL-Italic.txt and OFL-Newsreader.txt from the package into the app's assets/fonts directory, then register Geist and Newsreader in Contract if it is not already configured. Preserve an intentional existing typeface. Add \"rightui-font\" to the top-level app.json data allowlist, preserving existing entries. Add provide uiFont = \"theme\" to the root component (merge with its existing provide block). For runtime switching, provide a state choosing \"sans\", \"serif\" or \"mono\" instead.\n\nIf adding a code block, also install the root clipboard controller from the guide.\n\n4. Import components with Contract syntax, for example: use Button from \"@rightui/ui\". Add a small working interaction to the appropriate existing screen using the documented props. Keep UI state and actions in Contract; keep existing TypeScript or Rust data logic in its data module. Do not replace the app with a starter template.\n\n5. Run the project's build and relevant tests, then check the new interaction and responsive layout. Report the files changed, package version and checks actually completed. Distinguish web checks from native device validation, and list any remaining blockers.",
         "language": "text"
       },
       {
@@ -74,25 +74,41 @@
         "language": "sh"
       },
       {
+        "id": "metadata",
+        "title": "Allow the font marker",
+        "text": "Add rightui-font to the top-level data allowlist in app.json. Merge it with existing entries. RightUI uses this marker to identify text that follows the body typeface.",
+        "code": "{\n  \"data\": [\"rightui-font\"]\n}",
+        "language": "json"
+      },
+      {
         "id": "font",
         "title": "Add the typeface",
-        "text": "Copy the bundled Geist font and its license into your app. Declare the font at the top of app.contract, as shown in the next step.",
-        "code": "mkdir -p assets/fonts\ncp node_modules/@rightui/ui/assets/fonts/Geist.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/OFL.txt assets/fonts/",
+        "text": "Copy the bundled Geist and Newsreader families with their licenses. Declare their regular and italic faces at the top of app.contract, as shown in the next step.",
+        "code": "mkdir -p assets/fonts\ncp node_modules/@rightui/ui/assets/fonts/Geist.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/Geist-Italic.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/OFL.txt assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/OFL-Italic.txt assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/Newsreader.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/Newsreader-Italic.ttf assets/fonts/\ncp node_modules/@rightui/ui/assets/fonts/OFL-Newsreader.txt assets/fonts/",
         "language": "sh"
       },
       {
         "id": "example",
         "title": "Use your first component",
-        "text": "Copy this example into app.contract in a new app, or adapt the import and Button call in your existing view. The counter uses local state; the greeting comes from app.ts below.",
+        "text": "Copy this example into app.contract in a new app, or adapt the import and Button call in your existing view. The counter uses local state; the greeting comes from app.ts below. Every app root must provide uiFont = \"theme\", even with the default theme. Merge this with any existing provide block; descendants inherit the selected font.",
         "language": "contract",
-        "source": "integrations/typescript/app.contract"
+        "source": "integrations/typescript/app.contract",
+        "code": ""
       },
       {
         "id": "data",
         "title": "Add the data module",
         "text": "Use this as app.ts for the example. It answers the greeting requested by app.contract. The next command generates its Answer type.",
         "source": "integrations/typescript/app.ts",
-        "language": "typescript"
+        "language": "typescript",
+        "code": ""
+      },
+      {
+        "id": "clipboard",
+        "title": "Enable code-block copying",
+        "text": "If you use CodeBlock, CodeBlockAdvanced, CodeBlockAI or CodeBlockFrame, merge this controller into your application root. It copies the original text and resets feedback after three seconds; a repeated copy restarts the delay. Keep the font declarations and app.json metadata from the steps above. Exact dispatches the platform clipboard command but does not report its success back to Contract.",
+        "code": "use CodeBlock from \"@rightui/ui\"\n\ncomponent App\n  state copiedId = \"\"\n  state copiedText = \"\"\n  state copyVersion = 0\n  provide\n    uiFont = \"theme\"\n    uiCopiedId = copiedId\n    uiCopiedText = copiedText\n    uiCopyCode = copyCode\n  action copyCode(id: string, text: string)\n    copyText(text)\n    copiedId = id\n    copiedText = text\n    copyVersion = copyVersion + 1\n  action clearCopyFeedback\n    copiedId = \"\"\n    copiedText = \"\"\n  task copiedFeedback when copiedId != \"\" key=copyVersion\n    after(3000, clearCopyFeedback)\n  view\n    CodeBlock(id=\"example\", title=\"hello.ts\", language=\"ts\", code=\"console.log('Hello')\", numbers=false, diff=false)",
+        "language": "contract"
       },
       {
         "id": "run",
@@ -141,14 +157,16 @@
         "title": "Declare the UI in app.contract",
         "text": "Button comes from @rightui/ui. The greeting resource requests a record with the shape declared above the component.",
         "language": "contract",
-        "source": "integrations/typescript/app.contract"
+        "source": "integrations/typescript/app.contract",
+        "code": ""
       },
       {
         "id": "answer",
         "title": "Provide the data in app.ts",
         "text": "The answer function returns the data for greeting. Exact provides the generated Answer type after the next step.",
         "language": "typescript",
-        "source": "integrations/typescript/app.ts"
+        "source": "integrations/typescript/app.ts",
+        "code": ""
       },
       {
         "id": "run",
@@ -176,14 +194,16 @@
         "title": "Declare the Contract",
         "text": "Use this as app.contract. The greeting resource will be answered by Rust rather than app.ts. The component import is the same as in a TypeScript app.",
         "language": "contract",
-        "source": "integrations/typescript/app.contract"
+        "source": "integrations/typescript/app.contract",
+        "code": ""
       },
       {
         "id": "source",
         "title": "Implement the data source",
         "text": "Add this implementation to your data crate. Set app_id() to your application ID. Value record fields must follow the order of shape Greeting in Contract.",
         "language": "rust",
-        "source": "integrations/rust/src/lib.rs"
+        "source": "integrations/rust/src/lib.rs",
+        "code": ""
       },
       {
         "id": "host",
@@ -197,28 +217,42 @@
   {
     "route": "theming",
     "title": "Theming",
-    "description": "Customize the Tamber tokens used by rightui components.",
+    "description": "Shared foundations, semantic roles and component recipes across your Exact application.",
     "sections": [
       {
-        "id": "tokens",
-        "title": "Theme source",
-        "text": "The package declares ui.tamber as its theme. Inspect the tokens below. If you need to edit the component package itself, use the Manual installation option on a component page so your source changes live in your project rather than being overwritten in node_modules.",
-        "language": "tamber",
-        "source": "packages/ui/ui.tamber"
-      },
-      {
-        "id": "components",
-        "title": "Use component variants",
-        "text": "Button reads ui.primary, ui.primary-foreground and related theme tokens. Keep the declared props when composing controls.",
-        "language": "Contract",
-        "source": "integrations/typescript/app.contract"
-      },
-      {
-        "id": "inspect",
-        "title": "Inspect source",
-        "text": "Inspect the [theme source](/source?file=packages/ui/ui.tamber) or [Button source](/source?file=packages/ui/button.contract) to see which tokens a component uses.",
+        "id": "themes",
+        "title": "Choose a theme",
+        "text": "Open [Themes](/themes) to preview Neutral, Indigo or Forest. Density, corners and typeface are independent from light, dark and system appearance. Copy theme exports a complete app.tamber configuration; the site uses this same public package API.",
         "code": "",
-        "language": "sh"
+        "language": "Text"
+      },
+      {
+        "id": "hierarchy",
+        "title": "One configuration, shared components",
+        "text": "Foundations hold base values. Semantic aliases describe their purpose, and component recipes inherit those roles. For example ui.foundation-radius feeds ui.radius-lg, then ui.radius-control and the compatible ui.radius alias. Change a foundation globally, or override a role or a typed component param deliberately. Circular indicators and flat joined edges keep their intentional shapes.",
+        "code": "tamber app\ntheme\n  ui.foundation-radius: length = 6px\n  ui.foundation-border-width: length = 2px\n  ui.foundation-space-unit: length = 0.875px\n",
+        "language": "Tamber"
+      },
+      {
+        "id": "export",
+        "title": "Generate a reusable configuration",
+        "text": "The package exports a pure TypeScript helper. Write its output to app.tamber at setup or build time. A fixed theme needs no axes. Keep the Geist and Newsreader declarations in app.contract and copy their packaged font assets using the Installation guide. Set provide uiFont = \"theme\" at the app root to use the exported font. A runtime choice of \"sans\", \"serif\" or \"mono\" takes priority over that fixed font.",
+        "code": "import { createTheme } from \"@rightui/ui/theme\"\n\nconst configuration = createTheme({\n  preset: \"forest\",\n  density: \"compact\",\n  radius: \"sharp\",\n  font: \"serif\",\n})\n// Write configuration to app.tamber.",
+        "language": "TypeScript"
+      },
+      {
+        "id": "modes",
+        "title": "Switch presets at runtime",
+        "text": "createTheme({ interactive: true }) declares three application axes with {{THEME_COMBINATIONS}} combinations. Fonts use the root uiFont provider independently, so all three fonts work with every palette, density and corner style. Light/dark/system uses setScheme separately. A subtree preview pins its modes using -exact-mode. Exact replaces a token and all its conditional branches when you override it: preserve the required branches in custom overrides.",
+        "code": "state fontChoice = \"sans\" persist\nprovide\n  uiFont = fontChoice\n\naction chooseForest\n  setMode(\"ui-preset\", \"forest\")\n  setMode(\"ui-density\", \"compact\")\n  setMode(\"ui-radius\", \"sharp\")\n  fontChoice = \"serif\"\n\naction useDarkAppearance\n  setScheme(\"dark\")",
+        "language": "Contract"
+      },
+      {
+        "id": "boundaries",
+        "title": "What the theme controls",
+        "text": "RightUI-owned controls, code surfaces, cards, examples and chart default palettes share theme tokens. Explicit chart data colors remain explicit. System menus, scrollbars, embedded media and the legacy host Markdown renderer have platform-owned appearance. MarkdownDocument provides a themeable AST renderer and parseMarkdown supports a documented subset; use the legacy Markdown component when you need its broader host syntax. The system accent uses the initial preset in an interactive design. See the package Theming and Markdown guides for exact boundaries.",
+        "code": "",
+        "language": "Text"
       }
     ]
   },
@@ -247,6 +281,13 @@
         "text": "The public [registry manifest](/assets/registry/index.json) lists source paths and SHA-256 hashes. Its format is rightui-contract/v1, not the shadcn registry format. It is a source index, not an installation CLI.",
         "code": "",
         "language": "sh"
+      },
+      {
+        "id": "theme-assets",
+        "title": "Theme resources",
+        "text": "Registry entries include the shared ui.tamber, theme helper, Geist and Newsreader fonts and their licenses. Text entries use content directly. Binary font entries declare encoding: base64; decode content to bytes and verify sha256 before writing the file. The npm package includes the same resources.",
+        "code": "",
+        "language": "Text"
       }
     ]
   }
