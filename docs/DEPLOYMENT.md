@@ -27,6 +27,7 @@ Authenticate Wrangler using an account with access to Fizzy APP. Commit the revi
 bun run deploy
 bun run check:hosting https://rightui.dev
 bun tools/check-seo.ts https://rightui.dev
+bun tools/check-analytics.ts https://rightui.dev
 ```
 
 Each static asset must remain below Cloudflare’s 25 MiB limit. Postbuild checks the application bundle size. Keep large Contract slots instantiated once; conditional wrapper branches can duplicate their compiled content.
@@ -36,6 +37,8 @@ For an initial-render regression, run `tools/check-first-paint.browser.js` in th
 The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. Record the Cloudflare version ID from deployment output and verify `/build-info.json` before claiming that a particular revision is live.
 
 ## Routing
+
+Umami is injected after the dedicated client shells are generated. Its runtime guard limits collection to top-level, indexable catalog routes on `rightui.dev`, including after client-side navigation. Local hosts, source viewers, block previews, iframes and unknown paths are excluded. Query and hash changes do not create page views. Keep the script unique; do not add a second manual navigation tracker. If a Content Security Policy is introduced, review the inline guard, `https://cloud.umami.is` script and `https://gateway.umami.is` collection endpoint together.
 
 Exact builds HTML for most routes. The build generates `_redirects` with explicit internal 200 proxies for the three client-rendered pages, including slash aliases. Each destination is a dedicated `/_client-pages/<route-name>` shell with the page's canonical URL and social metadata. The extensionless destination avoids Cloudflare HTML-normalization redirects and preserves the original page URL. Unknown paths use the real `404.html` with HTTP status 404. There is no catch-all SPA rewrite.
 

@@ -2,7 +2,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readd
 import { resolve, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { repairSSRImages, assertNavbarFirstPaint } from './ssr-images';
-import { prepareSEO, clientTarget, socialDetails } from './seo';
+import { prepareSEO, clientTarget, socialDetails, isIndexable } from './seo';
+import { withAnalytics } from './analytics';
 import { withInitialTheme } from './theme';
 import { withClipboardFallback } from './clipboard';
 import { compiledModeCSS, withCompiledModeStyles, withSSRModeBootstrap } from './ssr-modes';
@@ -85,6 +86,21 @@ if (routes.some(route => route.render === 'request' || /[:*]/.test(route.pattern
 }
 const clientRoutes = routes.filter(route => route.render === 'client' && !route.notfound);
 prepareSEO(dist, pages, clientRoutes);
+// Include dedicated client shells and keep the filter active across SPA navigation.
+const analyticsPaths = pages.filter(page => isIndexable(page.url)).map(page => page.url);
+let analyticsHeads = 0;
+function addAnalytics(dir: string) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) addAnalytics(path);
+    else if (entry.name.endsWith('.html')) {
+      writeFileSync(path, withAnalytics(readFileSync(path, 'utf8'), analyticsPaths));
+      analyticsHeads++;
+    }
+  }
+}
+addAnalytics(dist);
+console.log(`Prepared analytics on ${analyticsHeads} HTML heads, limited to ${analyticsPaths.length} public routes on rightui.dev.`);
 writeFileSync(resolve(dist, '_redirects'), clientRoutes.flatMap(route => [
   `${route.pattern} ${clientTarget(route.name)} 200`, `${route.pattern}/ ${clientTarget(route.name)} 200`,
 ]).join('\n') + '\n');

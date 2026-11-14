@@ -166,7 +166,7 @@ for(const [name,url] of routes) {
  if(p.keyboard)parts.push('## Keyboard',p.keyboard);
  if(p.api.length)parts.push('## API Reference','| Property | Type |\n| --- | --- |\n'+p.api.map((r:any)=>`| ${r.name} | ${r.type.replaceAll('|','\\|')} |`).join('\n'));
  for(const s of p.sections)parts.push(`## ${s.title}`,s.text,...(s.code?[fenced(s.language,s.code)]:[]));
- if(p.kind==='try')parts.push('## iPhone','[Installer avec AppDrop](/try/iphone)','## Mac','[Télécharger avec AppDrop](https://appdrop.app/api/drops/wcfnk49huy/file?revision=2&build=macos)','Mac avec puce Apple, macOS 14 ou ultérieur.','## Android et Windows','Pas encore disponibles.');
+ if(p.kind==='try')parts.push('## iPhone','[Installer avec AppDrop](/try/iphone)','## Mac','[Télécharger avec AppDrop](https://appdrop.app/api/drops/wcfnk49huy/file?revision=3&build=macos)','Mac avec puce Apple, macOS 14 ou ultérieur.','## Android et Windows','Pas encore disponibles.');
  if(p.kind==='try-iphone')parts.push('[Ouvrir AppDrop sur mon iPhone](https://appdrop.app/d/wcfnk49huy)','La configuration AppDrop est requise avant la première installation.');
  if(p.kind==='index')parts.push('## Components',catalog.map(c=>`- [${c.title}](${c.href}.md): ${c.description}`).join('\n'));
  if(p.kind==='ai-index')parts.push('## Patterns',aiCatalog.map(c=>`- [${c.title}](${c.href}.md): ${c.description}`).join('\n'));

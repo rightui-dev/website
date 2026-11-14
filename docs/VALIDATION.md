@@ -16,6 +16,13 @@ Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `534
 - All 23 browser appearance scenarios passed on the final local production build, covering preference restoration, direct URLs, presets, fonts and the initial-render/runtime handoff. The production build reports 21 compiler warnings and one note; successful execution is not a claim of warning-free compilation.
 - No iOS build was started for this delivery. AppDrop's existing iPhone revision 1 is unchanged. Native visual and interaction coverage remains targeted, not exhaustive.
 
+## Block profile and analytics follow-up
+
+- The dashboard and six sidebar demos now show `@ccheever` with an inline Expo mark, including the account menu. All 14 light/dark previews were refreshed at a 1440×900 viewport and exported at 1280×800. Browser checks confirmed the profile, inline mark and absence of horizontal document overflow; the sidebar account menu opened with the same profile. Existing third-party source/license attribution remains intact.
+- A fresh macOS build includes the final previews. Its 14 images match the compiled resource inventory; strict signature and ZIP checks passed. AppDrop revision 3 serves the identical archive (SHA-256 `02e3f5e75a68a09ffe3820b023de8c32b8eed185ba3c82dbb34de44bc714002b`). No new native interaction coverage is claimed. The iPhone artifact is unchanged.
+- The website loads the deferred Umami Cloud tracker without an additional SDK or user identification. Collection is restricted to top-level public routes on `rightui.dev`; source viewers, isolated block previews, iframes, unknown routes and local hosts are excluded. Query strings and fragments are omitted, so appearance controls do not count as page navigation.
+- This follow-up changes repository demos and the website only. The npm package remains `0.2.0-beta.1`; the release test counts above are not a new full-suite run on these changes.
+
 ## Earlier validation history
 
 The following sections retain earlier release evidence and its original scope; they do not describe the current release unless explicitly stated.
