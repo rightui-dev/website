@@ -3,6 +3,12 @@
 Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## Avatar first-pointer follow-up
+
+The beta.4 production check exposed a pre-activation click problem: the decorative image's load/error listener hid the enclosing button from Exact's initial-event capture. The beta.5 correction makes only that image transparent to pointer hit testing. With idle activation held, real first-pointer clicks at 1440px and 390px activated the built app, opened the menu and focused Profile. Five Avatar tests and the isolated package/Button check also passed. No new native build is claimed for this web interaction correction.
+
+The published npm archive was verified byte for byte against the reviewed beta.5 artifact (SHA-256 `d783458853efd9696396c387f45c0e175863c110fbdb0a2e3849008ccac8c4f6`). A fresh npm installation passed its web build and Button interaction check. The website dependency and lockfile use the official registry package.
+
 ## Release 0.2.0-beta.4 — Avatar, block previews and iOS
 
 - The `0.2.0-beta.4` archive passed an isolated installation, web build and Button interaction, plus five Avatar tests for image recovery, legacy props/counts, account-menu selection and keyboard navigation. Original user icons on flat backgrounds replace portrait photographs. The five initial preview images were decoded and visible before JavaScript activation.
