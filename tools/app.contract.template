@@ -139,13 +139,6 @@ component RightUI
                       ExactOverview(width=viewport.width)
                     else if page.kind == "index"
                       h2 margin="12px 0 0" font-size="1.25rem" font-weight=600
-                        text "New Components"
-                      row gap=24
-                        link href="/docs/components/code-block" class=Hit padding="6px 12px"
-                          text "Code Block"
-                        link href="/docs/components/trace" class=Hit padding="6px 12px"
-                          text "Trace"
-                      h2 margin="12px 0 0" font-size="1.25rem" font-weight=600
                         text "All Components"
                       view display="grid" grid-template-columns=(viewport.width < 600 ? "1fr 1fr" : "1fr 1fr 1fr") gap="12px 24px"
                         for item in catalog key=item.slug
