@@ -3,6 +3,15 @@
 Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## Release 0.2.0-beta.4 — Avatar, block previews and iOS
+
+- The `0.2.0-beta.4` archive passed an isolated installation, web build and Button interaction, plus five Avatar tests for image recovery, legacy props/counts, account-menu selection and keyboard navigation. Original user icons on flat backgrounds replace portrait photographs. The five initial preview images were decoded and visible before JavaScript activation.
+- The website passed 34 browser tests before the final icon-only replacement. Targeted checks after that replacement confirmed the real pointer/keyboard account-menu flow, a 24px mobile article inset and no horizontal overflow. Sidebar text aligned with the header logo across the checked desktop widths. Search focus retained its complete ring in light/dark mode and sharp/default/rounded configurations.
+- All 54 block previews (27 blocks, light and dark) were regenerated at 3200×2000 from the current examples, including the Expo mark and `@ccheever` profile. The capture report recorded no application error or document overflow; sidebar-13 was captured with its dialog open.
+- The published npm archive matches the reviewed artifact byte for byte (SHA-256 `560ea8681ef4fb7c013112c4b75738204256cec71573df3c5d941b1cfc9a5eb2`). A fresh registry installation built and passed its Button interaction. Both `beta` and `latest` select `0.2.0-beta.4`; the website lockfile resolves the official package without a local override.
+- The local production build passed 141 hosting checks, 133 SEO heads and 105 sitemap URLs, plus 134 analytics heads with the production-only guard.
+- The same site sources compiled as an iPhone arm64 archive, app version `0.2.0`, build `2026111404`. ZIP integrity, bundle identity, architecture and the ad hoc signature passed verification. AppDrop iOS revision 2 serves exactly the CLI upload bytes after removal of Finder metadata (SHA-256 `3a5a07b45b1241dcac432dde6a10790902be030d8a73700bf66421f731d5a737`). The Mac build remains at revision 3. No iPhone installation, launch or interaction test is claimed.
+
 ## Release 0.2.0-beta.3 — modal Sheet
 
 - The published npm archive matches the reviewed artifact byte for byte (SHA-256 `2c1d5c6da106440a593e5f47722f74fc66646c43fec52439befe5a0395d391ec`). A fresh registry installation built and passed the Button interaction. Both `beta` and `latest` select `0.2.0-beta.3`; the website lockfile resolves that official package without a local override.
@@ -66,7 +75,7 @@ The separate `components/examples/native` showcase imports the same 124 previews
 
 - The macOS showcase built with an ad hoc signature. Its catalog, split navigation and dashboard were inspected.
 - `bun exact.mjs test macos` completed **2 tests, 0 failures**, including a repeat after the theme correction. Theme captures covered matching sidebar, content and native chrome in both schemes.
-- **iOS validation is incomplete.** No successful iOS build, launch, physical-device check, IPA or AppDrop upload is recorded.
+- **iOS validation of this older standalone showcase is incomplete.** It has no recorded successful iOS build or device check. The newer website-based iPhone archive is recorded separately above.
 - Targets are web, iOS and macOS. Windows and Android are outside rightui support. Targeting a platform does not certify every component or interaction.
 
 ### Outstanding limits

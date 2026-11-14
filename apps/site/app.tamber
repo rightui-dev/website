@@ -475,6 +475,20 @@ theme
   ui.tabs-height-horizontal-default: length = calc(ui.space-36 - ui.space-6 - ui.border-width)
   ui.tabs-height-vertical-compact: length = calc(ui.space-24 + ui.border-width * 2)
   ui.tabs-height-vertical-default: length = calc(ui.space-28 + ui.border-width * 2)
+  ui.avatar-sm: length = ui.space-24
+  ui.avatar-size: length = ui.space-32
+  ui.avatar-lg: length = ui.space-40
+  ui.avatar-radius: length = ui.radius-full
+  ui.avatar-border-width: length = ui.border-width
+  ui.avatar-badge-sm: length = ui.space-8
+  ui.avatar-badge-size: length = ui.space-10
+  ui.avatar-badge-lg: length = ui.space-12
+  ui.avatar-overlap: length = ui.space-negative-8
+  ui.avatar-menu-width: length = calc(ui.space-64 * 2)
+  ui.avatar-border: color = ui.border
+  ui.avatar-background: color = ui.muted
+  ui.avatar-foreground: color = ui.muted-foreground
+  ui.avatar-ring: box-shadow = ui.shadow-background-ring
 // In app.contract declare:
 // font "Geist"
 //   100 900 = "assets/fonts/Geist.ttf"

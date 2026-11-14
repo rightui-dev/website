@@ -14,6 +14,7 @@ use Hero from "./components/hero.contract"
 use TryApp, TryIPhone from "./components/try-app.contract"
 use BlockPreview, BlockFrame from "./components/blocks.contract"
 use ComponentDemo from "./generated/demos.contract"
+use Examples as AvatarExamples from "@rightui/registry/examples/avatar"
 use ChartDemo from "./generated/charts.contract"
 use AIDemo from "./generated/ai-demos.contract"
 use DocActions from "./components/doc-actions.contract"
@@ -367,6 +368,11 @@ component RightUI
                             if page.kind == "ai"
                               link href="/docs/ai-elements#demo-clock" class=Hit padding="ui.space-6 ui.space-10" border-width="ui.border-width" border-style="solid" border-color="ui.border"
                                 text "Demo runtime ↗" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        if page.kind == "component" and page.slug == "avatar"
+                          column gap="ui.space-24" id="examples"
+                            h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
+                              text "Examples" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                            AvatarExamples(width=(mobile ? viewport.width - 48 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
                         if page.keyboard != ""
                           column gap="ui.space-12" id="keyboard"
                             h2 font-size="ui.text-xl" font-weight="ui.weight-semibold" margin="ui.space-0"
@@ -408,6 +414,9 @@ component RightUI
                           text "Installation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                       link href="#usage" class=QuietLink
                         text "Usage" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                      if page.kind == "component" and page.slug == "avatar"
+                        link href="#examples" class=QuietLink
+                          text "Examples" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                       if page.keyboard != ""
                         link href="#keyboard" class=QuietLink
                           text "Keyboard" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
@@ -504,7 +513,8 @@ component RightUI
               for epoch in [themeEpoch] key=epoch
                 PopoverFrame(id="theme-settings", source="theme-toggle", label="Appearance settings", align="end", reduced=viewport.prefersReducedMotion, dismiss=closeThemeMenu(epoch))
                   QuickThemeControls(scheme=scheme, preset=preset, radius=radius, font=fontChoice, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, chooseScheme=chooseScheme, choosePreset=chooseQuickPreset, chooseFont=chooseQuickFont, chooseRadius=chooseQuickRadius, customize=follow("/themes"))
-      column id="docs-sidebar" testId="docs-sidebar" display=(doc ? "flex" : "none") inert=(not doc or mobile or searchOpen or homeDialog) width="clamp(0px, (100vw - 1023px) * 1000, 14.5rem)" overflow="hidden" flex-shrink=0 min-height=0 position="absolute" top=(chromeHeight + headerHeight + 48) bottom="ui.space-24" left="max(ui.space-24, calc((100vw - 96rem) / 2 + ui.space-24))" box-sizing="border-box"
+      // Align sidebar text with the logo, including the header's container and link insets.
+      column id="docs-sidebar" testId="docs-sidebar" display=(doc ? "flex" : "none") inert=(not doc or mobile or searchOpen or homeDialog) width="clamp(0px, (100vw - 1023px) * 1000, 14.5rem)" overflow="hidden" flex-shrink=0 min-height=0 position="absolute" top=(chromeHeight + headerHeight + 48) bottom="ui.space-24" left="calc(max(ui.space-24, (100vw - 96rem) / 2) + clamp(0px, (1100px - 100vw) * 1000, 32px) + ui.space-8 - ui.space-12)" box-sizing="border-box"
         scroll id="docs-sidebar-scroll" testId="docs-sidebar-scroll" flex=1 min-height=0 overflow-x="hidden"
           DocsSidebar(catalog=catalog, aiCatalog=aiCatalog, current=top(nav).name)
       if menu
@@ -519,7 +529,7 @@ component RightUI
           Button(id="home-confirmation-cancel", label="Don't allow", variant="outline", disabled=false, press=closeHomeDialog)
           Button(id="home-confirmation-allow", label="Allow", variant="primary", disabled=false, press=closeHomeDialog)
       DialogFrame(id="site-search", open=searchOpen, reduced=viewport.prefersReducedMotion, title="Search documentation", description="Find components, guides and examples.", focusIds=["search-input"].concat(matches.map(hit => "search-hit-" + hit.slug)), dismiss=closeSearch)
-        scroll flex="1 1 auto" min-height=0
+        scroll flex="1 1 auto" min-height=0 padding="ui.focus-width" margin="calc(0px - ui.focus-width)" box-sizing="border-box"
           column gap="ui.space-12"
             input id="search-input" testId="search-input" class=InputStyle value=query input=search key=searchKey placeholder="Search documentation..." aria-label="Search documentation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
             column gap="ui.space-4"

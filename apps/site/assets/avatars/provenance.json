@@ -1,0 +1,23 @@
+[
+  {
+    "file" : "user-blue.png",
+    "license" : "MIT",
+    "purpose" : "User icon on a flat color background for documentation examples",
+    "sha256" : "b1308238cb0b7082726ab8bea3601156d6111d09d2649da0d1aca53b3ebfa16c",
+    "source" : "Original RightUI artwork; tools/render-avatars.swift"
+  },
+  {
+    "file" : "user-violet.png",
+    "license" : "MIT",
+    "purpose" : "User icon on a flat color background for documentation examples",
+    "sha256" : "8d6fb80fad33b75fc5800c3f763314501be2e64506f400bc3be8143a9bad9fc4",
+    "source" : "Original RightUI artwork; tools/render-avatars.swift"
+  },
+  {
+    "file" : "user-green.png",
+    "license" : "MIT",
+    "purpose" : "User icon on a flat color background for documentation examples",
+    "sha256" : "2239ad21d468707868dad29109004e327c7d785e8d70ccfe059bebbec497400b",
+    "source" : "Original RightUI artwork; tools/render-avatars.swift"
+  }
+]

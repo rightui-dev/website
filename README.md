@@ -37,13 +37,13 @@ rightui/
 
 Edit `tools/app.contract.template`, not generated `apps/site/app.contract`. `tools/generate.ts` reads the library sources and creates the routes, catalog, Markdown documents, demo dispatchers and source viewer data. Generated files and build artifacts are excluded from Git. Every demo imports the shared Contract library; the site does not maintain a separate copy of the components.
 
-The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui@0.2.0-beta.1` is published on npm.
+The `/source?file=…` viewer displays the source used for this build and links to its GitHub file. Documentation pages offer Copy Page and Markdown access. The UI package's installation guide lives in [rightui-dev/ui](https://github.com/rightui-dev/ui/blob/main/docs/INSTALLATION.md); `@rightui/ui` is distributed on npm.
 
 ## Platform scope and validation
 
 rightui targets **web, iOS and macOS only**. Windows, Android and Linux are outside its current support scope. This repository compiles the documentation site and its native demo from the same Contract sources. The older standalone showcase remains in the UI repository.
 
-Web and targeted macOS checks have passed. iOS validation is incomplete; no successful iOS build or device check is claimed. Platform targets do not imply exhaustive component validation or stable upstream APIs; Exact is pre-1.0. See [validation](docs/VALIDATION.md) and the [native guide](https://github.com/rightui-dev/ui/blob/main/docs/NATIVE.md).
+Web and targeted macOS checks have passed. The current site also builds as an iPhone archive and is available through AppDrop. iOS visual and interaction validation remains incomplete; no device check is claimed. Platform targets do not imply exhaustive component validation or stable upstream APIs; Exact is pre-1.0. See [validation](docs/VALIDATION.md) and the [native guide](https://github.com/rightui-dev/ui/blob/main/docs/NATIVE.md).
 
 Most routes are prerendered. Three SVG chart routes render in the browser because the pinned Exact server renderer accesses `CSS.escape` without a server implementation. The upstream SDK is unchanged. See the validation report for remaining visual, accessibility and performance work.
 

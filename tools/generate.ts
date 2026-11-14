@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, copyFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, copyFileSync, cpSync, unlinkSync, rmSync } from 'node:fs';
 import { resolve, relative, dirname } from 'node:path';
 import { buildRegistry } from '../../components/tools/registry';
 import { checkVersion } from '../../components/tools/check-version';
@@ -17,8 +17,15 @@ for (const manifest of ['package.json', 'apps/site/package.json']) {
   }
 }
 const site = resolve(root, 'apps/site');
+// Keep command assertions pinned to the same candidate as the installation UI.
+const siteTests = resolve(site, 'app.test.contract');
+const versionedTests = readFileSync(siteTests, 'utf8').replace(/(@rightui\/ui@|rightui-ui-)\d+\.\d+\.\d+-beta\.\d+/g, (_, prefix) => prefix + uiVersion);
+writeFileSync(siteTests, versionedTests);
+
 mkdirSync(resolve(site,'assets/fonts'),{recursive:true});
 for(const font of ['Geist.ttf','Geist-Italic.ttf','Newsreader.ttf','Newsreader-Italic.ttf','OFL.txt','OFL-Italic.txt','OFL-Newsreader.txt'])copyFileSync(resolve(root,'node_modules/@rightui/ui/assets/fonts',font),resolve(site,'assets/fonts',font));
+rmSync(resolve(site, 'assets/avatars'), { recursive: true, force: true });
+cpSync(resolve(root, 'node_modules/@rightui/ui/assets/avatars'), resolve(site, 'assets/avatars'), { recursive: true });
 const read = (p: string) => readFileSync(p, 'utf8');
 const json = (p: string, fallback: unknown = []) => existsSync(p) ? JSON.parse(read(p)) : fallback;
 const write = (p: string, value: string) => { mkdirSync(resolve(p, '..'), { recursive: true }); writeFileSync(p, value); };
@@ -183,7 +190,7 @@ for(const [name,url] of routes) {
 }
 write(resolve(root,'packages/catalog/markdown.json'),JSON.stringify(markdownIndex,null,2)+'\n');
 const demos=components.filter(c=>c.example&&existsSync(resolve(library,c.example)));
-if(demos.length)write(resolve(site,'generated/demos.contract'),demos.map((c,i)=>`use Demo as Demo${i} from "@rightui/registry/examples/${c.slug}"`).join('\n')+'\ncomponent ComponentDemo\n  props\n    slug: string\n    width: number\n    reduced: bool\n  view\n    column width="100%" min-width=0\n'+demos.map((c,i)=>`      ${i?'else if':'if'} slug == "${c.slug}"\n        Demo${i}(width=width, reduced=reduced)`).join('\n')+'\n');
+if(demos.length)write(resolve(site,'generated/demos.contract'),demos.map((c,i)=>`use ${c.slug === "avatar" ? "Overview" : "Demo"} as Demo${i} from "@rightui/registry/examples/${c.slug}"`).join('\n')+'\ncomponent ComponentDemo\n  props\n    slug: string\n    width: number\n    reduced: bool\n  view\n    column width="100%" min-width=0\n'+demos.map((c,i)=>`      ${i?'else if':'if'} slug == "${c.slug}"\n        Demo${i}(width=width, reduced=reduced)`).join('\n')+'\n');
 if(charts.length)write(resolve(site,'generated/charts.contract'),charts.map((c,i)=>`use Demo as Chart${i} from "@rightui/registry/charts/${c.slug}"`).join('\n')+'\ncomponent ChartDemo\n  props\n    slug: string\n    width: number\n    reduced: bool\n  view\n    column width="100%" min-width=0\n'+charts.map((c,i)=>`      ${i?'else if':'if'} slug == "${c.slug}"\n        Chart${i}(width=width, reduced=reduced)`).join('\n')+'\n');
 for(const [name,data] of Object.entries(pages))write(resolve(site,`generated/pages/${name}.ts`),`export default ${JSON.stringify(data)};\n`);
 const sourceOutput = resolve(site, "generated/sources");
