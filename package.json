@@ -20,7 +20,7 @@
     "native:ios": "bun tools/build-native.ts ios"
   },
   "dependencies": {
-    "@rightui/ui": "0.2.0-beta.1"
+    "@rightui/ui": "0.2.0-beta.3"
   },
   "engines": {
     "bun": ">=1.4.2"

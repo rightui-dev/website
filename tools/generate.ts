@@ -38,7 +38,7 @@ function scan(dir: string) {
     if (item.name.startsWith('.') || ['node_modules','target','dist','generated','Cargo.lock'].includes(item.name)) continue;
     const path = resolve(dir,item.name);
     if (item.isDirectory()) scan(path);
-    else if (/\.(contract|tamber|ts|rs|toml|json|md)$/.test(item.name)) {
+    else if (/\.(contract|tamber|ts|rs|toml|json|md|css)$/.test(item.name)) {
       const key=relative(library,path);sourceFiles[key]={path:key,code:read(path),language:item.name.endsWith('.contract')?'Contract':item.name.endsWith('.rs')?'Rust':item.name.endsWith('.ts')?'TypeScript':item.name.split('.').at(-1)!};
     }
   }
@@ -92,8 +92,11 @@ const propRows=(code:string,names:string[])=>{
  }
  return rows;
 };
-for(const c of components) pages[`component_${c.slug.replaceAll('-','_')}`]={...blank,importCode:`use ${(c.exports??[]).join(', ')} from \"@rightui/ui\"`,title:c.title,description:c.description,kind:'component',slug:c.slug,source:c.source,code:c.example&&sourceFiles[c.example]?sourceFiles[c.example].code:'',usage:c.usage,keyboard:c.keyboard,sections:[],api:c.source&&sourceFiles[c.source]?propRows(publicSource,c.exports??[]):[]};
+for(const c of components) pages[`component_${c.slug.replaceAll('-','_')}`]={...blank,importCode:`use ${(c.exports??[]).join(', ')} from \"${c.importFrom ?? "@rightui/ui"}\"`,title:c.title,description:c.description,kind:'component',slug:c.slug,source:c.source,code:c.example&&sourceFiles[c.example]?sourceFiles[c.example].code:'',usage:c.usage,keyboard:c.keyboard,sections:[],api:c.source&&sourceFiles[c.source]?propRows(publicSource,c.exports??[]):[]};
 const clipboardSetup = read(resolve(root, 'node_modules/@rightui/ui/docs/CODE-BLOCK.md')).split('```contract\n')[1]?.split('```')[0].trimEnd();
+const sheetSetup = read(resolve(root, 'node_modules/@rightui/ui/docs/SHEET.md')).split('```json\n')[1]?.split('```')[0].trimEnd();
+if (!sheetSetup) throw new Error('SheetContent requires its documented web stylesheet setup.');
+pages.component_sheet.sections.push({id:'web-setup',title:'Web setup',text:'Copy node_modules/@rightui/ui/assets/sheet.css to assets/sheet.css in your app. Merge this configuration into app.json, preserving existing entries. The stylesheet supplies viewport positioning and scroll locking. Native hosts ignore it. Keep the root uiFont provider from Installation.',code:sheetSetup,language:'json'});
 if (!clipboardSetup) throw new Error('CodeBlock requires its documented root clipboard setup.');
 pages.component_code_block.sections.push({id:'clipboard-setup',title:'Clipboard setup',text:'Add this controller once to your app root. All CodeBlock variants share the last copied value and reset their confirmation after three seconds. Merge these providers with uiFont from Installation.',code:clipboardSetup,language:'Contract'});
 pages.ai_elements={...blank,title:'AI Elements',description:'Patterns for agentic interfaces, composed from rightui components.',kind:'ai-index',sections:[{id:'composition',title:'Built from shared components',text:'Copy a pattern into your Exact project and adapt its state and actions. Trace, Message, Code Block and the other rightui primitives provide the common structure. These demos use local sample data; connect your own model and tools in your data module.',code:'',language:''}]};
@@ -126,6 +129,7 @@ const motionValue = (name: string): string => {
 // Responsive font-size syntax is unavailable in this Exact pin. Generate the fallback
 // from the public theme configuration, so it cannot drift from the library values.
 write(resolve(site,'assets/critical.css'),`/* Generated from @rightui/ui/theme. */
+${read(resolve(root, "node_modules/@rightui/ui/assets/sheet.css"))}
 #exact-root [data-rightui-availability="available"] { position: relative; overflow: visible; }
 #exact-root [data-rightui-availability="available"]::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background-color: inherit; pointer-events: none; animation-name: rightui-availability-sonar; animation-duration: ${motionValue("ui.duration-availability")}; animation-timing-function: ${motionValue("ui.easing")}; animation-iteration-count: infinite; }
 @keyframes rightui-availability-sonar { 0% { transform: scale(1); opacity: 0.4; } 75%, 100% { transform: scale(2.8); opacity: 0; } }

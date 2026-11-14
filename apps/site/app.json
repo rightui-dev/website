@@ -10,7 +10,8 @@
     "rightui-font-choice",
     "rightui-font-ready",
     "rightui-font-scope",
-    "rightui-availability"
+    "rightui-availability",
+    "rightui-sheet"
   ],
   "app": {
     "id": "dev.rightui.docs",

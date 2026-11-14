@@ -3,6 +3,15 @@
 Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## Release 0.2.0-beta.3 — modal Sheet
+
+- The published npm archive matches the reviewed artifact byte for byte (SHA-256 `2c1d5c6da106440a593e5f47722f74fc66646c43fec52439befe5a0395d391ec`). A fresh registry installation built and passed the Button interaction. Both `beta` and `latest` select `0.2.0-beta.3`; the website lockfile resolves that official package without a local override.
+- The package retains the existing controlled Sheet and root imports. The new SheetContent, SheetBody and SheetFooter use the optional `@rightui/ui/sheet` entry. Only applications importing that entry need the documented `rightui-sheet` declaration and web stylesheet; a fresh Button-only app built and passed its interaction test without that declaration.
+- The final archive installed in isolation, built, and passed six Sheet interaction tests covering persistent fields, Escape, optional close controls and four orientations on mobile. The component and web stylesheet are byte-identical to the approved local implementation; import wiring and distribution documentation were adjusted for compatibility.
+- In Chromium at 1280×800, five real pointer clicks covered all four sides and No Close Button. Each dialog covered the viewport, kept focus inside, locked page scrolling and returned focus on Escape. Animation measurements observed zero dialog scroll and zero direction reversals. At 390×844, right and bottom panels retained a visible footer and caused no document overflow; both pointer-driven animations also passed. These are targeted checks; the older full website suite was not rerun for this release.
+- The local Cloudflare emulator passed 141 route/status/MIME checks. SEO passed 133 page heads and 105 sitemap URLs. Analytics checks confirmed a unique tracker and production-domain guard, including dedicated client shells. Existing Expo demo profiles, previews and Umami integration remain included.
+- No native build or AppDrop update was performed for this Sheet delivery. The new native modal composition remains unvalidated.
+
 ## Release 0.2.0-beta.1
 
 - The final local candidate passed **34 browser tests, 0 failures**, after the single-slot PageInsets correction. Coverage includes repeated mobile block menus, theme and font choices, source tabs and three-second clipboard feedback in code blocks, package commands and documentation actions. The test compiler reports eight warnings and one informational note; these checks do not clear every accessibility or enlarged-text concern in the historical report.

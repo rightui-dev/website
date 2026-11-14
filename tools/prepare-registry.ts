@@ -42,6 +42,9 @@ export function prepareRegistry(options: { manifestOnly?: boolean } = {}) {
     throw new Error(`Install the website dependencies before preparing registry sources: @rightui/ui ${uiVersion} is required.`);
   }
   const publicNames = new Map<string, string>();
+  const uiExports = JSON.parse(readFileSync(resolve(uiRoot, 'package.json'), 'utf8')).exports;
+  const isPublicUi = (specifier: string) => specifier === '@rightui/ui' ||
+    (specifier.startsWith('@rightui/ui/') && typeof uiExports['./' + specifier.slice('@rightui/ui/'.length)] === 'string');
   for (const match of readFileSync(resolve(uiRoot, 'index.contract'), 'utf8').matchAll(/^use (.+) from "([^"]+)"/gm)) {
     for (const name of match[1].split(',').map(name => name.trim())) {
       const parts = name.split(/\s+as\s+/);
@@ -82,7 +85,7 @@ export function prepareRegistry(options: { manifestOnly?: boolean } = {}) {
         const dependency = posix(relative(uiRoot, resolve(dirname(input), specifier)));
         return uiImports(output, names, dependency);
       }
-      if (specifier !== '@rightui/ui') throw new Error(`Unexpected UI helper dependency: ${specifier}`);
+      if (!isPublicUi(specifier)) throw new Error(`Unexpected UI helper dependency: ${specifier}`);
       return line;
     });
     // Public shapes are nominal: private helpers must use the package's original declarations.
@@ -105,7 +108,7 @@ export function prepareRegistry(options: { manifestOnly?: boolean } = {}) {
         const target = exports[key];
         if (!target) throw new Error(`Missing registry export: ${key}`);
         collectDemo(target.slice(2));
-      } else if (specifier !== '@rightui/ui') {
+      } else if (!isPublicUi(specifier)) {
         throw new Error(`Unexpected registry dependency: ${specifier}`);
       }
       return line;
