@@ -4,7 +4,7 @@ Recorded checks as of November 14, 2026, using Bun 1.4.2 and Exact revision `534
 
 ## Website
 
-- The latest recorded `bun run test` completed **26 browser tests, 0 failures**. Coverage includes navigation, search, theme, installation controls, compatibility tables and targeted component interactions. The preceding `verify` run reported 0 Contract findings across its 22 tests.
+- The latest recorded `bun run test` completed **28 browser tests, 0 failures**. Coverage includes navigation, search, theme, installation controls, compatibility tables and targeted component interactions. The preceding `verify` run reported 0 Contract findings across its 22 tests.
 - The production build passed for 66 component examples, 21 AI patterns, 27 blocks and 10 charts. The build generated 130 Markdown documents, including compatibility and installation pages. The official Exact SDK checkout was unchanged.
 - The previous production release passed **137 route/status/MIME checks** on `https://rightui.dev`. This update passed **138 checks** against the local Cloudflare emulator. Served `app.js` and Geist matched the local build. Checks included Markdown, client-rendered routes and genuine unknown-route 404 responses.
 - The approved logo is registered for the favicon, Apple touch icon and web manifest. A faithful 56×56, 1,155-byte derivative is embedded in initial HTML and the runtime for the 28px header logo. Postbuild rejects missing, deferred or external header logos.
@@ -13,11 +13,11 @@ The website now uses the immutable npm beta directly. Its generated demo registr
 
 ## Package and data integration
 
-- **`@rightui/ui@0.1.0-beta.3` is published on npm.** Its archive SHA-512 integrity matched the reviewed release artifact. Both the beta.3 archive and its npm installation built with zero warnings and passed the Button counter test, from 0 to 1. The npm archive integrity matched the validated local artifact.
+- The earlier **`@rightui/ui@0.1.0-beta.3` release** was validated on npm. Its archive SHA-512 integrity matched the reviewed release artifact. Both the beta.3 archive and its npm installation built with zero warnings and passed the Button counter test, from 0 to 1. The npm archive integrity matched the validated local artifact.
 - The package archive and its manual extraction were separately installed in isolated Exact apps without a global rightui link. Contract types and web builds passed; the counter interaction passed. The npm, pnpm and Yarn command variants are documented but were not individually exercised as installation clients.
 - The complete Contract and TypeScript integration example built and passed one interaction test. The Rust integration passed one `cargo test`; this checks its data-source contract, not a native host launch.
 - Five version-tool tests passed, covering beta policy, required notes, synchronized versions, immutable tags and refusal to repack modified package sources under an existing release.
-- Releases remain beta. The npm `beta` channel resolves to `0.1.0-beta.3`; the existing `latest` tag remains on `0.1.0-beta.2`. Use an exact version or `@beta` for the current beta. No stable version is published.
+- Releases remain beta. Both npm tags, `latest` and `beta`, now resolve to `0.1.0-beta.5` following explicit approval. The default install selects beta.5; this does not make it stable. Use an exact version for reproducible installation.
 
 ## Rendering checks
 
@@ -39,7 +39,7 @@ The separate `components/examples/native` showcase imports the same 124 previews
 
 The latest broad visual/accessibility audit reported **130 findings**, and has not been cleared by the functional checks above. Its 22 test endings were audited at phone/desktop sizes, light/dark schemes and the largest text size: 44 fixed-size findings, 25 clipping findings, 11 overflow findings and 50 other findings. Some involve intentional hidden live-status text or scrollable code; compact line heights, enlarged-text overflow, contrast and authored-dialog warnings still need triage. Generated reports live under `apps/site/.exact/verify/`.
 
-The latest functional test build retained 13 compiler warnings and one informational note. Neither successful tests nor screenshots establish full variant parity, complete keyboard/VoiceOver coverage, pixel-perfect fidelity or a 120 fps guarantee. See the UI repository's [variation inventory](https://github.com/rightui-dev/ui/blob/main/docs/VARIATIONS.md), [AI pattern boundaries](https://github.com/rightui-dev/ui/blob/main/docs/AI-ELEMENTS.md) and [native guide](https://github.com/rightui-dev/ui/blob/main/docs/NATIVE.md).
+The beta.5 functional test run reported 15 compiler warnings and one informational note; the subsequent final candidate build reported 18 warnings and one note. Neither successful tests nor screenshots establish full variant parity, complete keyboard/VoiceOver coverage, pixel-perfect fidelity or a 120 fps guarantee. See the UI repository's [variation inventory](https://github.com/rightui-dev/ui/blob/main/docs/VARIATIONS.md), [AI pattern boundaries](https://github.com/rightui-dev/ui/blob/main/docs/AI-ELEMENTS.md) and [native guide](https://github.com/rightui-dev/ui/blob/main/docs/NATIVE.md).
 
 Three routes (`/docs/components/chart`, `/charts/area`, `/view/dashboard-01`) render in the browser because the pinned SDK's server SVG-gradient renderer lacks `CSS.escape`. Other routes use build rendering. The demo dispatcher still compiles into one UI bundle; lazy data modules avoid loading every source document up front, while UI code splitting remains future work.
 
@@ -51,11 +51,11 @@ The SEO check passed for all 130 page heads, 102 sitemap URLs, robots.txt, the r
 
 ## Clean release history
 
-The history cleanup was completed with `v0.1.0-beta.3`, from the clean source history. Earlier GitHub prereleases and tags were removed after their metadata and archives were backed up and verified. Existing npm versions remain available. The beta.3 archive changes only the README, changelog and package version; all Contract components, theme tokens and font assets are byte-identical to beta.2.
+The history cleanup was completed with `v0.1.0-beta.3`, from the clean source history. Earlier GitHub prereleases and tags were removed after their metadata and archives were backed up and verified. npm versions were initially preserved; any subsequent targeted removal is recorded separately. The beta.3 archive changes only the README, changelog and package version; all Contract components, theme tokens and font assets are byte-identical to beta.2.
 
 ## AI installation prompt and Accordion spacing
 
-The homepage and Installation guide share one versioned AI setup prompt, including their Markdown exports. Browser checks confirmed the complete prompt reached the clipboard successfully on both pages, with the Copied state displayed. The expandable prompt wraps without horizontal overflow at 390px. The homepage attribution links Exact to its official repository.
+The beta.4 homepage and Installation guide shared one versioned AI setup prompt, including their Markdown exports. The homepage prompt was subsequently removed; it remains available in Installation. Browser checks confirmed the complete prompt reached the clipboard successfully on both pages, with the Copied state displayed. The expandable prompt wraps without horizontal overflow at 390px. The homepage attribution links Exact to its official repository.
 
 The beta.4 Accordion and AccordionMultiple render their headings, expanded content and chevrons 16px from the container edges. Browser measurements confirmed those insets at 390px, including hover, with no horizontal document overflow. ArrowDown moved focus to the next trigger. An isolated archive test and the website regression test checked single and independent expansion, keyboard activation and preserved state after resize. These are web checks; no new native validation is claimed.
 
@@ -66,3 +66,18 @@ The beta.4 package passed isolated installation, build and Button interaction ch
 Code blocks show the language once when it is also their title, while source filenames keep their separate language label. The Installation guide and all component installation panels share the same Bun/npm/pnpm/Yarn command panel. Markdown exports preserve all four commands.
 
 The 26 browser tests passed, including all four guide commands, keyboard selection, copy feedback reset and the existing Command/Manual component flow. A browser clipboard check confirmed Copy writes only the selected npm command. At 320px, the code scrolls inside its panel without document overflow, and Copy/Copied keeps the same header height. The final build passed after reserving the button width.
+
+
+## Trace, Code Block and initial theme
+
+The beta.5 component update preserves existing required props. Trace adds compact status rows, controlled tool/error/source disclosures and a local replay demonstration. CodeBlockAdvanced accepts syntax tokens and line variants, with wrapping, line numbers, constrained height, copy feedback and optional UTF-8 download. The example tokens are reproducibly generated by Shiki; a language label alone does not tokenize arbitrary code.
+
+The 28 website browser tests passed, including replay progression through the final answer, disclosure state, reduced motion, resize, tokenized source text, wrap and copy feedback. Desktop and 390px rendering checks showed no document horizontal overflow. Code Block's empty and populated unwrapped lines measured 24px. With clipboard write permission granted to the isolated browser, Copy succeeded; the downloaded route.ts matched the original 337-byte code. This checks the web download fallback, not the native file picker. No new iOS or macOS checks were run.
+
+An early inline theme bootstrap now reads Exact's stored preference before styles and activation. URL overrides, persisted light/dark choices and the system default share the same priority in the bootstrap and the Contract runtime. Four helper tests passed, including malformed/unavailable storage and dedicated SEO client shells. Browser measurements passed 20 scenarios across emulated light and dark system preferences: home, documentation and client-rendered routes, saved choices, URL overrides, corrupt values and storage exceptions. Animation-frame and root-style samples detected no opposite-color frame before or through activation. These are computed-style measurements, not a compositor filmstrip. A real toggle preserved the URL's other parameter and fragment, left the stored preference intact for the URL override and retained its scheme after reload.
+
+The homepage AI prompt box was removed; Installation retains its copyable prompt. The hero status now reads Work in progress and links to Compatibility. Local hosting and SEO checks passed 138 routes, 130 page heads and 102 sitemap URLs.
+
+The final beta.5 candidate archive and documentation build passed locally. The final build reported 18 warnings and one informational note; the existing broad audit remains unresolved. The first-paint layout/logo comparison passed all 12 widths from 390 to 2560px after the homepage changes. The package is now published on npm; its SHA-512 integrity matches the validated archive. The official npm installation built with zero warnings and passed the isolated Button interaction test. The website dependency and lockfile now resolve the exact official beta.5 without a local override.
+
+On November 14, 2026, the obsolete npm versions `0.0.0-stage` and `0.1.0-beta.2` were explicitly removed after their registry metadata and tarball integrity were backed up and verified. The registry retains beta.3, beta.4 and beta.5; both `latest` and `beta` select beta.5. The final website build uses the official exact npm package. Hosting/SEO checks passed locally for 138 routes, 130 page heads and 102 sitemap URLs.

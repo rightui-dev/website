@@ -12,6 +12,7 @@ test "documentation search opens a real component page"
 
 test "theme and mobile navigation remain usable"
   size 390x844
+  prefer prefers-color-scheme light
   clock data
   tap "theme-toggle"
   expect state theme == "dark"
@@ -56,18 +57,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.4"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.5"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.1.0-beta.4"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.1.0-beta.5"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.1.0-beta.4"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.1.0-beta.5"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -75,18 +76,16 @@ test "installation explains consumer setup"
   expect text "ai-install-copy" == "Copied"
   expect no failures
 
-test "homepage provides the AI installation prompt"
+test "homepage links the project status and credits Exact"
   size 390x844
   clock data
   expect tree has "made-with-exact"
-  expect tree has "ai-install-copy"
-  tap "ai-install-toggle"
-  expect tree has "ai-install-prompt-text"
-  tap "ai-install-copy"
-  expect text "ai-install-copy" == "Copied"
-  tap "ai-install-toggle"
-  expect text "ai-install-toggle" == "View prompt"
+  expect tree missing "ai-install-copy"
+  tap "project-status"
+  clock data
+  expect text "page-title" == "Compatibility"
   expect no failures
+
 
 test "accordion variants retain independent expansion after resize"
   at "/docs/components/accordion"
@@ -324,17 +323,17 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.4"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.1.0-beta.5"
   tap "install-button-mode-1"
-  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.4 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.4.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
+  expect text "install-button-command" == "mkdir -p vendor/rightui vendor/rightui-ui\nnpm pack @rightui/ui@0.1.0-beta.5 --pack-destination vendor/rightui\ntar -xzf ./vendor/rightui/rightui-ui-0.1.0-beta.5.tgz -C vendor/rightui-ui --strip-components=1\nnpm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.4"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.1.0-beta.5"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -355,4 +354,50 @@ test "compatibility matrix exposes every catalog group and honest platform statu
   resize 1280x900
   clock settle
   expect text "component-button-ios" == "⚠️"
+  expect no failures
+
+
+test "trace replay exposes tool output, error and sources before its answer"
+  at "/docs/components/trace"
+  size 1280x1000
+  clock data
+  expect tree has "content-trace-answer"
+  tap "content-trace-replay"
+  expect tree has "content-trace-thinking"
+  expect tree missing "content-trace-answer"
+  expect tree missing "content-trace-step-3"
+  clock +5200
+  expect tree has "content-trace-working"
+  tap "content-trace-step-1"
+  expect text "content-trace-status-output" == " M package.json"
+  tap "content-trace-step-3"
+  expect text "content-trace-error-code" == "ERR_PNPM_OUTDATED_LOCKFILE"
+  tap "content-trace-sources"
+  expect tree has "content-trace-sources-content"
+  clock +3500
+  expect tree has "content-trace-complete"
+  expect tree has "content-trace-replay"
+  expect text "content-trace-answer" == "package.json changed, but pnpm-lock.yaml did not. Run pnpm install locally and commit the updated lockfile so CI can install the same dependency versions."
+  resize 390x844
+  prefer prefers-reduced-motion reduce
+  tap "content-trace-step-3"
+  clock settle
+  expect tree missing "content-trace-step-3-content"
+  expect no failures
+
+test "code block preserves tokenized text and confirms copying after wrap"
+  at "/docs/components/code-block"
+  size 1280x1000
+  clock data
+  expect text "content-codeblock-title" == "app/api/chat/route.ts"
+  expect text "content-codeblock-line-0" == "import { streamText } from \"ai\""
+  expect tree has "content-codeblock-download"
+  tap "content-codeblock-wrap"
+  tap "content-codeblock-copy"
+  expect text "content-codeblock-copy-status" == "Copied to clipboard"
+  resize 390x844
+  clock settle
+  expect text "content-codeblock-line-11" == "  return result.toUIMessageStreamResponse()"
+  tap "content-codeblock-wrap"
+  expect text "code-diff-line-2" == "  return `Hello, ${name}!`"
   expect no failures

@@ -3,6 +3,7 @@ import { resolve, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { repairSSRImages, assertNavbarFirstPaint } from './ssr-images';
 import { prepareSEO, clientTarget, socialDetails } from './seo';
+import { withInitialTheme } from './theme';
 
 const root = resolve(import.meta.dir, '..');
 const dist = resolve(root, 'dist');
@@ -52,7 +53,7 @@ function fixFontDisplay(dir: string) {
         return face.replace(/font-display\s*:\s*optional/g, 'font-display:swap');
       });
       if (entry.name.endsWith('.html')) {
-        next = socialDetails(repairSSRImages(next, qrSource));
+        next = withInitialTheme(socialDetails(repairSSRImages(next, qrSource)));
         if (assertNavbarFirstPaint(next, inlineLogo)) firstPaintLogos++;
         next = next.replace(/<style data-rightui-critical>[\s\S]*?<\/style>\n?/g, '');
         next = insertHead(next, `<style data-rightui-critical>${criticalCSS}</style>`);

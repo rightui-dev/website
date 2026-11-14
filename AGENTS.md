@@ -28,3 +28,5 @@ Run `bun run build`, validate Cloudflare routing locally, then `bun run deploy:c
 ## Initial rendering
 
 Visible header assets and above-the-fold content must render in initial HTML, without waiting for JavaScript activation. Use appropriately sized eager images, reserve dimensions, and verify the rendered page before and after activation. Do not ship delayed logo appearance, placeholder flashes or layout shifts.
+
+Resolve the saved color scheme before the first paint on every HTML route, including client shells. Keep the early bootstrap and Exact runtime theme priority aligned; verify persisted dark mode through activation before shipping theme changes.

@@ -2,6 +2,7 @@ shape Viewport
   width: number
   height: number
   prefersReducedMotion: bool
+  prefersColorScheme: string
 shape CatalogEntry
   slug: string
   title: string

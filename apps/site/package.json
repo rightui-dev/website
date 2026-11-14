@@ -6,7 +6,7 @@
     "start": "bun exact.mjs serve dist"
   },
   "dependencies": {
-    "@rightui/ui": "0.1.0-beta.4",
+    "@rightui/ui": "0.1.0-beta.5",
     "@rightui/registry": "workspace:*"
   }
 }

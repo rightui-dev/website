@@ -61,7 +61,6 @@ pages.compatibility={...blank,title:'Compatibility',description:'Validation stat
 for (const {route,...x} of sections) pages[route]={...blank,...x,sections:x.sections.map(({source,siteSource,...section}:any)=>({...section,code:source?read(resolve(library,source)):siteSource?read(resolve(site,siteSource)):section.code})),kind:'guide'};
 const aiInstallSection = pages.installation.sections.find((section: any) => section.id === 'ai-setup');
 if (!aiInstallSection?.code) throw new Error('Installation must define the shared AI setup prompt.');
-pages.home.sections = [aiInstallSection];
 for (const category of ['sidebar','login','signup'])pages[`blocks_${category}`]={...pages.blocks,slug:category,title:`${category === 'sidebar' ? 'Sidebar' : category === 'login' ? 'Login' : 'Signup'} blocks for Exact`,description:`Explore ${category} layouts built with rightui. Preview each block and adapt its Contract source for your Exact application.`};
 const publicSource = Object.values(sourceFiles).filter(f=>f.path.startsWith('packages/ui/') && f.path.endsWith('.contract')).map(f=>f.code).join('\n');
 const propRows=(code:string,names:string[])=>{

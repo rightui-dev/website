@@ -27,7 +27,7 @@ component RightUI
   resource page = loadPage(top(nav).name) as shape Page else empty()
   resource source = loadSource(top(nav).name == "source" ? searchParam(top(nav), "file") : page.source) when top(nav).name == "source" or top(nav).name.startsWith("component_") as shape SourceFile else empty()
   resource compatibility = loadCompatibility() when top(nav).name == "compatibility" as shape CompatibilityReport else empty()
-  state theme = "light" persist
+  state theme = "system" persist
   state menu = false
   state query = ""
   state activeHit = 0
@@ -41,7 +41,7 @@ component RightUI
     demoUntil = max(demoUntil, demoTime + duration)
   action tickDemo
     demoTime = min(demoUntil, demoTime + 32)
-  task demoClock when demoTime < demoUntil and top(nav).name.startsWith("ai_")
+  task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace")
     every(32, tickDemo)
   state headerHeight = 64
   action measureHeader(w: number, h: number)
@@ -52,13 +52,22 @@ component RightUI
   derive searchEntries = [CatalogEntry(slug="how_exact", title="How Exact works", description="Understand Contract, RightUI, TypeScript and Rust", href="/docs/how-exact-works"), CatalogEntry(slug="compatibility", title="Compatibility", description="Platform validation for every component", href="/docs/compatibility"), CatalogEntry(slug="installation", title="Installation", description="Set up rightui", href="/docs/installation"), CatalogEntry(slug="typescript", title="TypeScript", description="TypeScript data integration", href="/docs/installation/typescript"), CatalogEntry(slug="rust", title="Rust", description="Rust data integration", href="/docs/installation/rust"), CatalogEntry(slug="theming", title="Theming", description="Theme tokens and dark mode", href="/docs/theming"), CatalogEntry(slug="blocks", title="Blocks", description="Ready-to-use layouts", href="/blocks"), CatalogEntry(slug="area", title="Area Charts", description="Charts and graphs", href="/charts/area")].concat(catalog).concat(aiCatalog)
   derive matches = searchEntries.filter(c => (c.title + " " + c.description).toLowerCase().includes(query.toLowerCase())).slice(0, 10)
   derive themeQuery = searchParam(top(nav), "theme")
-  task theming key=(theme + themeQuery)
+  derive scheme = themeQuery == "dark" or themeQuery == "light" ? themeQuery : (theme == "dark" or theme == "light" ? theme : "system")
+  derive effectiveTheme = scheme == "system" ? (viewport.prefersColorScheme == "dark" ? "dark" : "light") : scheme
+  task theming key=scheme
     change(applyTheme)
   action applyTheme
-    setScheme(themeQuery == "dark" or themeQuery == "light" ? themeQuery : theme)
+    setScheme(scheme)
   action toggleTheme
-    let next = theme == "dark" ? "light" : "dark"
-    theme = next
+    let next = effectiveTheme == "dark" ? "light" : "dark"
+    if themeQuery == "dark" or themeQuery == "light"
+      let url = top(nav).url
+      let hash = fragment(top(nav))
+      let queryAt = url.indexOf("?")
+      let remainingQuery = url.slice(queryAt + 1).split("&").filter(part => part != "theme" and not part.startsWith("theme=")).join("&")
+      nav = replace(nav, url.slice(0, queryAt) + "?theme=" + next + (remainingQuery == "" ? "" : "&" + remainingQuery) + (hash == "" ? "" : "#" + hash))
+    else
+      theme = next
     setScheme(next)
   action follow(url: string)
     query = ""
@@ -113,9 +122,6 @@ component RightUI
                   text "This site is 100% made with"
                   link href="https://github.com/expo/exact" target="_blank" rel="noopener noreferrer" class=QuietLink text-decoration="underline"
                     text "Exact"
-                column padding="0 24px 40px" max-width="64rem" margin="0 auto" box-sizing="border-box"
-                  for section in page.sections key=section.id
-                    AIInstallPrompt(title=section.title, description=section.text, prompt=section.code)
                 // HOME_CARDS
             else if doc
               row padding="calc(32px + clamp(0px, (100vw - 1023px) * 1000, 16px)) 0 64px" gap=0 align-items="flex-start" box-sizing="border-box"
@@ -247,7 +253,7 @@ component RightUI
                       link href=(category == "Featured" ? "/blocks" : "/blocks/" + category.toLowerCase()) class=Hit padding="4px 12px" color=(page.slug == category.toLowerCase() ? "ui.foreground" : "ui.muted-foreground")
                         text category font-size="1rem"
                   for block in blocks.filter(b => page.slug == "featured" ? ["dashboard-01", "sidebar-07", "sidebar-03", "login-03", "login-04"].includes(b.slug) : b.slug.startsWith(page.slug)) key=block.slug
-                    BlockFrame(slug=block.slug, title=block.title, code=block.code, theme=theme, width=viewport.width)
+                    BlockFrame(slug=block.slug, title=block.title, code=block.code, theme=effectiveTheme, width=viewport.width)
             else if page.kind == "charts"
               main
                 Hero(title=page.title, description=page.description, primary="Browse Charts", primaryHref="#charts", secondary="Documentation", secondaryHref="/docs/components/chart")
@@ -316,7 +322,7 @@ component RightUI
               link href="https://www.npmjs.com/package/@rightui/ui" target="_blank" rel="noopener noreferrer" class=Hit width=32 height=32 display="flex" align-items="center" justify-content="center" aria-label="rightui on npm" title="@rightui/ui on npm" testId="npm-link"
                 NpmIcon()
             view width=1 height=16 flex-shrink=0 background-color="ui.border" aria-hidden=true
-            button id="theme-toggle" testId="theme-toggle" class=Hit press=toggleTheme aria-label="Toggle theme" aria-pressed=(theme == "dark") width=32 height=32 flex-shrink=0 padding=0 display="flex" align-items="center" justify-content="center"
+            button id="theme-toggle" testId="theme-toggle" class=Hit press=toggleTheme aria-label="Toggle theme" aria-pressed=(effectiveTheme == "dark") width=32 height=32 flex-shrink=0 padding=0 display="flex" align-items="center" justify-content="center"
               ThemeIcon()
       column id="docs-sidebar" testId="docs-sidebar" display=(doc ? "flex" : "none") inert=(not doc or mobile) width="clamp(0px, (100vw - 1023px) * 1000, 14.5rem)" overflow="hidden" flex-shrink=0 min-height=0 position="absolute" top=(headerHeight + 48) bottom=24 left="max(24px, calc((100vw - 96rem) / 2 + 24px))" box-sizing="border-box"
         scroll id="docs-sidebar-scroll" testId="docs-sidebar-scroll" flex=1 min-height=0 overflow-x="hidden"
