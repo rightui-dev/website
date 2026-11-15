@@ -278,7 +278,7 @@
       {
         "id": "schema",
         "title": "Read the manifest",
-        "text": "The public [registry manifest](/assets/registry/index.json) lists source paths and SHA-256 hashes. Its format is rightui-contract/v1, not the shadcn registry format. It is a source index, not an installation CLI.",
+        "text": "The public [registry manifest](/assets/registry/index.json) lists source paths and SHA-256 hashes. Its rightui-contract/v1 format provides a source index for inspecting and copying examples.",
         "code": "",
         "language": "sh"
       },

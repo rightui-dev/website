@@ -81,7 +81,7 @@ component RightUI
     demoUntil = max(demoUntil, demoTime + duration)
   action tickDemo
     demoTime = min(demoUntil, demoTime + 32)
-  task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace")
+  task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace" or top(nav).name == "component_toast")
     every(32, tickDemo)
   state previewBarHidden = false
   state previewPageY = 0
@@ -558,7 +558,7 @@ component RightUI
                       text "This is the library source used to build this version of the examples." class=Paragraph font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                       if screen.source.path != ""
                         link href=("https://github.com/rightui-dev/ui/blob/main/" + screen.source.path) class=QuietLink
-                          text "View on GitHub (repository access required)" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                          text "View on GitHub" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                 else
                   main padding="ui.space-64"
                     h1 class=Heading
@@ -572,7 +572,7 @@ component RightUI
                       link href="https://ui.shadcn.com" class=QuietLink
                         text "shadcn/ui." font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                       link href="https://github.com/rightui-dev/ui" class=QuietLink
-                        text "GitHub (access required)." font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                        text "GitHub." font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                       text "Beta · {{UI_VERSION}}" font-size="ui.text-caption" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
             if nativeIOS and screen.page.kind == "view"
               view position="absolute" top=0 left=0 right=0 height="ui.space-48" overflow="clip" z-index=40 pointer-events=(previewBarHidden ? "none" : "auto")
