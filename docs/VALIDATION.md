@@ -3,6 +3,16 @@
 Recorded checks as of November 15, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## Simple Sheet motion — November 15, 2026
+
+- Package **0.3.0-beta.3** gives all four SheetContent orientations the same slide and backdrop fade. Bottom no longer uses Drawer handles, snap points or springs. Drawer source and behavior remain unchanged.
+- Eight isolated package Sheet tests passed, including initially open content and reopening during an interrupted exit. Real browser pointer checks measured entry and exit translations on every edge with synchronized opacity and no focus-induced layer scrolling. At 390px, reduced-motion checks observed no intermediate movement. An independent archive installation built and passed its Button test.
+- iOS simulator interactions and a recording verified full-window panels, no handles, close controls and visible entry/exit motion on all edges. Native accessibility and physical frame rate remain incompletely measured. The previous 45-test site run belongs to beta.2 and was not rerun for this Sheet-only correction.
+- iPhone and Mac **0.3.0, build 2026111505** are available on AppDrop as iOS **revision 5** and Mac **revision 6**. Both downloads match the uploaded bytes after IPA metadata normalization. Each update preserved the other platform. The iPhone copy was installed and launched on the physical device. Mac strict signature/ZIP checks passed. Once its window became available, opening and closing all four Sheet orientations was checked in the release archive; the bottom panel covered the window and had no handle.
+- npm publication completed on the beta channel. The public canonical tarball matches the release archive and registry integrity; a fresh registry installation built and passed its Button interaction. The website dependency and Bun lock resolve the official package, and all 94 installed files match the verified archive. The existing latest tag remains unchanged.
+- The final documentation build passed. Local Cloudflare checks passed 141 routing/status/MIME probes, 133 SEO heads and 105 sitemap URLs, and 134 analytics heads with the production-only guard. No local checkout paths were found in the generated HTML, JavaScript or Markdown.
+- Both native bundles exclude the Umami script and tracker identifier. Native apps embed the previous Mac download revision 5; the source link was advanced to revision 6 after upload. This native delivery does not deploy the public website.
+
 ## Drawer options and popover invokers — November 15, 2026
 
 - The final browser suite passed **45 tests, 0 failures**. Six route-data tests passed with 34 assertions. The installed-package overlay fixture passed 13 targeted tests; six Sheet checks cover the controlled composition. These checks do not establish exhaustive catalog accessibility coverage.
