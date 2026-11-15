@@ -32,3 +32,7 @@ Visible header assets and above-the-fold content must render in initial HTML, wi
 Resolve the saved color scheme before the first paint on every HTML route, including client shells. Keep the early bootstrap and Exact runtime theme priority aligned; verify persisted dark mode through activation before shipping theme changes.
 
 Selectable presets need all compiled mode rules in the initial HTML response or a render-blocking head stylesheet. Exact can prune unused rules from prerendered pages and reset modes at activation: preserve the initial choices through that handoff, then let application actions own them. Check palette and control dimensions through activation as well as light/dark appearance.
+
+## Version consistency
+
+Use `bun run sync:ui` after publishing a new UI beta and aligning the sibling library checkout. The installed package supplies the display version through `tools/ui-version.ts`; use `{{UI_VERSION}}` in current guides/templates. Generation and postbuild reject stale current-document references while preserving historical source files. `bun run deploy` enforces npm beta, official lock integrity, clean source and matching build provenance. Do not bypass this check with a raw Wrangler upload. Keep AppDrop URLs in `content/downloads.json`, shared by the Contract page and Markdown.

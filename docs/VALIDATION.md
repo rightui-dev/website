@@ -3,6 +3,10 @@
 Recorded checks as of November 15, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## Current release references — November 15, 2026
+
+Twelve version-guard tests passed with 27 assertions. They reject mismatched manifests, lock resolution, compatibility metadata, outdated commands and archive names, unpinned/latest/ranged install commands, unresolved placeholders and a deployment behind npm's beta channel. Local unpublished previews remain supported, while production rejects their overrides. Current public pages are checked separately from preserved historical source archives. `sync:ui` installed the official current beta and regenerated the shared command/footer data. AppDrop links now share `content/downloads.json`, fixing the older Mac revision in the Markdown download page.
+
 ## Simple Sheet motion — November 15, 2026
 
 - Package **0.3.0-beta.3** gives all four SheetContent orientations the same slide and backdrop fade. Bottom no longer uses Drawer handles, snap points or springs. Drawer source and behavior remain unchanged.

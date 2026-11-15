@@ -394,9 +394,9 @@ component RightUI
                         text "Exact" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                     // HOME_CARDS
                 else if screen.page.kind == "try"
-                  TryApp()
+                  TryApp(macDownloadUrl={{MAC_DOWNLOAD_URL}})
                 else if screen.page.kind == "try-iphone"
-                  TryIPhone()
+                  TryIPhone(iphoneUrl={{IPHONE_URL}})
                 else if screen.page.kind == "themes"
                   ThemePage(preset=preset, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, density=density, radius=radius, font=fontChoice, code=(current(themeExport) ? themeExport.code : ""), reduced=viewport.prefersReducedMotion, choose=chooseTheme)
                 else if isDocumentation(screen.name)

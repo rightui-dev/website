@@ -6,6 +6,7 @@ import { prepareSEO, clientTarget, socialDetails, isIndexable } from './seo';
 import { withAnalytics } from './analytics';
 import { withInitialTheme } from './theme';
 import { withClipboardFallback } from './clipboard';
+import { uiVersion, checkBuiltUiReferences } from './ui-version';
 import { compiledModeCSS, withCompiledModeStyles, withSSRModeBootstrap } from './ssr-modes';
 
 const root = resolve(import.meta.dir, '..');
@@ -112,6 +113,8 @@ const library = resolve(root, '../components');
 writeFileSync(resolve(dist, 'build-info.json'), JSON.stringify({
   websiteRevision: revision(root),
   uiRevision: revision(library),
-  uiVersion: JSON.parse(readFileSync(resolve(library, 'packages/ui/package.json'), 'utf8')).version,
+  uiVersion: uiVersion(root),
   exactRevision: revision(resolve(root, process.env.EXACT ?? '../.tooling/exact')),
 }, null, 2) + '\n');
+
+console.log(`Checked UI version references in ${checkBuiltUiReferences(dist, uiVersion(root))} public documents.`);

@@ -128,7 +128,7 @@
         "id": "updating",
         "title": "Update your version",
         "text": "Read the [changelog](/source?file=packages/ui/CHANGELOG.md) before installing a newer beta, then build and test your app. Commit package.json and your lockfile together. To roll back, reinstall the previous exact version. Keep your Exact SDK version unchanged unless the release notes require an upgrade.",
-        "code": "# Replace <version> with the beta version you want to use\nbun add --exact @rightui/ui@<version>",
+        "code": "bun add --exact @rightui/ui@{{UI_VERSION}}",
         "language": "sh"
       },
       {

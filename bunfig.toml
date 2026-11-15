@@ -1,0 +1,3 @@
+[install]
+# Allow the project's own freshly published releases; keep the age gate for other packages.
+minimumReleaseAgeExcludes = ["@rightui/ui"]

@@ -4,18 +4,15 @@ import { buildRegistry } from '../../components/tools/registry';
 import { checkVersion } from '../../components/tools/check-version';
 import { compatibility, compatibilityMarkdown } from '../../components/tools/compatibility';
 import { prepareRegistry } from './prepare-registry';
+import { uiVersion as resolveUiVersion, assertCurrentUiReferences } from './ui-version';
 import { createTheme, themeLayout, themeOptions, themeAxes, themeTokens } from '@rightui/ui/theme';
 prepareRegistry();
 const root = resolve(import.meta.dir, '..');
 const finderMetadata = resolve(root, "dist.gen/.DS_Store");
 if (existsSync(finderMetadata)) unlinkSync(finderMetadata);
 const library = resolve(root, '../components');
-const uiVersion = checkVersion(library);
-for (const manifest of ['package.json', 'apps/site/package.json']) {
-  if (JSON.parse(readFileSync(resolve(root, manifest), 'utf8')).dependencies['@rightui/ui'] !== uiVersion) {
-    throw new Error(`${manifest} must pin the same published UI version as the documentation: ${uiVersion}`);
-  }
-}
+checkVersion(library);
+const uiVersion = resolveUiVersion(root);
 const site = resolve(root, 'apps/site');
 // Keep command assertions pinned to the same candidate as the installation UI.
 const siteTests = resolve(site, 'app.test.contract');
@@ -31,6 +28,13 @@ const json = (p: string, fallback: unknown = []) => existsSync(p) ? JSON.parse(r
 const write = (p: string, value: string) => { mkdirSync(resolve(p, '..'), { recursive: true }); writeFileSync(p, value); };
 const slugify = (s: string) => s.toLowerCase().replaceAll(' ', '-');
 const appDropLogo = 'data:image/png;base64,' + readFileSync(resolve(site, 'assets/brand/appdrop.png')).toString('base64');
+const downloads = JSON.parse(read(resolve(root, 'content/downloads.json'))) as { iphoneUrl: string; macDownloadUrl: string };
+for (const key of ['iphoneUrl', 'macDownloadUrl'] as const) {
+  const url = new URL(downloads[key]);
+  if (url.protocol !== 'https:' || url.hostname !== 'appdrop.app' || url.username || url.password) {
+    throw new Error(`content/downloads.json ${key} must be a public HTTPS AppDrop URL.`);
+  }
+}
 write(resolve(site, 'generated/appdrop-brand.contract'), `component AppDropMark\n  view\n    image ${JSON.stringify(appDropLogo)} id="appdrop-logo" width=24 height=24 alt="" transform="rotate(-12deg)" flex-shrink=0\n`);
 const families = 'Accordion|Alert|Alert Dialog|Aspect Ratio|Attachment|Avatar|Badge|Breadcrumb|Bubble|Button|Button Group|Calendar|Card|Carousel|Chart|Checkbox|Code Block|Collapsible|Combobox|Command|Context Menu|Data Table|Date Picker|Dialog|Direction|Drawer|Dropdown Menu|Empty|Field|Hover Card|Input|Input Group|Input OTP|Item|Kbd|Label|Marker|Menubar|Message|Message Scroller|Native Select|Navigation Menu|Pagination|Popover|Progress|Questionnaire|Radio Group|Resizable|Scroll Area|Select|Separator|Sheet|Sidebar|Skeleton|Slider|Spinner|Switch|Table|Tabs|Textarea|Toast|Toggle|Toggle Group|Tooltip|Trace|Typography'.split('|');
 const details = json(resolve(library, 'metadata/components.json')) as any[];
@@ -179,14 +183,15 @@ for(const [name,url] of routes) {
  if(p.keyboard)parts.push('## Keyboard',p.keyboard);
  if(p.api.length)parts.push('## API Reference','| Property | Type |\n| --- | --- |\n'+p.api.map((r:any)=>`| ${r.name} | ${r.type.replaceAll('|','\\|')} |`).join('\n'));
  for(const s of p.sections)parts.push(`## ${s.title}`,s.text,...(s.code?[fenced(s.language,s.code)]:[]));
- if(p.kind==='try')parts.push('## iPhone','[Installer avec AppDrop](/try/iphone)','## Mac','[Télécharger avec AppDrop](https://appdrop.app/api/drops/wcfnk49huy/file?revision=3&build=macos)','Mac avec puce Apple, macOS 14 ou ultérieur.','## Android et Windows','Pas encore disponibles.');
- if(p.kind==='try-iphone')parts.push('[Ouvrir AppDrop sur mon iPhone](https://appdrop.app/d/wcfnk49huy)','La configuration AppDrop est requise avant la première installation.');
+ if(p.kind==='try')parts.push('## iPhone','[Installer avec AppDrop](/try/iphone)','## Mac',`[Télécharger avec AppDrop](${downloads.macDownloadUrl})`,'Mac avec puce Apple, macOS 14 ou ultérieur.','## Android et Windows','Pas encore disponibles.');
+ if(p.kind==='try-iphone')parts.push(`[Ouvrir AppDrop sur mon iPhone](${downloads.iphoneUrl})`,'La configuration AppDrop est requise avant la première installation.');
  if(p.kind==='index')parts.push('## Components',catalog.map(c=>`- [${c.title}](${c.href}.md): ${c.description}`).join('\n'));
  if(p.kind==='ai-index')parts.push('## Patterns',aiCatalog.map(c=>`- [${c.title}](${c.href}.md): ${c.description}`).join('\n'));
  if(p.kind==='blocks')parts.push('## Blocks',blocks.map(b=>`- [${b.title}](/view/${b.slug}.md)`).join('\n'));
  if(p.kind==='charts')parts.push(...charts.flatMap(c=>[`## ${c.title}`,fenced('contract',c.code)]));
  if(p.source && sourceFiles[p.source])parts.push('## Source',`File: ${p.source}`,fenced(sourceFiles[p.source].language,sourceFiles[p.source].code));
  p.markdown=(p.kind==='compatibility'?parts[0]+'\n\n'+compatibilityMarkdown(library):parts.filter(Boolean).join('\n\n')+'\n');p.markdownHref=(url==='/'?'/index':url)+'.md';
+ assertCurrentUiReferences(JSON.stringify(p), `page ${name}`, uiVersion);
  write(resolve(site,`assets/markdown/${name}.md`),p.markdown);
  markdownIndex.push({name,url,title:p.title,description:p.description,markdownHref:p.markdownHref});
 }
@@ -208,10 +213,11 @@ if(existsSync(resolve(site,'generated/catalog.ts')))unlinkSync(resolve(site,'gen
 write(resolve(root,'packages/catalog/catalog.json'),JSON.stringify({components,aiElements,charts:chartMeta,blocks:blocks.map(({code,...rest})=>rest)},null,2)+'\n');
 buildRegistry();
 mkdirSync(resolve(site,'assets/registry'),{recursive:true});copyFileSync(resolve(library,'generated/registry.json'),resolve(site,'assets/registry/index.json'));
-let template=read(resolve(root,'tools/app.contract.template')).replaceAll('{{THEME_PRESETS}}', JSON.stringify(themeOptions.preset)).replaceAll('{{THEME_FONTS}}', JSON.stringify(themeOptions.font)).replaceAll('{{THEME_LABELS}}', JSON.stringify(themeOptions.preset.map(preset => preset[0].toUpperCase() + preset.slice(1)))).replaceAll('{{UI_VERSION}}', uiVersion).replaceAll('{{NAVBAR_LOGO}}', 'data:image/png;base64,' + readFileSync(resolve(site, 'assets/brand/rightui-navbar.png')).toString('base64')).replace('// GENERATED_ROUTES',routes.map(([name,url])=>`  ${name} "${url}" render=${["component_chart", "area", "view_dashboard_01"].includes(name) ? "client" : "build activate=idle"}`).join('\n')+'\n  notfound render=build activate=idle');
+let template=read(resolve(root,'tools/app.contract.template')).replaceAll('{{THEME_PRESETS}}', JSON.stringify(themeOptions.preset)).replaceAll('{{THEME_FONTS}}', JSON.stringify(themeOptions.font)).replaceAll('{{THEME_LABELS}}', JSON.stringify(themeOptions.preset.map(preset => preset[0].toUpperCase() + preset.slice(1)))).replaceAll('{{UI_VERSION}}', uiVersion).replaceAll('{{MAC_DOWNLOAD_URL}}', JSON.stringify(downloads.macDownloadUrl)).replaceAll('{{IPHONE_URL}}', JSON.stringify(downloads.iphoneUrl)).replaceAll('{{NAVBAR_LOGO}}', 'data:image/png;base64,' + readFileSync(resolve(site, 'assets/brand/rightui-navbar.png')).toString('base64')).replace('// GENERATED_ROUTES',routes.map(([name,url])=>`  ${name} "${url}" render=${["component_chart", "area", "view_dashboard_01"].includes(name) ? "client" : "build activate=idle"}`).join('\n')+'\n  notfound render=build activate=idle');
 const homeReady=existsSync(resolve(site,'components/home-cards.contract'));
 template=template.replace('{{NATIVE_APP}}', process.env.RIGHTUI_NATIVE === '1' ? 'true' : 'false');
 template=template.replace('{{NATIVE_MAC}}', process.env.RIGHTUI_NATIVE_MAC === '1' ? 'true' : 'false');
 template=template.replace('// HOME_IMPORT',homeReady?'use HomeCards from "./components/home-cards.contract"':'').replace('// HOME_CARDS',homeReady?'HomeCards(width=viewport.width, nativeApp=nativeApp, reduced=viewport.prefersReducedMotion, openDialog=openHomeDialog)':'view height=300');
+assertCurrentUiReferences(template, 'generated app.contract', uiVersion);
 write(resolve(site,'app.contract'),template);
 console.log(`Generated ${components.length} component routes (${demos.length} examples), ${blocks.length} blocks, ${charts.length} charts and ${Object.keys(sourceFiles).length} linked source files.`);

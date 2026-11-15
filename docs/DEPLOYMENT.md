@@ -2,6 +2,16 @@
 
 The public documentation site is served at `https://rightui.dev` by the static-assets Worker `rightui-website`, in Cloudflare account **Fizzy APP**, `68e46be88d396623b3870544a294e0dd`. The domain is configured as a Worker Custom Domain. Cloudflare manages its DNS binding and HTTPS certificate.
 
+## Release versions and downloads
+
+`bun run sync:ui` reads npm's current beta, requires the matching library checkout, pins both website manifests, installs the official package and regenerates the guides, AI prompt, all installation commands, Markdown and footer. Review and commit the resulting changes. The package's freshly published releases are exempted from Bun's age gate; other dependencies retain it. This command does not publish npm, change dist-tags or deploy.
+
+The installed `@rightui/ui/package.json` supplies the displayed version. Generation checks it against the library, compatibility metadata, workspace manifests and Bun lock. Build checks reject stale commands, archive names, footer labels and unresolved placeholders in current public documents, including dedicated client shells. Source archives retain historical changelogs and fixtures unchanged.
+
+`bun run deploy` checks the current npm beta and archive integrity before building and again immediately before upload. It refuses local overrides, dirty source checkouts and stale build provenance. Publishing npm alone does not update a static website: run sync, commit and deploy for each delivery. Keep validation history dated; it is not the current installation version.
+
+Public AppDrop links have one source, `content/downloads.json`, shared by rendered pages and Markdown. After an AppDrop upload, update its server-returned Mac revision there. If changing the iPhone drop itself, regenerate its QR asset too.
+
 ## Build and publish
 
 Use Bun **1.4.2**, the sibling components checkout and the pinned Exact SDK described in the README. Wrangler is pinned in `package.json` and `bun.lock`.
@@ -34,7 +44,7 @@ Each static asset must remain below Cloudflare’s 25 MiB limit. Postbuild check
 
 For an initial-render regression, run `tools/check-first-paint.browser.js` in the browser on the built site. It compares script-disabled HTML and activated Exact at every homepage breakpoint. The built HTML inlines `apps/site/assets/critical.css`; serving unprocessed Exact test output skips this delivery step.
 
-The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. Record the Cloudflare version ID from deployment output and verify `/build-info.json` before claiming that a particular revision is live.
+The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. Record the Cloudflare version ID from deployment output and verify `/build-info.json` before claiming that a particular revision is live. After building a committed revision and passing the local HTTP checks and `deploy:check`, `bun run deploy:prepared` uploads that existing build with the same npm/version/provenance guards, without rebuilding it.
 
 ## Routing
 
