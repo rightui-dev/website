@@ -366,6 +366,16 @@ theme
   ui.duration-normal: duration = 200ms
   ui.duration-slow: duration = 300ms
   ui.easing: easing = ease
+  ui.easing-drawer: easing = -exact-spring(300, 30, 1)
+  ui.easing-drawer-bounce: easing = -exact-spring(300, 22, 1)
+  ui.drawer-content-inset: length = ui.card-inset
+  ui.drawer-floating-content-inset: length = ui.space-12
+  ui.drawer-floating-gap: length = ui.space-12
+  ui.drawer-handle-target-width: length = 10rem
+  ui.drawer-handle-target-height: length = ui.space-48
+  ui.drawer-handle-width: length = ui.space-48
+  ui.drawer-handle-height: length = ui.space-4
+  ui.drawer-backdrop: color = #000000 scheme=fixed
   ui.shadow-control: box-shadow = 0 1px 2px 0 ui.shadow
   ui.shadow-panel: box-shadow = 0 1px 3px 0 ui.shadow
   ui.shadow-menu: box-shadow = 0 4px 12px 0 ui.shadow

@@ -24,8 +24,11 @@ test "theme and mobile navigation remain usable"
   expect state themeOpen == false
   tap "nav-toggle"
   expect state menu == true
-  tap "nav-toggle"
+  clock settle
+  tap "mobile-menu-close"
+  clock settle
   expect state menu == false
+  expect state menuClosing == false
   expect no failures
 
 test "tabs use keyboard navigation and retain selection after resize"
@@ -63,18 +66,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.2.0-beta.5"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.2"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.2.0-beta.5"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.2"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.2.0-beta.5"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.2"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.2.0-beta.5"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.2"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.2.0-beta.5"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.2"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -338,7 +341,7 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.2.0-beta.5"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.2"
   tap "install-button-copy"
   expect text "install-button-copy" == "Copied"
   clock +2999
@@ -346,18 +349,18 @@ test "component installation switches package manager and source method"
   clock +1
   expect text "install-button-copy" == "Copy"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.2.0-beta.5"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.2"
   tap "install-button-mode-1"
   expect text "install-button-command-line-0" == "mkdir -p vendor/rightui vendor/rightui-ui"
-  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.2.0-beta.5 --pack-destination vendor/rightui"
-  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.2.0-beta.5.tgz -C vendor/rightui-ui --strip-components=1"
+  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.2 --pack-destination vendor/rightui"
+  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.2.tgz -C vendor/rightui-ui --strip-components=1"
   expect text "install-button-command-line-3" == "npm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.2.0-beta.5"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.2"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -506,6 +509,51 @@ test "system URL appearance can be explicitly toggled and remembered"
   expect no failures
 
 
+test "appearance popover toggles from its invoker and dismisses outside on desktop"
+  at "/docs/components/switch?theme=light&preset=neutral"
+  size 1280x900
+  clock data
+  tap "theme-toggle"
+  expect state themeOpen == true
+  tap "theme-toggle"
+  clock +200
+  expect state themeOpen == false
+  tap "theme-toggle"
+  tap "quick-palette-5"
+  expect state themeOpen == true
+  expect state uiPreset == "violet"
+  tap "site-shell" drag 0 0 from 8 300 mouse over 16
+  clock +200
+  expect state themeOpen == false
+  tap "theme-toggle"
+  expect state themeOpen == true
+  type "quick-palette-5" key "Escape"
+  expect state themeOpen == false
+  expect no failures
+
+test "appearance popover toggles and dismisses outside on mobile"
+  at "/docs/components/switch?theme=light&preset=neutral"
+  size 390x844
+  clock data
+  tap "theme-toggle"
+  expect state themeOpen == true
+  tap "theme-toggle"
+  clock +200
+  expect state themeOpen == false
+  tap "theme-toggle"
+  tap "quick-scheme-1"
+  expect state themeOpen == true
+  expect state theme == "dark"
+  tap "site-shell" drag 0 0 from 8 300 mouse over 16
+  clock +200
+  expect state themeOpen == false
+  tap "theme-toggle"
+  expect state themeOpen == true
+  tap "theme-toggle"
+  clock +200
+  expect state themeOpen == false
+  expect no failures
+
 test "violet palette keeps the quick font and corner choices"
   at "/docs/components/switch?theme=dark&preset=neutral&font=sans&radius=default"
   size 390x844
@@ -522,6 +570,93 @@ test "violet palette keeps the quick font and corner choices"
   expect text "page-title" == "Switch"
   expect no failures
 
+
+test "appearance survives component Back Forward and reload"
+  at "/docs/components/switch?theme=light&preset=neutral&density=compact&radius=default&font=sans&example=retained#top"
+  size 1280x900
+  clock data
+  clock +1
+  tap "theme-toggle"
+  tap "quick-scheme-1"
+  tap "quick-palette-5"
+  tap "quick-font-1"
+  tap "quick-radius-2"
+  type "quick-radius-2" key "Escape"
+  tap "docs-link-tabs"
+  clock data
+  tap "theme-toggle"
+  tap "quick-scheme-2"
+  tap "quick-palette-4"
+  tap "quick-font-2"
+  tap "quick-radius-1"
+  type "quick-radius-1" key "Escape"
+  expect state scheme == "system"
+  expect state preset == "amber"
+  expect state density == "compact"
+  expect state radius == "sharp"
+  expect state fontChoice == "mono"
+  tap "site-shell" history -1
+  clock data
+  clock +1
+  expect text "page-title" == "Switch"
+  expect state scheme == "system"
+  expect state preset == "amber"
+  expect state density == "compact"
+  expect state radius == "sharp"
+  expect state fontChoice == "mono"
+  expect state themeQuery == "system"
+  expect state presetQuery == "amber"
+  expect state currentAppearanceURL == "/docs/components/switch?theme=system&preset=amber&density=compact&radius=sharp&font=mono&example=retained#top"
+  tap "site-shell" history 1
+  clock data
+  clock +1
+  expect text "page-title" == "Tabs"
+  expect state preset == "amber"
+  tap "site-shell" history -1
+  clock data
+  clock +1
+  reload
+  clock +1
+  expect text "page-title" == "Switch"
+  expect state scheme == "system"
+  expect state preset == "amber"
+  expect state density == "compact"
+  expect state radius == "sharp"
+  expect state fontChoice == "mono"
+  tap "site-shell" history 1
+  clock data
+  clock +1
+  expect text "page-title" == "Tabs"
+  expect state preset == "amber"
+  expect state fontChoice == "mono"
+  expect no failures
+
+test "initial URL appearance stays a preview without overwriting saved preferences"
+  at "/docs/components/switch?theme=dark&preset=forest&density=compact&radius=round&font=serif"
+  size 1280x900
+  clock data
+  clock +1
+  expect state scheme == "dark"
+  expect state preset == "forest"
+  expect state fontChoice == "serif"
+  expect state theme == "system"
+  expect state uiPreset == "neutral"
+  expect state uiDensity == "comfortable"
+  expect state uiRadius == "default"
+  expect state uiFont == "sans"
+  tap "docs-link-tabs"
+  clock data
+  expect state preset == "forest"
+  expect state fontChoice == "serif"
+  tap "site-shell" history -1
+  clock data
+  clock +1
+  reload
+  clock +1
+  expect state preset == "forest"
+  expect state uiPreset == "neutral"
+  expect state theme == "system"
+  expect no failures
 
 test "mobile block catalog shows desktop photos and real source files"
   at "/blocks"
@@ -572,4 +707,135 @@ test "mobile sidebar block opens and closes repeatedly"
   tap "block-sidebar-03-trigger"
   clock settle
   tap "block-sidebar-03-mobile-close"
+  expect no failures
+
+
+test "home logo keeps the existing home visit"
+  size 390x844
+  clock data
+  clock settle
+  perf
+    tap "navbar-home"
+    clock data
+    clock settle
+  expect perf built "page-content" == 0
+  expect perf built "site-header" == 0
+  expect tree has "made-with-exact"
+  expect no failures
+
+test "block categories replace content without replacing the shell or adding history"
+  at "/docs/installation"
+  size 390x844
+  clock data
+  tap "search-open"
+  type "search-input" "Blocks"
+  type "search-input" key "Enter"
+  clock data
+  clock settle
+  perf
+    tap "blocks-1"
+    clock data
+    clock settle
+  expect perf built "site-header" == 0
+  expect tree has "sidebar-01-image-link"
+  expect tree missing "dashboard-01-image-link"
+  tap "blocks-2"
+  clock data
+  expect tree has "login-01-image-link"
+  expect tree missing "sidebar-01-image-link"
+  tap "site-shell" history -1
+  clock data
+  expect text "page-title" == "Installation"
+  expect no failures
+
+test "direct block category URLs still support in-place tabs"
+  at "/blocks/sidebar"
+  size 390x844
+  clock data
+  expect tree has "sidebar-01-image-link"
+  type "blocks-1" key "ArrowRight"
+  clock data
+  expect tree has "login-01-image-link"
+  expect tree missing "sidebar-01-image-link"
+  type "blocks-2" key "Home"
+  clock data
+  expect tree has "dashboard-01-image-link"
+  expect no failures
+
+
+test "mobile reveal closes from the page and restores keyboard access"
+  size 390x844
+  clock data
+  clock settle
+  tap "nav-toggle"
+  clock settle
+  expect state menu == true
+  tap "mobile-menu-dismiss"
+  clock settle
+  expect state menu == false
+  expect state menuClosing == false
+  tap "nav-toggle"
+  clock settle
+  type "mobile-menu-close" key "Escape"
+  clock settle
+  expect state menu == false
+  tap "search-open"
+  expect state searchOpen == true
+  expect no failures
+
+test "mobile menu waits for its close before navigating and resets on desktop"
+  size 390x844
+  clock data
+  clock settle
+  tap "nav-toggle"
+  clock settle
+  tap "mobile-menu-docs"
+  expect state menu == false
+  clock settle
+  clock data
+  expect text "page-title" == "Installation"
+  expect state menuClosing == false
+  expect state menuDestination == ""
+  tap "nav-toggle"
+  clock settle
+  resize 1280x900
+  clock settle
+  expect state menu == false
+  expect state menuClosing == false
+  expect tree missing "site-mobile-menu"
+  expect no failures
+
+test "reduced motion menu still closes and follows its destination"
+  size 390x844
+  prefer prefers-reduced-motion reduce
+  clock data
+  clock settle
+  tap "nav-toggle"
+  tap "mobile-menu-docs"
+  clock settle
+  clock data
+  expect text "page-title" == "Installation"
+  expect state menu == false
+  expect state menuClosing == false
+  expect no failures
+
+
+test "public popover toggles and preserves edited content after outside dismissal"
+  at "/docs/components/popover?theme=light"
+  size 390x844
+  clock data
+  tap "catalog-popover"
+  expect tree has "catalog-folder"
+  tap "catalog-popover"
+  clock +200
+  expect tree missing "catalog-folder"
+  tap "catalog-popover"
+  type "catalog-folder" "My folder"
+  tap "site-shell" drag 0 0 from 8 300 mouse over 16
+  clock +200
+  expect tree missing "catalog-folder"
+  tap "catalog-popover"
+  expect text "catalog-folder" == "My folder"
+  type "catalog-folder" key "Escape"
+  expect tree missing "catalog-folder"
   expect no failures

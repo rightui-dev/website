@@ -68,6 +68,12 @@ shape CompatibilityReport
   statuses: CompatibilityNote[]
   evidence: CompatibilityNote[]
 
+shape ThemeSelection
+  scheme: string
+  preset: string
+  density: string
+  radius: string
+  font: string
 shape ThemeExport
   code: string
 
@@ -77,3 +83,19 @@ shape BlockEntry
   source: string
   code: string
   files: SourceFile[]
+
+shape ScreenRequest
+  id: string
+  name: string
+  sourceFile: string
+  blockCategory: string
+
+shape Screen
+  id: string
+  name: string
+  blockCategory: string
+  page: Page
+  source: SourceFile
+  blocks: BlockEntry[]
+  charts: ChartEntry[]
+  compatibility: CompatibilityReport

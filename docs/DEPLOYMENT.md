@@ -46,7 +46,7 @@ The postbuild step rejects request-rendered or parameterized routes until a serv
 
 ## Source visibility and credentials
 
-The public website and the GitHub repository have separate visibility. Both GitHub repositories remain private until their owner requests otherwise. `wrangler.jsonc` is safe to version: account IDs, domains, Worker names and compatibility dates are configuration, not credentials. This static site needs no runtime secrets or data bindings.
+The website and both GitHub repositories are public. Repository visibility is independent of deployment. `wrangler.jsonc` is safe to version: account IDs, domains, Worker names and compatibility dates are configuration, not credentials. This static site needs no runtime secrets or data bindings.
 
 Keep Cloudflare API tokens and OAuth state outside Git. `.env*`, `.dev.vars*` and `.wrangler/` are ignored. GitHub Actions, if added later, must use repository/environment secrets and a token scoped to this deployment. No Git-triggered deployment pipeline has been configured by this setup.
 

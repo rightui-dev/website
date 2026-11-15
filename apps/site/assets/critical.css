@@ -1,27 +1,30 @@
 /* Generated from @rightui/ui/theme. */
-/* Web support for Exact SheetContent; native hosts ignore this asset.
-   The pinned web host forces dialog positioning, hence this scoped override. */
-#exact-root dialog[data-rightui-sheet] {
+/* RightUI painted top layers. Native hosts use the Contract bounds directly.
+   Keep the historical asset path so existing applications retain this setup. */
+#exact-root [popover][id^="rightui-modal-"],
+#exact-root [popover][id^="rightui-toast-"] {
   position: fixed !important;
-  opacity: 1;
-  transition: opacity 200ms ease, display 200ms allow-discrete, overlay 200ms allow-discrete;
+  inset: 0 auto auto 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
 }
-#exact-root dialog[data-rightui-sheet]::backdrop { background: transparent; }
-#exact-root dialog[data-rightui-sheet]:not([open]) { opacity: 0; pointer-events: none; }
-html:has(dialog[data-rightui-sheet]:modal) { overflow: hidden; scrollbar-gutter: stable; }
-#exact-root dialog[data-rightui-sheet="right"]:not([open]) > :last-child { animation: rightui-sheet-right-out 200ms ease both !important; }
-#exact-root dialog[data-rightui-sheet="left"]:not([open]) > :last-child { animation: rightui-sheet-left-out 200ms ease both !important; }
-#exact-root dialog[data-rightui-sheet="top"]:not([open]) > :last-child { animation: rightui-sheet-top-out 200ms ease both !important; }
-#exact-root dialog[data-rightui-sheet="bottom"]:not([open]) > :last-child { animation: rightui-sheet-bottom-out 200ms ease both !important; }
-@keyframes rightui-sheet-right-out { to { translate: 40px 0; opacity: 0; } }
-@keyframes rightui-sheet-left-out { to { translate: -40px 0; opacity: 0; } }
-@keyframes rightui-sheet-top-out { to { translate: 0 -40px; opacity: 0; } }
-@keyframes rightui-sheet-bottom-out { to { translate: 0 40px; opacity: 0; } }
-#exact-root dialog[data-rightui-sheet="reduced"],
-#exact-root dialog[data-rightui-sheet="reduced"] * { animation: none !important; transition: none !important; }
+html:has([popover][id^="rightui-modal-"]:popover-open) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+/* Lock the scroll ancestors, not the authored panel or its scrollable body. */
+#exact-root :has([popover][id^="rightui-modal-"]:popover-open):not([popover]) {
+  overflow: hidden !important;
+}
 @media (prefers-reduced-motion: reduce) {
-  #exact-root dialog[data-rightui-sheet],
-  #exact-root dialog[data-rightui-sheet] * { animation: none !important; transition: none !important; }
+  #exact-root [popover][id^="rightui-modal-"] *,
+  #exact-root [popover][id^="rightui-toast-"] * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 #exact-root [data-rightui-availability="available"] { position: relative; overflow: visible; }

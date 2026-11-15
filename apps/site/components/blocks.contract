@@ -1,6 +1,6 @@
 use uiFontFamily, CodeBlockAdvanced from "@rightui/ui"
-use DashboardBlock from "@rightui/registry/blocks/dashboard"
-use SidebarBlock, SidebarSettings from "@rightui/registry/blocks/sidebars"
+use DashboardBlockWithScroll from "@rightui/registry/blocks/dashboard"
+use SidebarBlockWithScroll, SidebarSettings from "@rightui/registry/blocks/sidebars"
 use AuthBlock from "@rightui/registry/blocks/auth"
 use Hit from "./styles.contract"
 use SourceFile from "./shapes.contract"
@@ -9,6 +9,7 @@ component BlockPreview
     slug: string
     width: number
     reduced: bool
+    scrolled: action
   state settings = false
   state signup = slug.startsWith("signup")
   action showSettings
@@ -21,9 +22,9 @@ component BlockPreview
   view
     view width="100%" min-height="100vh" background-color="ui.background" position="relative"
       if slug == "dashboard-01"
-        DashboardBlock(narrow=(width < 768), reduced=reduced)
+        DashboardBlockWithScroll(narrow=(width < 768), reduced=reduced, scrolled=scrolled)
       else if slug.startsWith("sidebar")
-        SidebarBlock(variant=variant, narrow=(width < 768), reduced=reduced, openSettings=showSettings)
+        SidebarBlockWithScroll(variant=variant, narrow=(width < 768), reduced=reduced, openSettings=showSettings, scrolled=scrolled)
       else
         AuthBlock(variant=variant, signup=signup, narrow=(width < 768), switchMode=switchMode)
       if settings

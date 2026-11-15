@@ -23,7 +23,7 @@ component TryApp
       view testId="try-platforms" display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 18rem), 1fr))" gap="ui.space-16" width="100%" max-width="48rem"
         link href="/try/iphone" testId="try-iphone" class=PlatformCard
           PlatformContent(platform="iphone", title="Essayer sur mon iPhone", description="Installez la démo avec AppDrop.", available=true)
-        link href="https://appdrop.app/api/drops/wcfnk49huy/file?revision=3&build=macos" target="_blank" rel="noopener noreferrer" testId="try-mac" class=PlatformCard
+        link href="https://appdrop.app/api/drops/wcfnk49huy/file?revision=5&build=macos" target="_blank" rel="noopener noreferrer" testId="try-mac" class=PlatformCard
           PlatformContent(platform="mac", title="Essayer sur mon Mac", description="Mac avec puce Apple · macOS 14 ou ultérieur.", available=true)
         button disabled=true aria-disabled=true cursor="not-allowed" testId="try-android" class=PlatformCard
           PlatformContent(platform="android", title="Essayer sur mon Android", description="Pas encore disponible.", available=false)

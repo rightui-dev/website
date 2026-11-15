@@ -5,7 +5,7 @@
     "": {
       "name": "rightui",
       "dependencies": {
-        "@rightui/ui": "0.2.0-beta.5",
+        "@rightui/ui": "0.3.0-beta.2",
       },
       "devDependencies": {
         "wrangler": "4.158.0",
@@ -15,14 +15,14 @@
       "name": "@rightui/site",
       "dependencies": {
         "@rightui/registry": "workspace:*",
-        "@rightui/ui": "0.2.0-beta.5",
+        "@rightui/ui": "0.3.0-beta.2",
       },
     },
     "packages/registry": {
       "name": "@rightui/registry",
       "version": "0.0.0",
       "dependencies": {
-        "@rightui/ui": "0.2.0-beta.5",
+        "@rightui/ui": "0.3.0-beta.2",
       },
     },
   },
@@ -167,7 +167,7 @@
 
     "@rightui/site": ["@rightui/site@workspace:apps/site"],
 
-    "@rightui/ui": ["@rightui/ui@0.2.0-beta.5", "", {}, "sha512-7R7XRWepDZ+6dWgxA3BL8ujSLLz3S3wPBAqqNlwnEHEgbTSWsHdfnau/0ngmk5GO+zyIiymB6TkGzXvYj3n8zA=="],
+    "@rightui/ui": ["@rightui/ui@0.3.0-beta.2", "", {}, "sha512-janTZdoSQ9f0UOlk8TAL1AF25/lzOC6lVbUfZkjG6k2m7FcLEA746cm3QTwjlau11O7Cn1x2Kocv8UZQf/JgDQ=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
 

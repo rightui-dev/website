@@ -2,9 +2,11 @@
 component PageInsets
   props
     docs: bool
+    roundBottom: bool
+    motion: string
   slot
   view
-    row flex=1 min-height=0 min-width=0 width="100%" align-items="stretch"
+    row flex=1 min-height=0 min-width=0 width="100%" align-items="stretch" overflow="clip" border-radius=(roundBottom ? "0px 0px ui.radius-2xl ui.radius-2xl" : "0px") transition=motion
       if docs
         view aria-hidden=true flex-shrink=0 width="max(ui.space-24, calc(clamp(0px, (100vw - 1023px) * 1000, 20rem) + max(0px, (100vw - 96rem) / 2)))"
       column flex=1 min-height=0 min-width=0
