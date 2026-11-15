@@ -23,6 +23,8 @@ mkdirSync(resolve(site,'assets/fonts'),{recursive:true});
 for(const font of ['Geist.ttf','Geist-Italic.ttf','Newsreader.ttf','Newsreader-Italic.ttf','OFL.txt','OFL-Italic.txt','OFL-Newsreader.txt'])copyFileSync(resolve(root,'node_modules/@rightui/ui/assets/fonts',font),resolve(site,'assets/fonts',font));
 rmSync(resolve(site, 'assets/avatars'), { recursive: true, force: true });
 cpSync(resolve(root, 'node_modules/@rightui/ui/assets/avatars'), resolve(site, 'assets/avatars'), { recursive: true });
+rmSync(resolve(site, 'assets/card'), { recursive: true, force: true });
+cpSync(resolve(root, 'node_modules/@rightui/ui/assets/card'), resolve(site, 'assets/card'), { recursive: true });
 const read = (p: string) => readFileSync(p, 'utf8');
 const json = (p: string, fallback: unknown = []) => existsSync(p) ? JSON.parse(read(p)) : fallback;
 const write = (p: string, value: string) => { mkdirSync(resolve(p, '..'), { recursive: true }); writeFileSync(p, value); };
@@ -46,7 +48,7 @@ const sourceFiles: Record<string,{path:string,code:string,language:string}> = {}
 function scan(dir: string) {
   if (!existsSync(dir)) return;
   for (const item of readdirSync(dir,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))) {
-    if (item.name.startsWith('.') || ['node_modules','target','dist','generated','Cargo.lock'].includes(item.name)) continue;
+    if (item.name.endsWith('-HANDOFF.md') || item.name.startsWith('.') || ['node_modules','target','dist','generated','Cargo.lock'].includes(item.name)) continue;
     const path = resolve(dir,item.name);
     if (item.isDirectory()) scan(path);
     else if (/\.(contract|tamber|ts|rs|toml|json|md|css)$/.test(item.name)) {

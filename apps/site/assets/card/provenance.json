@@ -1,0 +1,11 @@
+[
+  {
+    "file": "cover.jpg",
+    "author": "mymind",
+    "source": "https://images.unsplash.com/photo-1604076850742-4c7221f3101b?q=80&w=960&auto=format&fit=crop",
+    "reference": "registry/bases/base/examples/card-example.tsx (CardWithImage and CardWithImageSmall)",
+    "licenseUrl": "https://unsplash.com/license",
+    "purpose": "Local Card and AspectRatio documentation cover; no runtime image request to an external provider",
+    "sha256": "c22de4776e0d0c30127f8ebbe1d22b96d52487f49db4f6b23cc8a1c220e46d35"
+  }
+]

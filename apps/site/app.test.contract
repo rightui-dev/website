@@ -1,3 +1,45 @@
+test "component pager follows catalog order and preserves appearance"
+  at "/docs/components/checkbox?theme=dark&preset=rose&density=comfortable&radius=rounded&font=serif"
+  size 390x844
+  clock data
+  clock settle
+  tap "component-next"
+  clock data
+  clock settle
+  expect text "page-title" == "Code Block"
+  expect state scheme == "dark"
+  expect state preset == "rose"
+  expect state fontChoice == "serif"
+  tap "component-previous"
+  clock data
+  clock settle
+  expect text "page-title" == "Checkbox"
+  tap "component-previous"
+  clock data
+  clock settle
+  expect text "page-title" == "Chart"
+  expect state scheme == "dark"
+  expect state preset == "rose"
+  expect no failures
+
+test "component pager disables previous at the first component"
+  at "/docs/components/accordion"
+  clock data
+  expect disabled "component-previous"
+  tap "component-next"
+  clock data
+  expect text "page-title" == "Alert"
+  expect no failures
+
+test "component pager disables next at the last component"
+  at "/docs/components/typography"
+  clock data
+  expect disabled "component-next"
+  tap "component-previous"
+  clock data
+  expect text "page-title" == "Trace"
+  expect no failures
+
 test "documentation search opens a real component page"
   size 1280x900
   clock data
@@ -66,18 +108,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.4"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.4"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.6"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.4"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.6"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.4"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.6"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.4"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -341,7 +383,7 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.4"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
   tap "install-button-copy"
   expect text "install-button-copy" == "Copied"
   clock +2999
@@ -349,18 +391,18 @@ test "component installation switches package manager and source method"
   clock +1
   expect text "install-button-copy" == "Copy"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.4"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.6"
   tap "install-button-mode-1"
   expect text "install-button-command-line-0" == "mkdir -p vendor/rightui vendor/rightui-ui"
-  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.4 --pack-destination vendor/rightui"
-  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.4.tgz -C vendor/rightui-ui --strip-components=1"
+  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.6 --pack-destination vendor/rightui"
+  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.6.tgz -C vendor/rightui-ui --strip-components=1"
   expect text "install-button-command-line-3" == "npm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.4"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -838,4 +880,270 @@ test "public popover toggles and preserves edited content after outside dismissa
   expect text "catalog-folder" == "My folder"
   type "catalog-folder" key "Escape"
   expect tree missing "catalog-folder"
+  expect no failures
+
+test "accordion keyboard activation respects disabled and required expansion"
+  at "/docs/components/accordion"
+  clock data
+  clock settle
+  expect disabled "accordion-disabled-trigger-1"
+  type "accordion-disabled-trigger-0" key "ArrowDown"
+  type "accordion-disabled-trigger-2" key "Enter"
+  expect tree has "accordion-disabled-panel-2"
+  expect tree missing "accordion-disabled-panel-0"
+  type "accordion-disabled-trigger-2" key "Enter"
+  expect tree has "accordion-disabled-panel-2"
+  type "accordion-disabled-trigger-2" key "Home"
+  type "accordion-disabled-trigger-0" key "Enter"
+  expect tree has "accordion-disabled-panel-0"
+  expect tree missing "accordion-disabled-panel-2"
+  expect no failures
+
+test "checkbox mixed selection controlled peer and independent group update"
+  at "/docs/components/checkbox"
+  clock data
+  expect text "checkbox-selection" == "Selection: mixed"
+  tap "advanced-mixed"
+  expect text "checkbox-selection" == "Selection: true"
+  type "checkbox-controlled" key " "
+  expect text "checkbox-selection" == "Selection: false"
+  expect disabled "checkbox-disabled"
+  expect tree has "checkbox-error-message-0"
+  tap "checkbox-basic"
+  expect tree missing "checkbox-error-message-0"
+  expect text "checkbox-group-count" == "0"
+  tap "checkbox-list-0"
+  tap "checkbox-list-2"
+  expect text "checkbox-group-count" == "2"
+  tap "checkbox-list-0"
+  expect text "checkbox-group-count" == "1"
+  expect no failures
+
+test "card validates locally rejects malformed email and resets"
+  at "/docs/components/card"
+  clock data
+  tap "composition-save"
+  expect text "composition-name-error-message-0" == "Enter your name."
+  expect text "composition-email-error-message-0" == "Enter a valid email address."
+  type "composition-name" "Ada"
+  type "composition-email" "ada@@example.com"
+  tap "composition-save"
+  expect text "composition-result" == "No information sent."
+  expect tree has "composition-email-error-message-0"
+  type "composition-email" "ada@example.com"
+  type "composition-email" key "Enter"
+  expect text "composition-result" == "Profile validated locally."
+  expect tree missing "composition-email-error-message-0"
+  tap "composition-disable"
+  expect disabled "composition-name"
+  expect disabled "composition-email"
+  expect disabled "composition-save"
+  tap "composition-disable"
+  tap "composition-reset"
+  expect text "composition-name" == ""
+  expect text "composition-result" == "No information sent."
+  tap "card-login-submit"
+  expect tree has "card-login-email-error-message-0"
+  type "card-login-email" "ada@example.com"
+  type "card-login-password" "example-password"
+  tap "card-login-submit"
+  expect text "card-login-result" == "Credentials validated locally. No sign-in request sent."
+  tap "card-image-default-view"
+  expect tree has "card-image-default-event"
+  expect no failures
+  screenshot "/tmp/rightui-review-card.png"
+
+test "aspect ratio cover examples retain content after language and width changes"
+  at "/docs/components/aspect-ratio"
+  size 390x844
+  clock data
+  expect tree has "ratio-landscape"
+  expect tree has "ratio-ultrawide"
+  expect tree has "ratio-square"
+  expect tree has "ratio-portrait"
+  expect text "ratio-caption" == "عمل فني تجريدي"
+  tap "ratio-language-0"
+  expect text "ratio-caption" == "Abstract artwork"
+  resize 1280x900
+  clock settle
+  expect tree has "ratio-landscape"
+  expect no failures
+  screenshot "/tmp/rightui-review-aspect-ratio.png"
+
+test "attachment preview closes retries recovered content and removes independently"
+  at "/docs/components/attachment"
+  size 390x844
+  prefer prefers-reduced-motion reduce
+  clock data
+  tap "content-attachment-preview"
+  clock settle
+  expect text "content-attachment-content" == "RightUI component review\nCheck keyboard navigation, responsive layouts and shared themes.\nDeliver a reusable Exact interface."
+  type "content-attachment-dialog-body" key "Escape"
+  clock settle
+  expect tree missing "content-attachment-content"
+  expect disabled "attachment-error-preview"
+  tap "attachment-error-retry"
+  expect tree missing "attachment-error-retry"
+  expect enabled "attachment-error-preview"
+  tap "attachment-error-preview"
+  clock settle
+  expect text "attachment-error-dialog-content" == "component,status\nButton,ready\nCard,ready\nCheckbox,ready"
+  tap "attachment-error-dialog-close"
+  clock settle
+  expect tree missing "attachment-error-dialog-content"
+  tap "content-attachment-remove"
+  expect tree missing "content-attachment"
+  expect tree has "attachment-error"
+  tap "attachment-uploading-remove"
+  expect tree missing "attachment-uploading"
+  tap "attachment-restore"
+  expect tree has "content-attachment"
+  expect tree has "attachment-uploading"
+  expect no failures
+
+test "bubble expands reacts selects replies and reopens error popover"
+  at "/docs/components/bubble"
+  size 390x844
+  prefer prefers-reduced-motion reduce
+  clock data
+  expect text "content-bubble-in-collapse" == "Show more"
+  tap "content-bubble-in-collapse"
+  expect text "content-bubble-in-collapse" == "Show less"
+  expect text "content-bubble-in-body" == "Here is the session brief.\nPlease check the spaces and lighting before our appointment.\n\nKeep keyboard focus visible in the dialog, menu and drawer. Reuse the shared RightUI tokens so the other themes can choose their own focus treatment.\n\nCheck the full message before preparing the final selection."
+  tap "content-bubble-in-reaction"
+  expect text "content-bubble-in-reaction" == "Helpful · 1"
+  tap "content-bubble-in-reaction"
+  expect text "content-bubble-in-reaction" == "Helpful"
+  tap "content-bubble-in-collapse"
+  expect text "content-bubble-in-collapse" == "Show more"
+  tap "bubble-help-password-button"
+  expect text "bubble-help-result" == "Password help selected. Use your account's password reset flow."
+  tap "bubble-confirm-action"
+  expect disabled "bubble-confirm-action"
+  tap "bubble-error-details"
+  expect tree has "bubble-error-details-content"
+  type "bubble-error-details" key "Escape"
+  expect tree missing "bubble-error-details-content"
+  tap "bubble-error-details"
+  expect tree has "bubble-error-details-content"
+  tap "bubble-error-details"
+  expect tree missing "bubble-error-details-content"
+  expect no failures
+
+test "breadcrumb desktop menu follows real links with keyboard"
+  at "/docs/components/breadcrumb"
+  size 1280x900
+  clock data
+  type "breadcrumb-components" key "ArrowDown"
+  expect tree has "breadcrumb-components-menu"
+  type "breadcrumb-components-item-documentation" key "End"
+  type "breadcrumb-components-item-registry" key "Escape"
+  expect tree missing "breadcrumb-components-menu"
+  tap "breadcrumb-demo-more"
+  expect tree has "breadcrumb-demo-more-menu"
+  tap "breadcrumb-demo-more-item-documentation"
+  clock data
+  clock settle
+  expect text "page-title" == "Installation"
+  expect no failures
+
+test "breadcrumb mobile drawer exposes every hidden ancestor and resets on resize"
+  at "/docs/components/breadcrumb"
+  size 390x844
+  prefer prefers-reduced-motion reduce
+  clock data
+  tap "responsive-breadcrumb-more"
+  clock settle
+  expect tree has "responsive-breadcrumb-hidden-documentation"
+  expect tree has "responsive-breadcrumb-hidden-rightui"
+  expect tree has "responsive-breadcrumb-hidden-components"
+  tap "responsive-breadcrumb-drawer-done"
+  clock settle
+  expect tree missing "responsive-breadcrumb-hidden-documentation"
+  tap "responsive-breadcrumb-more"
+  resize 1024x900
+  clock settle
+  expect tree missing "responsive-breadcrumb-hidden-documentation"
+  resize 390x844
+  clock settle
+  expect tree missing "responsive-breadcrumb-hidden-documentation"
+  tap "responsive-breadcrumb-more"
+  clock settle
+  tap "responsive-breadcrumb-hidden-documentation"
+  clock data
+  clock settle
+  expect text "page-title" == "Installation"
+  expect no failures
+
+test "badge language changes content and link follows a real route"
+  at "/docs/components/badge"
+  clock data
+  expect text "badge-rtl-examples" == "شارةثانويمدمرمخططمتحققإشارة مرجعية"
+  tap "badge-language"
+  tap "badge-language-option-2"
+  expect text "badge-rtl-examples" == "תגמשניהרסניקווי מתארמאומתסימנייה"
+  tap "badge-language"
+  tap "badge-language-option-0"
+  expect text "badge-rtl-examples" == "BadgeSecondaryDestructiveOutlineVerifiedBookmark"
+  tap "Open Link"
+  clock data
+  expect text "page-title" == "Badge"
+  expect no failures
+
+test "chart tooltip totals track visible series and preserve raw area values"
+  at "/docs/components/chart"
+  size 1280x1000
+  clock data
+  tap "data-chart-point-1"
+  expect text "data-chart-value-desktop" == "305"
+  expect text "data-chart-value-mobile" == "200"
+  expect text "data-chart-total" == "505"
+  tap "data-chart-legend-mobile"
+  tap "data-chart-point-1"
+  expect tree missing "data-chart-value-mobile"
+  expect text "data-chart-total" == "305"
+  tap "data-chart-legend-desktop"
+  expect text "data-chart-empty" == "All series are hidden. Use the legend to show a series."
+  tap "data-chart-legend-desktop"
+  tap "data-chart-point-1"
+  expect text "data-chart-total" == "305"
+  type "parity-line" key "Home"
+  type "parity-line" key "ArrowRight"
+  expect text "parity-line-value-desktop" == "305"
+  expect text "parity-line-total" == "505"
+  type "area-chart" key "Home"
+  type "area-chart" key "ArrowRight"
+  expect text "area-chart-value-desktop" == "380"
+  expect text "area-chart-value-mobile" == "420"
+  expect text "area-chart-total" == "800"
+  expect no failures
+
+test "chart formats tooltip anatomy empty recovery and RTL remain interactive"
+  at "/docs/components/chart"
+  size 390x844
+  locale "en-US"
+  prefer prefers-reduced-motion reduce
+  clock data
+  expect text "chart-tooltip-advanced-value-desktop" == "450 kcal"
+  expect text "chart-tooltip-advanced-total" == "750 kcal"
+  tap "chart-format-kcal"
+  tap "data-chart-point-1"
+  expect text "data-chart-value-desktop" == "305 kcal"
+  expect text "data-chart-total" == "505 kcal"
+  tap "chart-format-currency"
+  tap "data-chart-point-1"
+  expect text "data-chart-value-desktop" == "$305.00"
+  tap "chart-format-percent"
+  tap "data-chart-point-1"
+  expect text "data-chart-value-desktop" == "31%"
+  tap "parity-empty"
+  expect text "data-chart-empty" == "No chart data."
+  tap "parity-empty"
+  tap "data-chart-point-1"
+  expect text "data-chart-value-mobile" == "20%"
+  tap "chart-direction"
+  expect text "chart-direction" == "Language: Arabic (RTL)"
+  type "chart-example-plot" key "Home"
+  type "chart-example-plot" key "ArrowLeft"
+  expect text "chart-example-value-desktop" == "305"
   expect no failures

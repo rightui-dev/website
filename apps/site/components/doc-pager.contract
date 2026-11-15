@@ -1,0 +1,28 @@
+use IconButton from "@rightui/ui"
+use CatalogEntry from "./shapes.contract"
+
+component DocPager
+  props
+    id: string
+    items: CatalogEntry[]
+    slug: string
+    follow: action
+  derive index = items.map(item => item.slug).indexOf(slug)
+  derive hasPrevious = index > 0
+  derive hasNext = index >= 0 and index < items.length - 1
+  derive previous = match items.at(max(0, index - 1)) { case some(item) => item, case none => CatalogEntry(slug="", title="", description="", href="") }
+  derive next = match items.at(index + 1) { case some(item) => item, case none => CatalogEntry(slug="", title="", description="", href="") }
+  action goPrevious
+    if hasPrevious
+      follow(previous.href)
+  action goNext
+    if hasNext
+      follow(next.href)
+  view
+    row role="group" aria-label="Component navigation" gap="ui.space-8" align-items="center" flex-shrink=0
+      IconButton(id=id + "-previous", label=(hasPrevious ? "Previous component: " + previous.title : "Previous component"), variant="secondary", disabled=(not hasPrevious), press=goPrevious)
+        svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true
+          path d="m12 5-7 7 7 7M5 12h14"
+      IconButton(id=id + "-next", label=(hasNext ? "Next component: " + next.title : "Next component"), variant="secondary", disabled=(not hasNext), press=goNext)
+        svg width="ui.space-16" height="ui.space-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" stroke-linejoin="round" aria-hidden=true
+          path d="m12 5 7 7-7 7M19 12H5"

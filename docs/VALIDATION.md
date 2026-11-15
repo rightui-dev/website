@@ -3,6 +3,25 @@
 Recorded checks as of November 15, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
 
+## 0.3.0-beta.6 delivery — November 15, 2026
+
+- The final component candidate passed **59 browser tests, 0 failures**, plus its isolated archive installation, build and Button interaction check. All 220 legacy exports remain unchanged; 50 additive exports cover the updated component compositions.
+- Real pointer checks reproduced the default hover wash on FieldLabel, then verified transparent backgrounds on Card labels and standard/mixed Checkboxes after the fix. Clicking the label still focuses its input, and checkboxes still toggle. Attachment now uses named document previews without photography; at 390px, its page has no horizontal overflow, and a document opens and closes with Escape.
+- A fresh installation from the public npm registry also built and passed its Button interaction test. All 103 installed package files match the validated archive. The website lockfile now resolves the exact official package without a local override.
+- The published npm archive matches SHA-256 `a153fcb8a866a82a13e3b9fea507e1178cc66e02f8a13d963809855a0b5e4e55`. The existing npm `latest` selection remains unchanged.
+- Native **0.3.0, build 2026111508** is delivered on AppDrop as iOS **revision 8** and macOS **revision 9**. Both downloads match their validated upload bytes, including IPA metadata normalization; each upload preserved the other platform. Bundle identifiers, architecture, strict signatures, fonts and Card resources passed archive checks. The native bundles contain no Umami injection.
+- The Mac release copy launched and rendered Home, Components and Card. Other new native interactions and physical iPhone behavior remain unverified. The Mac app retains ad hoc signing. Native bundles embed the preceding Mac download revision 8; the website source now selects revision 9.
+
+## Local 0.3.0-beta.5 integration — November 15, 2026
+
+- This is an unpublished local candidate. No release, deployment, native build or AppDrop update was performed for this batch.
+- The complete website browser suite passed **59 tests, 0 failures**: 45 historical tests, three component-pager tests and eleven targeted tests across Accordion, Checkbox, Card, AspectRatio, Attachment, Bubble, Breadcrumb, Badge and Chart. Existing assertions remain; versioned installation expectations follow the candidate.
+- Coverage includes disabled/keyboard Accordion, controlled mixed Checkbox and independent selections, local Card validation/reset/disabled inputs, Attachment preview/Escape/close/retry/removal/restore, Bubble collapse/reactions/replies/approval/repeated popover, Breadcrumb keyboard menus and real destinations, mobile hidden ancestors and breakpoint reset, Badge language/link controls, Chart raw values/visible totals/hidden-series recovery/formats/RTL, and the existing area-gallery period/keyboard scenario.
+- Card and AspectRatio screenshots from the browser tests were inspected: the bundled cover renders in portrait, landscape and card layouts. The 65,427-byte cover matches its packaged provenance. This is not an exhaustive visual or accessibility review, and no new hover or native interaction coverage is claimed.
+- The final archive installed into an independent application, generated types, compiled with **0 warnings**, and passed its Button interaction test. SHA-256: `210403f2a4e487cdea0e278b78b18a636a6ce9faabb0a5c984e4279bb61882b5`. Its Contract sources and assets are byte-identical to the archive used by the 59-test website run; only the attribution notice was added afterward.
+- All **220 legacy exports and their declared props/shape fields** remain unchanged. There are **50 additive exports**, for 270 total. Responsive Breadcrumb now receives the viewport width on the website; a content width capped below 768 would otherwise always select the Drawer.
+- The website compiler retains **19 advisory warnings and one note**. Targeted functional tests and a successful build do not establish exhaustive catalog compatibility. The nine updated families and shared area-gallery changes have no release-specific iOS/macOS build or interaction validation; their native matrix rows remain incomplete. Windows and Android remain unsupported.
+
 ## Current release references — November 15, 2026
 
 Twelve version-guard tests passed with 27 assertions. They reject mismatched manifests, lock resolution, compatibility metadata, outdated commands and archive names, unpinned/latest/ranged install commands, unresolved placeholders and a deployment behind npm's beta channel. Local unpublished previews remain supported, while production rejects their overrides. Current public pages are checked separately from preserved historical source archives. `sync:ui` installed the official current beta and regenerated the shared command/footer data. AppDrop links now share `content/downloads.json`, fixing the older Mac revision in the Markdown download page.

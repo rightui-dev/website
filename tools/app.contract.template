@@ -18,6 +18,7 @@ use Examples as AvatarExamples from "@rightui/registry/examples/avatar"
 use ChartDemo from "./generated/charts.contract"
 use AIDemo from "./generated/ai-demos.contract"
 use DocActions from "./components/doc-actions.contract"
+use DocPager from "./components/doc-pager.contract"
 use Installation from "./components/installation.contract"
 use PackageCommands from "./components/package-commands.contract"
 use AIInstallPrompt from "./components/ai-install-prompt.contract"
@@ -407,7 +408,10 @@ component RightUI
                           row align-items="center" justify-content="space-between" gap="ui.space-16" flex-wrap="wrap"
                             h1 class=Heading testId="page-title" flex="1 1 12rem"
                               text screen.page.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
-                            DocActions(title=screen.page.title, markdown=screen.page.markdown, markdownHref=screen.page.markdownHref)
+                            row gap="ui.space-8" align-items="flex-start" min-width=0
+                              DocActions(title=screen.page.title, markdown=screen.page.markdown, markdownHref=screen.page.markdownHref)
+                              if screen.page.kind == "component"
+                                DocPager(id=navigationId("component", screen.id, screen.id == `${top(nav).id}`), items=catalog, slug=screen.page.slug, follow=follow)
                           text screen.page.description color="ui.muted-foreground" font-size="ui.text-base" line-height="ui.leading-normal" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
                         if screen.page.kind == "compatibility"
                           Compatibility(report=screen.compatibility)
@@ -441,7 +445,7 @@ component RightUI
                               if screen.page.kind == "ai"
                                 AIDemo(slug=screen.page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
                               else
-                                ComponentDemo(slug=screen.page.slug, width=(mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
+                                ComponentDemo(slug=screen.page.slug, width=(screen.page.slug == "breadcrumb" ? viewport.width : mobile ? viewport.width - 88 : min(560, viewport.width - 504)), reduced=viewport.prefersReducedMotion)
                             if showCode
                               Code(id="example-code-" + screen.page.slug, code=screen.page.code, title=(screen.page.kind == "ai" ? screen.page.source : "examples/" + screen.page.slug + ".contract"), language="Contract", compact=true)
                             else

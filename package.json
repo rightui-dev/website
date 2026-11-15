@@ -23,7 +23,7 @@
     "deploy:prepared": "bun tools/check-ui-version.ts --published --dist && wrangler deploy"
   },
   "dependencies": {
-    "@rightui/ui": "0.3.0-beta.4"
+    "@rightui/ui": "0.3.0-beta.6"
   },
   "engines": {
     "bun": ">=1.4.2"
