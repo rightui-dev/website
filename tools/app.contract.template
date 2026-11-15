@@ -82,7 +82,7 @@ component RightUI
     demoUntil = max(demoUntil, demoTime + duration)
   action tickDemo
     demoTime = min(demoUntil, demoTime + 32)
-  task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace" or top(nav).name == "component_toast")
+  task demoClock when demoTime < demoUntil and (top(nav).name.startsWith("ai_") or top(nav).name == "component_trace" or top(nav).name == "component_toast" or top(nav).name == "component_message_scroller")
     every(32, tickDemo)
   state previewBarHidden = false
   state previewPageY = 0

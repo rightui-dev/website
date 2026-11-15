@@ -21,7 +21,13 @@ component Hero
         text title font-family=uiFontFamily(uiFont) data-rightui-font="body"
       text description id="hero-description" min-width=0 max-width="min(50rem, 100%)" hyphens="auto" margin="ui.space-0" line-height="ui.leading-hero" text-align="center" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       row gap="ui.space-10" padding-top="ui.space-10" justify-content="center"
-        link href=primaryHref class=Hit padding="ui.space-7 ui.space-13" border-radius="ui.radius-full" background-color="ui.primary" color="ui.primary-foreground"
+        link href=primaryHref testId="hero-primary" class=Hit padding="ui.space-7 ui.space-13" border-radius="ui.radius-full" background-color="ui.primary" color="ui.primary-foreground" transition="background-color ui.duration-fast ui.easing"
+          :hover
+            background-color="ui.primary-hover"
+            color="ui.primary-foreground"
+          :active
+            background-color="ui.primary-hover"
+            color="ui.primary-foreground"
           text primary line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         link href=secondaryHref class=Hit padding="ui.space-7 ui.space-13" border-radius="ui.radius-full" background-color="ui.muted"
           text secondary line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"

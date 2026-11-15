@@ -1,3 +1,25 @@
+test "composed message actions and attachment state remain usable on mobile"
+  at "/docs/components/message"
+  size 390x844
+  clock data
+  clock settle
+  expect tree missing "content-bubble-in"
+  tap "message-like"
+  expect tree has "message-reactions"
+  tap "message-more"
+  tap "variation-message-action"
+  expect text "message-action-status" == "Acknowledged"
+  tap "variation-message-copy"
+  expect text "message-action-status" == "Message copied"
+  tap "variation-message-retry"
+  expect tree missing "variation-message-retry"
+  tap "content-attachment-remove"
+  expect tree missing "content-attachment"
+  expect tree has "content-attachment-restore"
+  tap "content-attachment-restore"
+  expect tree has "content-attachment"
+  expect no failures
+
 test "component pager follows catalog order and preserves appearance"
   at "/docs/components/checkbox?theme=dark&preset=rose&density=comfortable&radius=rounded&font=serif"
   size 390x844
@@ -108,18 +130,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.6"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.8"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.6"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.8"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.6"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.8"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -383,7 +405,7 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
   tap "install-button-copy"
   expect text "install-button-copy" == "Copied"
   clock +2999
@@ -391,18 +413,18 @@ test "component installation switches package manager and source method"
   clock +1
   expect text "install-button-copy" == "Copy"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.6"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.8"
   tap "install-button-mode-1"
   expect text "install-button-command-line-0" == "mkdir -p vendor/rightui vendor/rightui-ui"
-  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.6 --pack-destination vendor/rightui"
-  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.6.tgz -C vendor/rightui-ui --strip-components=1"
+  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.8 --pack-destination vendor/rightui"
+  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.8.tgz -C vendor/rightui-ui --strip-components=1"
   expect text "install-button-command-line-3" == "npm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.6"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -1146,4 +1168,54 @@ test "chart formats tooltip anatomy empty recovery and RTL remain interactive"
   type "chart-example-plot" key "Home"
   type "chart-example-plot" key "ArrowLeft"
   expect text "chart-example-value-desktop" == "305"
+  expect no failures
+test "message scroller streams automatically stops resumes resets and loads history"
+  at "/docs/components/message-scroller"
+  size 390x844
+  clock data
+  clock settle
+  expect tree has "scroller-empty"
+  tap "content-scroller-send"
+  clock +160
+  expect text "scroller-status" == "Replying…"
+  expect text "content-scroller-message-0-body" == "How do I keep a streamed reply in view?"
+  expect text "content-scroller-message-1-body" == "Give the c"
+  tap "content-scroller-stop"
+  clock +1000
+  expect text "scroller-status" == "Reply paused"
+  expect text "content-scroller-message-1-body" == "Give the c"
+  tap "content-scroller-resume"
+  clock +10000
+  expect text "scroller-status" == "Local demo"
+  tap "content-scroller-send"
+  clock +10000
+  expect text "scroller-status" == "Local demo"
+  expect text "content-scroller-message-2-body" == "What if I scroll up to read an earlier reply?"
+  tap "content-scroller-reset"
+  expect tree has "scroller-empty"
+  expect tree missing "content-scroller-viewport"
+  tap "scroller-more"
+  tap "content-scroller-history"
+  expect disabled "content-scroller-history"
+  tap "controls-first"
+  tap "controls-end"
+  expect no failures
+
+test "navigation sections transfer close by Escape and follow documentation links"
+  at "/docs/components/navigation-menu"
+  clock data
+  clock settle
+  tap "site-navigation-start"
+  clock settle
+  expect tree has "site-navigation-start-overview"
+  tap "site-navigation-components"
+  clock settle
+  expect tree has "site-navigation-components-buttons"
+  expect tree missing "site-navigation-start-overview"
+  type "site-navigation-components-buttons" key "Escape"
+  expect tree missing "site-navigation-content"
+  tap "site-navigation-start"
+  tap "site-navigation-start-install"
+  clock data
+  expect text "page-title" == "Installation"
   expect no failures

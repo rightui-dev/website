@@ -1,7 +1,16 @@
 # Validation status
 
-Recorded checks as of November 15, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
+Recorded checks as of November 16, 2026, using Bun 1.4.2 and Exact revision `53426cf02bf986a5e781abc4f953d79989c6dc05`. This report distinguishes executed checks from platform targets. It is not an exhaustive compatibility certification.
 
+
+## 0.3.0-beta.8 delivery — November 16, 2026
+
+- The complete website browser suite passed **62 tests, 0 failures** against the final approved package. The three targeted Message, MessageScroller and NavigationMenu regressions also passed independently before release.
+- Desktop and 390px browser checks verified compact incoming/outgoing messages, intentional reactions, working retry actions, and the three-dot typing wave (one-second cycle with staggered starts). Navigation panels maintain an 8px gap and align with their trigger without horizontal overflow.
+- MessageScroller checks covered timed reply growth, two completed replies, stop/resume/reset, a reader's unchanged scroll position during growth, history-row anchoring, and following the latest reply after sending or jumping to the end. The demo is local and does not call an AI service. Saved scroll restoration and automatic turn anchoring are not exposed by the current API.
+- The public npm archive matches SHA-256 `9ee5f738c3cc10a7038e378f31f96d60435dfb2e6c4fdc7a78ad1aff50932ead`. All 106 package files match the validated archive, library sources and official site installation. A separate npm installation built and passed its Button interaction test. The existing npm `latest` selection remains unchanged.
+- Native **0.3.0, build 2026111601** is delivered on AppDrop as iOS **revision 9** and macOS **revision 10**. Both downloads match the uploaded bytes, including IPA metadata normalization. Bundle identities, archive integrity, arm64 binaries and strict signatures were checked. Each bundle's 209 resources match the generated sources; no Umami injection is included.
+- These native builds have not received a new interaction/device pass. The Mac app uses ad hoc signing and is not notarized. Native bundles embed the preceding Mac download revision 9; the website source selects revision 10.
 
 ## 0.3.0-beta.6 delivery — November 15, 2026
 
