@@ -1,5 +1,7 @@
 # Native builds and AppDrop delivery
 
+Use `bun run release appdrop` for an authorized delivery of both platforms. The [local delivery engine](RELEASING.md) performs the build, version/signature, archive, upload and downloaded-byte checks below, and commits/pushes the returned website download link. It does not deploy the website. `release all` additionally coordinates npm and the website. Raw commands below describe the underlying operations for diagnosis, not a parallel delivery procedure.
+
 The iPhone and Mac builds compile the same site sources. Run native builds and web checks sequentially: the wrapper temporarily switches the manifest and generated Contract to the selected native host, then restores the web configuration in `finally`.
 
 ## iPhone archive

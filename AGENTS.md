@@ -21,6 +21,8 @@ Coordinate conventional release commits, annotated `v<version>` library tags and
 
 ## Production hosting
 
+Use `bun run release site|appdrop|npm|all` as the delivery entry point; see `docs/RELEASING.md` for exact effects. All builds, tests, Cloudflare and AppDrop operations stay local. GitHub Actions is reserved for npm publication of the exact locally validated archive. Never run npm publish locally, bypass the journal with raw uploads, or infer product-release authorization from installation of this tooling. `doctor`, `--dry-run`, `resume` and `status` are documented in that runbook. Preserve existing user edits: release sources must already be committed/pushed, and only generated dependency/download metadata may be committed by the engine.
+
 The public documentation domain is `rightui.dev`. Deploy only the `rightui-website` static-assets Worker on Cloudflare account `68e46be88d396623b3870544a294e0dd` (Fizzy APP), using the checked-in `wrangler.jsonc`. Keep API tokens, OAuth credentials, `.dev.vars` and AppDrop management links outside Git. Account IDs and route configuration are not secrets. Repository visibility is independent of site visibility; do not change it without the user's request.
 
 Run `bun run build`, validate Cloudflare routing locally, then `bun run deploy:check` before an authorized production deployment. Preserve explicit client-route rewrites and real 404 responses. Verify HTTPS HTML, Markdown, fonts, a client-rendered route and an unknown route on the custom domain after deployment. Record the source SHA and Cloudflare version ID; a successful upload alone does not prove the domain works.

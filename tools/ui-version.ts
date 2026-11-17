@@ -13,7 +13,11 @@ export function uiVersion(root = resolve(import.meta.dir, '..')): string {
     'library package': read(resolve(root, '../components/packages/ui/package.json')).version,
     'compatibility metadata': read(resolve(root, '../components/metadata/compatibility.json')).version,
   };
-  const lock = Bun.JSONC.parse(readFileSync(resolve(root, 'bun.lock'), 'utf8'));
+  const lock = Bun.JSONC.parse(readFileSync(resolve(root, 'bun.lock'), 'utf8')) as {
+    workspaces: Record<string, { dependencies?: Record<string, string> }>;
+    overrides?: Record<string, string>;
+    packages?: Record<string, unknown[]>;
+  };
   for (const [name, workspace] of Object.entries(lock.workspaces) as [string, any][]) {
     if (workspace.dependencies?.['@rightui/ui']) versions[`bun.lock ${name || 'root'}`] = workspace.dependencies['@rightui/ui'];
   }

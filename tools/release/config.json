@@ -1,0 +1,15 @@
+{
+  "bun": "1.4.2",
+  "exact": "53426cf02bf986a5e781abc4f953d79989c6dc05",
+  "libraryRepository": "rightui-dev/ui",
+  "websiteRepository": "rightui-dev/website",
+  "branch": "main",
+  "workflow": "publish-npm.yml",
+  "npmEnvironment": "npm",
+  "appdropVersion": "0.8.0",
+  "appdropId": "wcfnk49huy",
+  "bundleId": "dev.rightui",
+  "worker": "rightui-website",
+  "cloudflareAccount": "68e46be88d396623b3870544a294e0dd",
+  "site": "https://rightui.dev"
+}

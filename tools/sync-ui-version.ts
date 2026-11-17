@@ -4,7 +4,12 @@ import { publishedUi } from './ui-version';
 import { prepareRegistry } from './prepare-registry';
 
 const root = resolve(import.meta.dir, '..');
+const requested = process.argv.slice(2);
+if (requested.length > 1 || (requested[0] && !/^0\.\d+\.\d+-beta\.[1-9]\d*$/.test(requested[0]))) {
+  throw new Error('Usage: bun run sync:ui [exact-beta-version]');
+}
 const { version } = await publishedUi();
+if (requested[0] && requested[0] !== version) throw new Error(`Delivery is pinned to ${requested[0]}, but npm beta is ${version}. Refusing to switch releases.`);
 const library = JSON.parse(readFileSync(resolve(root, '../components/packages/ui/package.json'), 'utf8')).version;
 if (library !== version) throw new Error(`Align the library checkout with published npm beta ${version} before syncing the website (checkout: ${library}).`);
 for (const path of ['package.json', 'apps/site/package.json']) {

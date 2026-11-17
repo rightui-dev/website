@@ -1,5 +1,7 @@
 # Production deployment
 
+The supported delivery entry point is `bun run release site` (or `all` for an authorized combined release). See [Local delivery](RELEASING.md). It performs the checks below and uses `deploy:prepared` internally. Cloudflare deployment and all builds/tests remain local; GitHub Actions is used only for npm publication.
+
 The public documentation site is served at `https://rightui.dev` by the static-assets Worker `rightui-website`, in Cloudflare account **Fizzy APP**, `68e46be88d396623b3870544a294e0dd`. The domain is configured as a Worker Custom Domain. Cloudflare manages its DNS binding and HTTPS certificate.
 
 ## Release versions and downloads
@@ -16,35 +18,19 @@ Public AppDrop links have one source, `content/downloads.json`, shared by render
 
 Use Bun **1.4.2**, the sibling components checkout and the pinned Exact SDK described in the README. Wrangler is pinned in `package.json` and `bun.lock`.
 
-```sh
-bun run build
-bun run deploy:check
-```
-
-Before an authorized deployment, run the Cloudflare emulator in one terminal and the HTTP checks in another:
+Authenticate Wrangler using an account with access to Fizzy APP. Commit and push the reviewed sources before delivery, so `/build-info.json` identifies the deployed website, library and Exact revisions.
 
 ```sh
-bun run preview:cloudflare
+bun run release site
 ```
 
-```sh
-bun run check:hosting http://localhost:8793
-```
-
-Authenticate Wrangler using an account with access to Fizzy APP. Commit the reviewed source before rebuilding and publishing, so `/build-info.json` identifies the deployed website, library and Exact revisions.
-
-```sh
-bun run deploy
-bun run check:hosting https://rightui.dev
-bun tools/check-seo.ts https://rightui.dev
-bun tools/check-analytics.ts https://rightui.dev
-```
+This runs the build and browser suite, starts/stops the local Cloudflare emulator, checks routing/SEO/analytics, performs the deployment dry-run, uploads the prepared assets, and verifies production. `bun run deploy` is an alias for this command. Use the printed release ID with `bun run release resume <id>` after an interruption; do not rerun the underlying commands independently.
 
 Each static asset must remain below Cloudflare’s 25 MiB limit. Postbuild checks the application bundle size. Keep large Contract slots instantiated once; conditional wrapper branches can duplicate their compiled content.
 
 For an initial-render regression, run `tools/check-first-paint.browser.js` in the browser on the built site. It compares script-disabled HTML and activated Exact at every homepage breakpoint. The built HTML inlines `apps/site/assets/critical.css`; serving unprocessed Exact test output skips this delivery step.
 
-The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. Record the Cloudflare version ID from deployment output and verify `/build-info.json` before claiming that a particular revision is live. After building a committed revision and passing the local HTTP checks and `deploy:check`, `bun run deploy:prepared` uploads that existing build with the same npm/version/provenance guards, without rebuilding it.
+The hosting check verifies every catalog route, client-route aliases, Markdown types, unknown-route 404s, and the exact bytes of `app.js` and Geist against the local build. Browser interaction tests remain `bun run test`; HTTP checks do not replace them. The engine records the Cloudflare version ID and verifies `/build-info.json` before reporting completion. Its internal `deploy:prepared` step uploads the validated build with npm/version/provenance guards, without rebuilding it.
 
 ## Routing
 
@@ -58,6 +44,6 @@ The postbuild step rejects request-rendered or parameterized routes until a serv
 
 The website and both GitHub repositories are public. Repository visibility is independent of deployment. `wrangler.jsonc` is safe to version: account IDs, domains, Worker names and compatibility dates are configuration, not credentials. This static site needs no runtime secrets or data bindings.
 
-Keep Cloudflare API tokens and OAuth state outside Git. `.env*`, `.dev.vars*` and `.wrangler/` are ignored. GitHub Actions, if added later, must use repository/environment secrets and a token scoped to this deployment. No Git-triggered deployment pipeline has been configured by this setup.
+Keep Cloudflare API tokens and OAuth state outside Git. `.env*`, `.dev.vars*` and `.wrangler/` are ignored. Cloudflare authentication stays local. The sibling library's manual GitHub Actions workflow publishes npm only; it has no Cloudflare or AppDrop credentials and performs no application builds.
 
 Cloudflare references: [Static Assets](https://developers.cloudflare.com/workers/static-assets/), [Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/) and [proxy rules](https://developers.cloudflare.com/workers/static-assets/redirects/).
