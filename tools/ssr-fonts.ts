@@ -7,6 +7,14 @@ import { defaultTheme, themeOptions } from '@rightui/ui/theme';
 export const ssrFontBootstrap = `(()=>{
   const choices=${JSON.stringify(themeOptions.font)},fallback=${JSON.stringify(defaultTheme.font)},root=document.documentElement;
   const initial=root.getAttribute("data-rightui-font-choice"),selected=choices.includes(initial)?initial:fallback;
+  const optical=Number(root.getAttribute("data-rightui-optical-size")||0),rounded=Number(root.getAttribute("data-rightui-roundness")||50);
+  const axisSheet=document.createElement("style");axisSheet.setAttribute("data-rightui-axes-boot","");
+  const variation=selected==="sans"?'"ROND" '+rounded+(optical?' ,"opsz" '+optical:''):'normal';
+  axisSheet.textContent='#site-shell{font-variation-settings:'+variation+'!important;font-optical-sizing:'+(selected==="sans"&&optical?'none':'auto')+'!important}';
+  document.head.append(axisSheet);
+  const weightScale=selected==="sans"?Number(root.getAttribute("data-rightui-weight-scale")||100)/100:1;
+  const weightAttribute="data-rightui-weight-boot",weightSheet=document.createElement("style");
+  weightSheet.setAttribute(weightAttribute,"");document.head.append(weightSheet);
   const marked='[data-rightui-font="body"]',attribute="data-rightui-font-boot",pending=new Set();
   let parsed=document.readyState!=="loading",sheet=null,families=null,finished=false;
   const collect=node=>{
@@ -38,6 +46,21 @@ export const ssrFontBootstrap = `(()=>{
     if(finished||!catalogue())return;
     const shell=document.getElementById("site-shell"),ready=shell?.getAttribute("data-rightui-font-ready");
     const canRelease=parsed&&document.getElementById("exact-root")?.hasAttribute("data-boot-ms")&&ready!=null&&ready!=="false"&&ready!=="0";
+    if(canRelease)axisSheet.remove();
+    // Read authored weights together before applying the first-paint scale.
+    // Temporary selectors never replace an inline weight owned by Exact.
+    for(const node of pending)node.removeAttribute(weightAttribute);
+    if(canRelease)weightSheet.remove();
+    else if(weightScale!==1){
+      const weights=[];
+      for(const node of pending){
+        const weight=Number(getComputedStyle(node).fontWeight);
+        if(Number.isFinite(weight)&&weight>0)weights.push([node,weight]);
+      }
+      const css=[...new Set(weights.map(([,weight])=>weight))].map(weight=>'['+weightAttribute+'="'+weight+'"]{font-weight:'+(weight*weightScale)+'!important}').join("\\n");
+      if(weightSheet.textContent!==css)weightSheet.textContent=css;
+      for(const [node,weight]of weights)node.setAttribute(weightAttribute,String(weight));
+    }
     const currentChoice=shell?.getAttribute("data-rightui-font-choice");
     const current=canRelease&&Object.hasOwn(families,currentChoice)?currentChoice:selected;
     // Remove temporary selectors together, then read the runtime's actual

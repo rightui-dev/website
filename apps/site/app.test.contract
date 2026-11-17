@@ -63,9 +63,11 @@ test "component pager disables next at the last component"
   expect no failures
 
 test "documentation search opens a real component page"
+  at "/"
   size 1280x900
   clock data
   tap "search-open"
+  clock settle
   type "search-input" "Tabs"
   type "search-input" key "Enter"
   clock data
@@ -130,18 +132,18 @@ test "installation explains consumer setup"
   expect tree has "font"
   expect tree has "example"
   expect tree has "run"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.4.0-beta.1"
   tap "commands-package-manager-1"
-  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.8"
+  expect text "commands-package-command" == "npm install --save-exact @rightui/ui@0.4.0-beta.1"
   tap "commands-package-copy"
   expect text "commands-package-copy" == "Copied"
   type "commands-package-manager-1" key "ArrowRight"
-  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.3.0-beta.8"
+  expect text "commands-package-command" == "pnpm add --save-exact @rightui/ui@0.4.0-beta.1"
   expect text "commands-package-copy" == "Copy"
   tap "commands-package-manager-3"
-  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.3.0-beta.8"
+  expect text "commands-package-command" == "yarn add --exact @rightui/ui@0.4.0-beta.1"
   tap "commands-package-manager-0"
-  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
+  expect text "commands-package-command" == "bun add --exact @rightui/ui@0.4.0-beta.1"
   expect tree has "ai-install-copy"
   tap "ai-install-toggle"
   expect tree has "ai-install-prompt-text"
@@ -405,7 +407,7 @@ test "component installation switches package manager and source method"
   clock data
   clock settle
   expect tree has "github-link"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.4.0-beta.1"
   tap "install-button-copy"
   expect text "install-button-copy" == "Copied"
   clock +2999
@@ -413,18 +415,18 @@ test "component installation switches package manager and source method"
   clock +1
   expect text "install-button-copy" == "Copy"
   tap "install-button-manager-1"
-  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.3.0-beta.8"
+  expect text "install-button-command" == "npm install --save-exact @rightui/ui@0.4.0-beta.1"
   tap "install-button-mode-1"
   expect text "install-button-command-line-0" == "mkdir -p vendor/rightui vendor/rightui-ui"
-  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.3.0-beta.8 --pack-destination vendor/rightui"
-  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.3.0-beta.8.tgz -C vendor/rightui-ui --strip-components=1"
+  expect text "install-button-command-line-1" == "npm pack @rightui/ui@0.4.0-beta.1 --pack-destination vendor/rightui"
+  expect text "install-button-command-line-2" == "tar -xzf ./vendor/rightui/rightui-ui-0.4.0-beta.1.tgz -C vendor/rightui-ui --strip-components=1"
   expect text "install-button-command-line-3" == "npm install file:./vendor/rightui-ui"
   expect tree has "install-button-expand"
   tap "install-button-expand"
   expect text "install-button-expand" == "Collapse source"
   tap "install-button-manager-0"
   tap "install-button-mode-0"
-  expect text "install-button-command" == "bun add --exact @rightui/ui@0.3.0-beta.8"
+  expect text "install-button-command" == "bun add --exact @rightui/ui@0.4.0-beta.1"
   expect no failures
 
 test "compatibility matrix exposes every catalog group and honest platform status"
@@ -641,6 +643,8 @@ test "appearance survives component Back Forward and reload"
   clock data
   clock +1
   tap "theme-toggle"
+  type "quick-allo-roundness" key "End"
+  tap "quick-allo-auto"
   tap "quick-scheme-1"
   tap "quick-palette-5"
   tap "quick-font-1"
@@ -659,6 +663,8 @@ test "appearance survives component Back Forward and reload"
   expect state density == "compact"
   expect state radius == "sharp"
   expect state fontChoice == "mono"
+  expect state uiOpticalSize == 14
+  expect state uiRoundness == 100
   tap "site-shell" history -1
   clock data
   clock +1
@@ -668,9 +674,11 @@ test "appearance survives component Back Forward and reload"
   expect state density == "compact"
   expect state radius == "sharp"
   expect state fontChoice == "mono"
-  expect state themeQuery == "system"
-  expect state presetQuery == "amber"
-  expect state currentAppearanceURL == "/docs/components/switch?theme=system&preset=amber&density=compact&radius=sharp&font=mono&example=retained#top"
+  expect state uiOpticalSize == 14
+  expect state uiRoundness == 100
+  expect state themeQuery == ""
+  expect state presetQuery == ""
+  expect state currentAppearanceURL == "/docs/components/switch?example=retained#top"
   tap "site-shell" history 1
   clock data
   clock +1
@@ -687,12 +695,16 @@ test "appearance survives component Back Forward and reload"
   expect state density == "compact"
   expect state radius == "sharp"
   expect state fontChoice == "mono"
+  expect state uiOpticalSize == 14
+  expect state uiRoundness == 100
   tap "site-shell" history 1
   clock data
   clock +1
   expect text "page-title" == "Tabs"
   expect state preset == "amber"
   expect state fontChoice == "mono"
+  expect state uiOpticalSize == 14
+  expect state uiRoundness == 100
   expect no failures
 
 test "initial URL appearance stays a preview without overwriting saved preferences"
@@ -792,6 +804,7 @@ test "block categories replace content without replacing the shell or adding his
   size 390x844
   clock data
   tap "search-open"
+  clock settle
   type "search-input" "Blocks"
   type "search-input" key "Enter"
   clock data
@@ -1218,4 +1231,140 @@ test "navigation sections transfer close by Escape and follow documentation link
   tap "site-navigation-start-install"
   clock data
   expect text "page-title" == "Installation"
+  expect no failures
+
+
+test "Allo variable controls preserve semantic weights and update the export"
+  at "/themes?font=sans&opsz=0&roundness=50"
+  size 1280x1000
+  clock data
+  clock +1
+  expect text "theme-allo-optical-value" == "14"
+  type "theme-allo-roundness" key "End"
+  expect state roundness == 100
+  clock +180
+  expect state uiRoundness == 100
+  type "theme-allo-optical" key "End"
+  expect state opticalSize == 32
+  clock +180
+  expect state uiOpticalSize == 32
+  clock data
+  expect text "theme-allo-optical-value" == "32"
+  tap "theme-allo-reset"
+  clock +180
+  expect state uiRoundness == 50
+  expect state uiOpticalSize == 0
+  expect no failures
+
+test "Allo quick settings keep their values through typeface changes"
+  at "/docs/components/button?font=sans&opsz=0&roundness=50"
+  size 1280x1000
+  clock data
+  tap "theme-toggle"
+  type "quick-allo-roundness" key "Home"
+  clock +180
+  expect state uiRoundness == 0
+  type "quick-allo-optical" key "Home"
+  clock +180
+  expect state uiOpticalSize == 9
+  tap "quick-font-1"
+  expect state uiFont == "serif"
+  tap "quick-font-0"
+  expect state uiFont == "sans"
+  expect text "quick-allo-roundness-value" == "0"
+  expect text "quick-allo-optical-value" == "9"
+  expect no failures
+
+test "Allo saves only after the last axis input settles"
+  at "/themes?font=sans&opsz=0&roundness=50"
+  clock data
+  clock +1
+  type "theme-allo-roundness" key "End"
+  expect state roundness == 100
+  expect state settledRoundness == 50
+  expect state fontVariations == "'ROND' 50"
+  clock +179
+  expect state settledRoundness == 50
+  type "theme-allo-roundness" key "Home"
+  expect state roundness == 0
+  clock +179
+  expect state settledRoundness == 50
+  clock +1
+  expect state settledRoundness == 0
+  expect state fontVariations == "'ROND' 0"
+  expect state uiRoundness == 0
+  expect no failures
+
+
+test "Allo weight scales roles and saves the final percentage"
+  at "/themes?font=sans&weight=100"
+  size 1280x1000
+  clock data
+  clock +1
+  expect text "theme-allo-weight-value" == "100"
+  type "theme-allo-weight" key "PageUp"
+  expect state weightPercent == 110
+  expect state fontWeights.regular == 400
+  expect state settledWeightPercent == 100
+  clock +180
+  expect state fontWeights.regular == 440
+  expect state fontWeights.medium == 550
+  expect state fontWeights.semibold == 660
+  expect state fontWeights.bold == 770
+  expect state fontWeights.heavy == 880
+  expect state uiWeightScale == 110
+  clock data
+  expect text "theme-allo-weight-value" == "110"
+  type "theme-allo-weight" key "Home"
+  expect state weightPercent == 25
+  clock +180
+  expect state fontWeights.regular == 100
+  expect state fontWeights.heavy == 200
+  type "theme-allo-weight" key "End"
+  expect state weightPercent == 112
+  clock +180
+  expect state fontWeights.regular == 448
+  expect state fontWeights.heavy == 896
+  tap "theme-allo-reset"
+  expect state weightPercent == 100
+  clock +180
+  expect state uiWeightScale == 100
+  expect no failures
+
+test "Allo weight URL survives font switches and navigation"
+  at "/themes?font=sans&weight=75"
+  clock data
+  clock +1
+  expect state weightPercent == 75
+  expect state weightScale == 75
+  tap "theme-font-1"
+  expect state weightScale == 100
+  tap "theme-font-0"
+  expect state weightScale == 75
+  expect text "theme-allo-weight-value" == "75"
+  expect no failures
+
+test "appearance controls keep clean URLs through navigation and reload"
+  at "/themes"
+  size 1280x1000
+  clock data
+  clock +1
+  type "theme-allo-weight" key "Home"
+  clock +180
+  tap "theme-preset-1"
+  expect state themeQuery == ""
+  expect state presetQuery == ""
+  expect state currentAppearanceURL == "/themes"
+  reload
+  clock data
+  clock +1
+  expect state weightPercent == 25
+  expect state preset == "indigo"
+  expect state currentAppearanceURL == "/themes"
+  tap "navbar-home"
+  clock data
+  expect state currentAppearanceURL == "/"
+  expect state themeQuery == ""
+  expect state presetQuery == ""
+  expect state weightPercent == 25
   expect no failures

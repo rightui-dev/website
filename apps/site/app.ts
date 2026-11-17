@@ -20,9 +20,16 @@ const loadCharts = async () => (await import('./generated/charts-data')).default
 const loadBlocks = async () => (await import('./generated/blocks-data')).default;
 
 const sources: Sources = {
-  loadTheme: async ([preset, density, radius, font]) => {
+  loadTheme: async ([preset, density, radius, font, optical, rounded, weight]) => {
     const load = themeExports[`${preset}/${density}/${radius}/${font}` as keyof typeof themeExports];
-    return {code: load ? (await load()).default : ''};
+    if (!load) return {code: ''};
+    const axes = optical === 0 ? `'ROND' ${rounded}` : `'ROND' ${rounded}, 'opsz' ${optical}`;
+    const note = font === 'sans' ? `\n// On your App's outermost view in app.contract:\n//   font-variation-settings="${axes}"\n//   font-optical-sizing="${optical === 0 ? 'auto' : 'none'}"\n// Weights below already include your proportional scale; do not scale them twice.\n` : '';
+    const scale = font === 'sans' ? weight / 100 : 1;
+    const code = (await load()).default.replace(/(ui\.weight-[a-z]+: number = )(\d+)/g, (_, prefix, base) => prefix + Number(base) * scale);
+    const values = Object.fromEntries([...code.matchAll(/ui\.weight-([a-z]+): number = (\d+)/g)].map(match => [match[1], Number(match[2])]));
+    const provider = `\n// Import FontWeights from "@rightui/ui". In your root provider:\n//   uiWeights = FontWeights(regular=${values.regular}, medium=${values.medium}, semibold=${values.semibold}, bold=${values.bold}, heavy=${values.heavy})\n// Set the root font-weight to ${values.regular} for text without an explicit role.\n`;
+    return {code: code + note + provider};
   },
   loadCatalog: () => catalog,
   loadAI: () => aiCatalog,

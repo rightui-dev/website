@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily from "@rightui/ui"
 use Paragraph, QuietLink from "./styles.contract"
 
@@ -5,52 +6,53 @@ component ExactOverview
   props
     width: number
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     column gap="ui.space-36" min-width=0 testId="exact-overview"
       section id="overview" display="flex" flex-direction="column" gap="ui.space-16" min-width=0
-        h2 class=SectionTitle
+        h2 class=SectionTitle font-weight=uiWeights.semibold
           text "From your code to the screen" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Exact is the complete system. Contract describes the interface. TypeScript or Rust supplies your data." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         column border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" background-color="ui.sidebar" padding="ui.space-16" gap="ui.space-16" min-width=0
           view display="grid" grid-template-columns="minmax(0, 1fr)" id="exact-build-flow" align-items="center" gap="ui.space-8" role="group" aria-label="Build flow: Contract and rightui, Exact compiler, then the platform screen" testId="exact-build-flow"
             column class=FlowCard
-              text "01 / YOU WRITE" class=Eyebrow font-family=uiFontFamily(uiFont) data-rightui-font="body"
-              h3 class=CardTitle
+              text "01 / YOU WRITE" class=Eyebrow font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              h3 class=CardTitle font-weight=uiWeights.semibold
                 text "Contract" font-family=uiFontFamily(uiFont) data-rightui-font="body"
               text "Screens, styles, state and actions." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
               row gap="ui.space-6" align-items="center" padding-top="ui.space-8" border-top-width="ui.border-width" border-top-style="solid" border-top-color="ui.border"
                 svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" stroke-linecap="round" aria-hidden=true
                   path d="M12 5v14 M5 12h14"
-                text "rightui" font-weight="ui.weight-semibold" font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+                text "rightui" font-weight=uiWeights.semibold font-size="ui.text-caption" font-family=uiFontFamily(uiFont) data-rightui-font="body"
               text "Ready-made Contract components." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
             FlowArrow()
             column class=FlowCard
-              text "02 / EXACT BUILDS" class=Eyebrow font-family=uiFontFamily(uiFont) data-rightui-font="body"
-              h3 class=CardTitle
+              text "02 / EXACT BUILDS" class=Eyebrow font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              h3 class=CardTitle font-weight=uiWeights.semibold
                 text "Compiler" font-family=uiFontFamily(uiFont) data-rightui-font="body"
               text "Checks your interface and turns it into a compact plan." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
               text "The plan tells the runtime what to show and how to respond." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
             FlowArrow()
             column class=FlowCard
-              text "03 / EXACT RUNS" class=Eyebrow font-family=uiFontFamily(uiFont) data-rightui-font="body"
-              h3 class=CardTitle
+              text "03 / EXACT RUNS" class=Eyebrow font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              h3 class=CardTitle font-weight=uiWeights.semibold
                 text "Your screen" font-family=uiFontFamily(uiFont) data-rightui-font="body"
               Platform(name="Web", detail="Browser DOM + CSS")
               Platform(name="iOS", detail="UIKit")
               Platform(name="macOS", detail="AppKit")
           column border-width="ui.border-width" border-style="dashed" border-color="ui.border" border-radius="ui.radius-control" padding="ui.space-16" gap="ui.space-8" min-width=0
-            text "DATA / AT RUNTIME" class=Eyebrow font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text "DATA / AT RUNTIME" class=Eyebrow font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
             row gap="ui.space-8" align-items="center" flex-wrap="wrap"
-              text "TypeScript" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "TypeScript" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
               text "or" class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
-              text "Rust" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text "Rust" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
             text "Your data module handles API calls, storage and business logic. Exact asks it for data, checks the reply and updates the interface." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "You can build with Contract + TypeScript without writing Rust. Rust also powers parts of Exact internally; that does not make it a language you must write." class=Paragraph testId="exact-no-rust" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         link href="/docs/compatibility" class=QuietLink
           text "Web, iOS and macOS are rightui's targets. See the checks completed for each platform." font-family=uiFontFamily(uiFont) data-rightui-font="body"
       section id="roles" display="flex" flex-direction="column" gap="ui.space-16" min-width=0
-        h2 class=SectionTitle
+        h2 class=SectionTitle font-weight=uiWeights.semibold
           text "Inside the runtime" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         column border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" overflow="hidden" min-width=0
           RuntimeRole(name="Runner", detail="Handles events, state changes and requests to your data module.", last=false)
@@ -60,7 +62,7 @@ component ExactOverview
           link href="https://github.com/expo/exact/blob/53426cf02bf986a5e781abc4f953d79989c6dc05/README.md#how-it-works" class=QuietLink
             text "Read the Exact architecture" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       section id="expo" display="flex" flex-direction="column" gap="ui.space-16" min-width=0
-        h2 class=SectionTitle
+        h2 class=SectionTitle font-weight=uiWeights.semibold
           text "Coming from Expo?" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Expo is a framework built around React Native. Exact provides its own UI language, compiler and runtime. These are useful points of comparison, not interchangeable packages." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         view border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" overflow="hidden" min-width=0
@@ -84,7 +86,7 @@ component ExactOverview
         link href="https://docs.expo.dev/get-started/create-a-project/" class=QuietLink
           text "About the Expo framework" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       section id="interaction" display="flex" flex-direction="column" gap="ui.space-16" min-width=0
-        h2 class=SectionTitle
+        h2 class=SectionTitle font-weight=uiWeights.semibold
           text "One example: load products" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Imagine a Load products button in your app. Each layer has one job." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         column gap="ui.space-0" min-width=0 testId="exact-interaction-flow"
@@ -93,7 +95,7 @@ component ExactOverview
           InteractionStep(number="3", title="The list appears", owner="Exact runtime + Contract", detail="Exact checks the reply against the declared shape. Contract renders the products and the host displays the result.", last=true)
         text "A local interaction, like opening a menu, can stay entirely in Contract. A data request is needed only when the action needs your data module." class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
       section id="next" display="flex" flex-direction="column" gap="ui.space-16" min-width=0
-        h2 class=SectionTitle
+        h2 class=SectionTitle font-weight=uiWeights.semibold
           text "Start with Contract + TypeScript" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Use rightui for the components and app.ts for your data. Choose Rust when your project needs a Rust data source; the UI still stays in Contract." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         row gap="ui.space-16" flex-wrap="wrap"
@@ -115,10 +117,11 @@ component Platform
     name: string
     detail: string
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     column gap="ui.space-2"
-      text name font-size="ui.text-caption" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      text name font-size="ui.text-caption" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
       text detail class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
 
 component RuntimeRole
@@ -127,10 +130,11 @@ component RuntimeRole
     detail: string
     last: bool
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     row gap="ui.space-16" padding="ui.space-16" border-bottom-width=(last ? "0px" : "ui.border-width") border-bottom-style="solid" border-bottom-color="ui.border" align-items="flex-start"
-      text name flex="0 0 4rem" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      text name flex="0 0 4rem" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
       text detail class=SmallText flex=1 min-width=0 font-family=uiFontFamily(uiFont) data-rightui-font="body"
 
 component ComparisonRow
@@ -139,10 +143,11 @@ component ComparisonRow
     expo: string
     exact: string
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     tr
-      th scope="row" class=TableCell font-weight="ui.weight-medium"
+      th scope="row" class=TableCell font-weight=uiWeights.medium
         text role font-family=uiFontFamily(uiFont) data-rightui-font="body"
       td class=TableCell
         text expo font-family=uiFontFamily(uiFont) data-rightui-font="body"
@@ -157,18 +162,19 @@ component InteractionStep
     detail: string
     last: bool
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     row gap="ui.space-16" min-width=0 align-items="stretch"
       column align-items="center" flex="0 0 ui.space-28"
         view width="ui.space-28" height="ui.space-28" box-sizing="border-box" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-full" display="flex" align-items="center" justify-content="center" background-color="ui.sidebar"
-          text number font-size="ui.text-xs" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text number font-size="ui.text-xs" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
         if not last
           view width="ui.border-width" flex=1 background-color="ui.border" margin="ui.space-6 ui.space-0"
       column gap="ui.space-6" padding-bottom=(last ? "ui.space-0" : "ui.space-24") min-width=0 flex=1
-        h3 class=CardTitle
+        h3 class=CardTitle font-weight=uiWeights.semibold
           text title font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        text owner class=Eyebrow font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text owner class=Eyebrow font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text detail class=SmallText font-family=uiFontFamily(uiFont) data-rightui-font="body"
 
 style FlowCard

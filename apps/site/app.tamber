@@ -1,6 +1,6 @@
-// RightUI theme. Copy the bundled Geist and Newsreader fonts and their licenses from @rightui/ui/assets/fonts.
+// RightUI theme. Bundle AlloVariable.ttf (Allo 1.0.1, SIL OFL) alongside the package fonts and licenses.
 // Light/dark/system is controlled separately by setScheme().
-// In App, provide uiFont = "theme" to use this configuration's body family.
+// In App, provide uiFont = "theme" to use this configuration's body family. Also import defaultFontWeights and provide uiWeights = defaultFontWeights().
 tamber app
 
 axes
@@ -297,7 +297,7 @@ theme
   ui.ai-radius-panel: length = calc(ui.foundation-radius * 2.4)
   ui.ai-radius-bubble: length = calc(ui.foundation-radius * 2.2)
   ui.ai-radius-checkbox: length = calc(ui.foundation-radius * 0.5)
-  ui.foundation-font-sans: family = "Geist", system-ui, sans-serif
+  ui.foundation-font-sans: family = "Allo", system-ui, sans-serif
   ui.font-sans: family = ui.foundation-font-sans
   ui.foundation-font-serif: family = "Newsreader", serif
   ui.font-serif: family = ui.foundation-font-serif
@@ -507,3 +507,7 @@ theme
 // font "Newsreader"
 //   200 800 = "assets/fonts/Newsreader.ttf"
 //   200 800 italic = "assets/fonts/Newsreader-Italic.ttf"
+
+// In app.contract also declare:
+// font "Allo"
+//   100 900 = "assets/fonts/AlloVariable.ttf"

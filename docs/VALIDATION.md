@@ -208,3 +208,21 @@ The package archive also installs, compiles and passes its interaction check in 
 The iPhone archive is version 0.3.0, build 2026111502. A separately development-signed copy was installed and launched over Wi-Fi; installed version and bundle identifier were verified. The archived IPA was not modified by device signing. ProMotion eligibility is present and Exact requests the display maximum for spatial motion. Sustained 120 fps and full VoiceOver modal isolation are not certified by these checks; physical performance capture requires a real gesture session.
 
 This batch is local/device delivery. npm, GitHub, the public website and AppDrop remain separate publication steps.
+
+## 2026-11-17 — Allo proportional weights (local preview)
+
+The local 0.4.0-beta.1 candidate supplies a `FontWeights` context shared by the website and public library components. The Weight (%) slider multiplies each semantic base weight, leaving the font's weight axis controlled by each text role. Its 25–112% range keeps the default 400–800 roles within Allo's 100–900 range. Roundness and optical size remain independent controls.
+
+Fourteen bootstrap/theme unit tests pass (87 assertions). The 67-scenario website run passed 65 scenarios; the two search scenarios passed on targeted rerun after explicitly settling their opening animation and initializing the search route. All five Allo scenarios passed, including proportional values, endpoints, reset and font-switch preservation.
+
+Rendered browser checks measured body 440 and heading 660 at 110%, both before and after activation. Six public Input fields also measured 440. Keyboard Home/End produced 25% and 112%, preserving body/title ratios. During twenty continuous adjustments, no persistence writes or history updates occurred; after settlement, storage and exported theme weights matched 110%. Exported provider weights were 440/550/660/770/880. These checks do not establish a sustained frame rate.
+
+This candidate is local only. The new required `uiWeights` provider and migration from custom weight tokens to a base `FontWeights` record are documented in the library migration guide.
+
+The same immutable package archive installed, built and passed its Button interaction test in an isolated Exact app. The macOS app compiled, passed strict bundle-signature verification and contains the exact Allo font asset. Native generation restored the web manifest and generated inputs byte for byte. This is a local ad-hoc build; native slider interactions have not been visually verified.
+
+### Allo interaction and page layout follow-up
+
+Ten focused browser scenarios pass for appearance controls, navigation, reload and proportional weights. Slider values update immediately; page-wide typography, persistence and exports settle after 180 ms without another input. A browser drag reached 112%, then applied body weight 448 and heading weight 672 while leaving the page URL unchanged. Regular navigation no longer adds appearance parameters; explicit incoming preview URLs remain supported.
+
+The Themes page uses the shared 96rem maximum width and a larger font specimen. The homepage title places “Design System” on its own second line. Browser geometry checks confirmed two lines at desktop and mobile widths, with no heading overflow. The website production build and macOS compilation completed; the Mac bundle passed strict signature verification. These checks do not establish native drag smoothness or a sustained frame rate.

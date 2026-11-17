@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily from "@rightui/ui"
 use CompatibilityReport, CompatibilityGroup from "./shapes.contract"
 use QuietLink, Paragraph from "./styles.contract"
@@ -6,25 +7,26 @@ component Compatibility
   props
     report: CompatibilityReport
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     column gap="ui.space-32" min-width=0
       column gap="ui.space-12" id="status"
-        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight=uiWeights.semibold
           text "Reading this table" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text ("Evidence for rightui " + report.version + ", recorded " + report.asOf + ". Partial checks do not certify every variant. Built only means compilation succeeded, without a targeted interaction result.") class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "iOS validation is incomplete. Windows and Android are not supported. Hover a symbol or use a screen reader to read its status." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for status in report.statuses key=status.id
           column gap="ui.space-4"
-            text status.label font-weight="ui.weight-medium" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text status.label font-weight=uiWeights.medium font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             text status.description color="ui.muted-foreground" font-size="ui.text-caption" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       for group in report.groups key=group.id
         column gap="ui.space-16" id=group.id min-width=0
-          h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+          h2 margin="ui.space-0" font-size="ui.text-xl" font-weight=uiWeights.semibold
             text (group.title + " (" + group.rows.length.toString() + ")") font-family=uiFontFamily(uiFont) data-rightui-font="body"
           Matrix(group=group)
       column gap="ui.space-16" id="evidence"
-        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+        h2 margin="ui.space-0" font-size="ui.text-xl" font-weight=uiWeights.semibold
           text "Validation evidence" font-family=uiFontFamily(uiFont) data-rightui-font="body"
         for item in report.evidence key=item.id
           column gap="ui.space-4" id=("evidence-" + item.id)
@@ -36,6 +38,7 @@ component Matrix
   props
     group: CompatibilityGroup
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     scroll overflow-x="auto" max-height="80vh" min-width=0 max-width="100%" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel" tabindex=0 aria-label=(group.title + " compatibility table")
@@ -52,7 +55,7 @@ component Matrix
         tbody
           for row in group.rows key=row.id
             tr testId=("compatibility-" + row.id)
-              th scope="row" text-align="left" padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" font-weight="ui.weight-medium" min-width="10rem"
+              th scope="row" text-align="left" padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" font-weight=uiWeights.medium min-width="10rem"
                 link href=row.href class=QuietLink color="ui.foreground"
                   text row.title font-family=uiFontFamily(uiFont) data-rightui-font="body"
               td padding="ui.space-12" border-bottom-width="ui.border-width" border-bottom-style="solid" border-bottom-color="ui.border" testId=(row.id + "-ios") title=row.ios aria-label=row.ios

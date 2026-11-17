@@ -18,12 +18,12 @@ function run(stored: string | null, search = '', unavailable = false, settings: 
       };
     },
   });
-  return { scheme: document.documentElement.style.colorScheme, reads, modes:attributes["data-x-modes"], font:attributes["data-rightui-font-choice"] };
+  return { scheme: document.documentElement.style.colorScheme, reads, modes:attributes["data-x-modes"], font:attributes["data-rightui-font-choice"], optical:attributes["data-rightui-optical-size"], roundness:attributes["data-rightui-roundness"], weight:attributes["data-rightui-weight-scale"] };
 }
 
 test('first paint uses existing Exact preferences and URL overrides without writing storage', () => {
   expect(run('"dark"').scheme).toBe('dark');
-  expect(run('"dark"').reads).toEqual(['exact.state.theme','exact.state.uiPreset','exact.state.uiDensity','exact.state.uiRadius','exact.state.uiFont']);
+  expect(run('"dark"').reads).toEqual(['exact.state.theme','exact.state.uiPreset','exact.state.uiDensity','exact.state.uiRadius','exact.state.uiFont','exact.state.uiOpticalSize','exact.state.uiRoundness','exact.state.uiWeightScale']);
   expect(run('"light"').scheme).toBe('light');
   expect(run('"dark"', '?theme=light').scheme).toBe('light');
   expect(run('"light"', '?theme=dark').scheme).toBe('dark');
@@ -84,4 +84,26 @@ test('SSR mode transport stays before styles and survives client route shells', 
   expect(withSSRModeBootstrap(html)).toBe(html);
   expect(withClientMetadata(html,{name:'area',url:'/charts/area',title:'Charts',description:'Charts'})).toContain('<script data-rightui-ssr-modes>');
   expect(()=>withSSRModeBootstrap('<html></html>')).toThrow('withInitialTheme');
+});
+
+
+test('Allo axes use saved preferences before paint, sanitize URL input and never pin weight', () => {
+  const stored = {'exact.state.uiOpticalSize':'24','exact.state.uiRoundness':'85'};
+  expect(run(null, '', false, stored)).toMatchObject({optical:'24',roundness:'85'});
+  expect(run(null, '?opsz=9&roundness=0', false, stored)).toMatchObject({optical:'9',roundness:'0'});
+  expect(run(null, '?opsz=32&roundness=100', true)).toMatchObject({optical:'32',roundness:'100'});
+  expect(run(null, '?opsz=0&roundness=50', false, stored)).toMatchObject({optical:'0',roundness:'50'});
+  expect(run(null, '?opsz=4&roundness=Infinity')).toMatchObject({optical:'0',roundness:'50'});
+  expect(run(null, '?opsz=broken&roundness=-1', false, stored)).toMatchObject({optical:'24',roundness:'85'});
+  expect(run(null, '', false, {'exact.state.uiOpticalSize':'"bad"','exact.state.uiRoundness':'200'})).toMatchObject({optical:'0',roundness:'50'});
+  expect(themeBootstrap).not.toContain('"wght"');
+});
+
+
+test('weight scale validates saved percentages and URL overrides', () => {
+  expect(run(null, '', false, {'exact.state.uiWeightScale':'110'}).weight).toBe('110');
+  expect(run(null, '?weight=75', false, {'exact.state.uiWeightScale':'110'}).weight).toBe('75');
+  for (const value of ['0', '24', '113', 'Infinity', 'bad']) expect(run(null, '?weight='+value).weight).toBe('100');
+  expect(run(null, '?weight=25').weight).toBe('25');
+  expect(run(null, '?weight=112').weight).toBe('112');
 });

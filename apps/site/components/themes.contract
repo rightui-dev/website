@@ -1,3 +1,5 @@
+use FontWeights from "@rightui/ui"
+use FontAxisControls, FontSpecimen from "./font-axes.contract"
 use uiFontFamily from "@rightui/ui"
 use Button, ButtonContent, Input, Checkbox, Switch, CardFrame, CardHeader, CardTitle, CardDescription, CardContent, Badge, TabsAdvanced, CodeBlockAdvanced, Heading, Paragraph, RadioGroupAdvanced, Separator from "@rightui/ui"
 
@@ -33,6 +35,7 @@ component ThemeSample
 
 component ThemePage
   props
+    width: number
     preset: string
     palettes: string[]
     paletteLabels: string[]
@@ -54,20 +57,21 @@ component ThemePage
   action chooseFont(value: number)
     choose(preset, density, radius, (match ["sans", "serif", "mono"].at(value) { case some(v) => v, case none => "sans" }))
   inject
+    uiWeights: FontWeights
     uiFont: string
     uiCopiedId: string
     uiCopiedText: string
     uiCopyCode: action
   view
-    main max-width="80rem" margin="0 auto" padding="ui.space-40 ui.space-24 ui.space-64" width="100%" box-sizing="border-box"
+    main testId="themes-container" max-width="96rem" margin="0 auto" padding="ui.space-40 ui.space-24 ui.space-64" width="100%" box-sizing="border-box"
       column gap="ui.space-32"
         column gap="ui.space-12"
-          h1 class=Heading
+          h1 class=Heading font-weight=uiWeights.semibold
             text "Themes" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           text "Choose a palette, shape and rhythm. The site and its examples use the same RightUI configuration." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
           text "Light, dark and system appearance stay independent of your preset." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
         column gap="ui.space-16"
-          text "Palette" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Palette" font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
           TabsAdvanced(id="theme-preset", label="Palette", labels=paletteLabels, counts=[], selected=palettes.indexOf(preset), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=choosePreset)
           row gap="ui.space-24" flex-wrap="wrap"
             column gap="ui.space-8"
@@ -78,17 +82,21 @@ component ThemePage
               TabsAdvanced(id="theme-radius", label="Corners", labels=["Neutral", "Sharp", "Rounded"], counts=[], selected=["default", "sharp", "round"].indexOf(radius), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseRadius)
             column gap="ui.space-8"
               text "Typeface" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-              TabsAdvanced(id="theme-font", label="Typeface", labels=["Sans", "Serif", "Mono"], counts=[], selected=["sans", "serif", "mono"].indexOf(font), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseFont)
+              TabsAdvanced(id="theme-font", label="Typeface", labels=["Allo", "Serif", "Mono"], counts=[], selected=["sans", "serif", "mono"].indexOf(font), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseFont)
+        view display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 20rem), 1fr))" gap="ui.space-24" align-items="stretch"
+          column padding="ui.space-24" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel"
+            FontAxisControls(id="theme-allo")
+          FontSpecimen(width=width)
         view display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 18rem), 1fr))" gap="ui.space-24" align-items="start"
           for option in palettes key=option
             column gap="ui.space-12" -exact-mode=`ui-preset=${option}`
-              text option text-transform="capitalize" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+              text option text-transform="capitalize" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
               ThemeSample(id="preview-" + option, reduced=reduced)
               Button(id="apply-" + option, label=(option == preset ? "Selected" : "Apply " + option), variant="outline", disabled=(option == preset), press=choose(option, density, radius, font))
         column gap="ui.space-12"
           h2 margin=0
-            text "Use this theme" font-size="ui.text-xl" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-          text "Copy this configuration into app.tamber. Keep the Geist and Newsreader font declarations and provide uiFont=\"theme\" at your app root, as shown in Installation. Your app controls light, dark or system separately with setScheme()." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            text "Use this theme" font-size="ui.text-xl" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Copy this configuration into app.tamber. Allo is a local site preview: bundle its font file and OFL license separately from the published package. The export includes its declaration and your chosen axes. Provide uiFont=\"theme\" at your app root." class=Paragraph font-family=uiFontFamily(uiFont) data-rightui-font="body"
           Button(id="copy-theme", label=(copied ? "Theme copied" : "Copy theme"), variant="primary", disabled=(code == ""), press=copy)
           text (copied ? "Theme copied to clipboard" : "") role="status" aria-live="polite" font-family=uiFontFamily(uiFont) data-rightui-font="body" font-size="ui.text-sm"
           view inert=(code == "") aria-busy=(code == "") min-width="0px"
@@ -109,15 +117,16 @@ component QuickThemeControls
     chooseRadius: action
     customize: action
   inject
+    uiWeights: FontWeights
     uiFont: string
   derive schemeLabel = scheme == "dark" ? "Dark" : scheme == "light" ? "Light" : "System"
   derive presetLabel = (match paletteLabels.at(palettes.indexOf(preset)) { case some(label) => label, case none => "Neutral" })
-  derive fontLabel = font == "serif" ? "Serif" : font == "mono" ? "Mono" : "Sans"
+  derive fontLabel = font == "serif" ? "Serif" : font == "mono" ? "Mono" : "Allo"
   derive radiusLabel = radius == "sharp" ? "Sharp" : radius == "round" ? "Rounded" : "Neutral"
   action selectScheme(label: string)
     chooseScheme(label.toLowerCase())
   action selectFont(label: string)
-    chooseFont(label.toLowerCase())
+    chooseFont(label == "Allo" ? "sans" : label.toLowerCase())
   action selectRadius(label: string)
     chooseRadius(label == "Sharp" ? "sharp" : label == "Rounded" ? "round" : "default")
   action selectPalette(label: string)
@@ -129,16 +138,18 @@ component QuickThemeControls
   view
     column gap="ui.space-16"
       column gap="ui.space-8"
-        text "Appearance" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "Appearance" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
         RadioGroupAdvanced(id="quick-scheme", label="Appearance mode", options=["Light", "Dark", "System"], value=schemeLabel, disabled=false, required=false, descriptionId="", change=selectScheme, variant="segmented")
       column gap="ui.space-8"
-        text "Palette" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "Palette" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
         RadioGroupAdvanced(id="quick-palette", label="Color palette", options=paletteLabels, value=presetLabel, disabled=false, required=false, descriptionId="", change=selectPalette, variant="segmented")
       column gap="ui.space-8"
-        text "Typeface" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        RadioGroupAdvanced(id="quick-font", label="Typeface", options=["Sans", "Serif", "Mono"], value=fontLabel, disabled=false, required=false, descriptionId="", change=selectFont, variant="segmented")
+        text "Typeface" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        RadioGroupAdvanced(id="quick-font", label="Typeface", options=["Allo", "Serif", "Mono"], value=fontLabel, disabled=false, required=false, descriptionId="", change=selectFont, variant="segmented")
       column gap="ui.space-8"
-        text "Corners" font-size="ui.text-sm" font-weight="ui.weight-semibold" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text "Corners" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
         RadioGroupAdvanced(id="quick-radius", label="Corners", options=["Neutral", "Sharp", "Rounded"], value=radiusLabel, disabled=false, required=false, descriptionId="", change=selectRadius, variant="segmented")
+      Separator(vertical=false)
+      FontAxisControls(id="quick-allo")
       Separator(vertical=false)
       Button(id="customize-theme", label="Customize theme", variant="outline", disabled=false, press=customize)

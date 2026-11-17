@@ -55,6 +55,10 @@ SOFTWARE.
 
 `assets/fonts/Geist.ttf` is Geist, distributed under the SIL Open Font License 1.1. The full license is included at `assets/fonts/OFL.txt`. Source: https://github.com/google/fonts/tree/main/ofl/geist
 
+# Allo
+
+Allo 1.0.1 by Josh Puckett is bundled as `assets/fonts/AlloVariable.ttf` and `assets/fonts/AlloVariable.woff2`, unmodified, under the SIL Open Font License 1.1. Copyright 2026 Josh Puckett and copyright 2016 The Inter Project Authors. The full license is included at `assets/fonts/OFL-Allo.txt`. Source: https://github.com/joshpuckett/allo
+
 # Tabler Icons
 
 The dashboard sidebar and header theme SVG paths are adapted from Tabler Icons, as shipped in the official shadcn/ui references. Source: https://github.com/tabler/tabler-icons

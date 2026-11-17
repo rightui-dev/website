@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily from "@rightui/ui"
 use Hit, QuietLink, Heading from "./styles.contract"
 
@@ -12,6 +13,7 @@ component TryApp
   props
     macDownloadUrl: string
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     main testId="try-page" padding="clamp(ui.space-48, 8vw, ui.space-96) ui.space-24 ui.space-96" display="flex" flex-direction="column" align-items="center" gap="ui.space-40" min-width=0
@@ -19,7 +21,7 @@ component TryApp
         row align-items="center" gap="ui.space-10" color="ui.muted-foreground" font-size="ui.text-sm"
           AppDropMark()
           text "RightUI avec AppDrop" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        h1 testId="try-title" class=Heading
+        h1 testId="try-title" class=Heading font-weight=uiWeights.semibold
           text "Essayez RightUI sur votre appareil." font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Explorez les composants dans une application native. Choisissez votre plateforme pour commencer." font-size="ui.text-md" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       view testId="try-platforms" display="grid" grid-template-columns="repeat(auto-fit, minmax(min(100%, 18rem), 1fr))" gap="ui.space-16" width="100%" max-width="48rem"
@@ -40,6 +42,7 @@ component TryIPhone
   props
     iphoneUrl: string
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     main testId="iphone-install" padding="clamp(ui.space-48, 8vw, ui.space-96) ui.space-24 ui.space-96" display="flex" flex-direction="column" align-items="center" gap="ui.space-32" min-width=0
@@ -47,14 +50,14 @@ component TryIPhone
         row align-items="center" gap="ui.space-10" color="ui.muted-foreground" font-size="ui.text-sm"
           AppDropMark()
           text "RightUI sur iPhone" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        h1 class=Heading
+        h1 class=Heading font-weight=uiWeights.semibold
           text "Scannez. Installez. Explorez." font-family=uiFontFamily(uiFont) data-rightui-font="body"
         text "Scannez ce QR code avec votre iPhone, puis suivez les étapes dans AppDrop pour installer la démo." color="ui.muted-foreground" font-size="ui.text-md" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       view padding="ui.space-16" background-color="#ffffff" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-panel"
         image "assets/brand/appdrop-iphone-qr.svg" width=208 height=208 alt="QR code du lien AppDrop pour installer RightUI sur iPhone"
       column gap="ui.space-12" align-items="center" text-align="center" max-width="32rem"
         text "Vous êtes déjà sur votre iPhone ?" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        link href=iphoneUrl target="_blank" rel="noopener noreferrer" testId="iphone-appdrop-link" class=Hit display="flex" align-items="center" gap="ui.space-10" padding="ui.space-12 ui.space-20" border-radius="ui.radius-full" background-color="ui.primary" color="ui.primary-foreground"
+        link href=iphoneUrl target="_blank" rel="noopener noreferrer" testId="iphone-appdrop-link" class=Hit font-weight=uiWeights.medium display="flex" align-items="center" gap="ui.space-10" padding="ui.space-12 ui.space-20" border-radius="ui.radius-full" background-color="ui.primary" color="ui.primary-foreground"
           text "Ouvrir AppDrop sur mon iPhone" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           ArrowRight()
         text "AppDrop nécessite une configuration initiale avec votre compte Apple." font-size="ui.text-xs" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
@@ -68,6 +71,7 @@ component PlatformContent
     description: string
     available: bool
   inject
+    uiWeights: FontWeights
     uiFont: string
   view
     column gap="ui.space-24" width="100%" min-width=0
@@ -78,7 +82,7 @@ component PlatformContent
           view testId=(platform + "-availability-dot") data-rightui-availability=(available ? "available" : "unavailable") animation-duration="ui.duration-availability" animation-timing-function="ui.easing" aria-hidden=true width="ui.space-6" height="ui.space-6" flex-shrink=0 border-radius="ui.radius-full" background-color=(available ? "ui.success" : "ui.danger")
       column gap="ui.space-8" min-width=0
         row align-items="center" justify-content="space-between" gap="ui.space-12"
-          text title font-size="ui.text-md" font-weight="ui.weight-semibold" line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text title font-size="ui.text-md" font-weight=uiWeights.semibold line-height="ui.leading-snug" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           if available
             ArrowRight()
         text description font-size="ui.text-caption" line-height="ui.leading-copy" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"

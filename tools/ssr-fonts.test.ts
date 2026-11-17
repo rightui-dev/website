@@ -8,8 +8,11 @@ class NodeStub {
   parentElement: NodeStub | null = null;
   children: NodeStub[] = [];
   attributes = new Map<string, string>();
-  textContent = '';
+  private text = '';
+  get textContent() { return this.text; }
+  set textContent(value: string) { this.text = value; this.notify({ type: 'childList', target: this, addedNodes: [] }); }
   runtimeFamily = '';
+  runtimeWeight = '400';
   notify: (record: Mutation) => void = () => {};
   constructor(public tag = 'div', attrs: Record<string, string> = {}) { for (const [name, value] of Object.entries(attrs)) this.attributes.set(name, value); }
   get isConnected(): boolean { return this.tag === 'html' || !!this.parentElement?.isConnected; }
@@ -24,9 +27,9 @@ class NodeStub {
   remove() { if (!this.parentElement) return; const parent = this.parentElement; parent.children = parent.children.filter(node => node !== this); this.parentElement = null; parent.notify({ type: 'childList', target: parent, addedNodes: [] }); }
 }
 
-function fixture(selected = 'serif') {
+function fixture(selected = 'serif', percent = 100) {
   const families = { sans: '"CompiledSans42", system-ui', serif: '"CompiledSerif73", serif', mono: '"CompiledMono19", monospace', theme: '"CustomBody88", serif' };
-  const root = new NodeStub('html', { 'data-rightui-font-choice': selected });
+  const root = new NodeStub('html', { 'data-rightui-font-choice': selected, 'data-rightui-weight-scale': String(percent) });
   const head = new NodeStub('head'), exact = new NodeStub('div', { id: 'exact-root' });
   const shell = new NodeStub('main', { id: 'site-shell', 'data-rightui-font-ready': 'false', 'data-rightui-font-choice': 'sans' });
   root.append(head); root.append(exact); exact.append(shell);
@@ -43,7 +46,8 @@ function fixture(selected = 'serif') {
   const sheet = () => head.children.find(node => node.tag === 'style' && node.hasAttribute('data-rightui-font-boot'));
   const computed = (node: NodeStub) => {
     const temporary = node.getAttribute('data-rightui-font-boot') as keyof typeof families;
-    return { fontFamily: sheet() && temporary ? families[temporary] : node.runtimeFamily };
+    const weight = node.getAttribute('data-rightui-weight-boot');
+    return { fontFamily: sheet() && temporary ? families[temporary] : node.runtimeFamily, fontWeight: weight ? String(Number(weight) * percent / 100) : node.runtimeWeight };
   };
   runInNewContext(ssrFontBootstrap, {
     document, getComputedStyle: computed,
@@ -115,4 +119,21 @@ test('a leaf that becomes code stops receiving the body font override', () => {
   expect(body.hasAttribute('data-rightui-font-boot')).toBe(false);
   expect(page.computed(body).fontFamily).toBe(page.families.sans);
   page.ready(); expect(page.isObserving()).toBe(false);
+});
+
+
+test('saved proportional weights are present before activation and release to runtime weights', () => {
+  const page = fixture('sans', 110); page.probes();
+  const body = page.leaf();
+  const title = page.leaf();
+  title.runtimeWeight = '600'; title.setAttribute('style', 'font-weight:600'); page.flush();
+  expect(page.computed(body).fontWeight).toBe('440');
+  expect(page.computed(title).fontWeight).toBe('660');
+  body.runtimeWeight = '440'; title.runtimeWeight = '660';
+  page.ready();
+  expect(body.hasAttribute('data-rightui-weight-boot')).toBe(false);
+  expect(title.hasAttribute('data-rightui-weight-boot')).toBe(false);
+  expect(page.computed(body).fontWeight).toBe('440');
+  expect(page.computed(title).fontWeight).toBe('660');
+  expect(page.isObserving()).toBe(false);
 });

@@ -1,3 +1,4 @@
+import { createSiteTheme } from './site-theme';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, copyFileSync, cpSync, unlinkSync, rmSync } from 'node:fs';
 import { resolve, relative, dirname } from 'node:path';
 import { buildRegistry } from '../../components/tools/registry';
@@ -5,7 +6,7 @@ import { checkVersion } from '../../components/tools/check-version';
 import { compatibility, compatibilityMarkdown } from '../../components/tools/compatibility';
 import { prepareRegistry } from './prepare-registry';
 import { uiVersion as resolveUiVersion, assertCurrentUiReferences } from './ui-version';
-import { createTheme, themeLayout, themeOptions, themeAxes, themeTokens } from '@rightui/ui/theme';
+import { themeLayout, themeOptions, themeAxes, themeTokens } from '@rightui/ui/theme';
 prepareRegistry();
 const root = resolve(import.meta.dir, '..');
 const finderMetadata = resolve(root, "dist.gen/.DS_Store");
@@ -129,13 +130,13 @@ for(const b of blocks)pages[`view_${b.slug.replaceAll('-','_')}`]={...blank,titl
 pages.try={...blank,title:'Essayer RightUI',description:'Essayez les composants RightUI sur votre iPhone ou votre Mac avec AppDrop.',kind:'try'};
 pages.try_iphone={...blank,title:'Essayer RightUI sur iPhone',description:'Scannez le QR code pour installer RightUI sur votre iPhone avec AppDrop.',kind:'try-iphone'};
 pages.themes={...pages.home,title:'Themes',description:'Customize RightUI palettes, density, corners and typography. Preview and export your Exact theme.',kind:'themes',slug:'themes',sections:[]};
-write(resolve(site,'app.tamber'),createTheme({interactive:true}));
+write(resolve(site,'app.tamber'),createSiteTheme({interactive:true}));
 // Exact captures TypeScript inside the app. Generate lazy resource data from the
 // installed public helper instead of importing a module outside that capture.
 const themeLoaders: string[]=[];
 for(const preset of themeOptions.preset)for(const density of themeOptions.density)for(const radius of themeOptions.radius)for(const font of themeOptions.font){
   const key=`${preset}/${density}/${radius}/${font}`,name=key.replaceAll('/','-');
-  write(resolve(site,`generated/themes/${name}.ts`),`export default ${JSON.stringify(createTheme({preset,density,radius,font}))};\n`);
+  write(resolve(site,`generated/themes/${name}.ts`),`export default ${JSON.stringify(createSiteTheme({preset,density,radius,font}))};\n`);
   themeLoaders.push(`${JSON.stringify(key)}:()=>import("./themes/${name}.ts")`);
 }
 write(resolve(site,'generated/theme-exports.ts'),`export default {${themeLoaders.join(',')}};\n`);
@@ -155,13 +156,14 @@ ${read(resolve(root, "node_modules/@rightui/ui/assets/sheet.css"))}
 #exact-root [data-rightui-availability="available"]::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background-color: inherit; pointer-events: none; animation-name: rightui-availability-sonar; animation-duration: ${motionValue("ui.duration-availability")}; animation-timing-function: ${motionValue("ui.easing")}; animation-iteration-count: infinite; }
 @keyframes rightui-availability-sonar { 0% { transform: scale(1); opacity: 0.4; } 75%, 100% { transform: scale(2.8); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #exact-root [data-rightui-availability="available"]::after { animation: none; opacity: 0; } }
-#exact-root #hero-title { font-size: ${themeLayout.heroTitle.small} !important; }
-#exact-root #hero-description { font-size: ${themeLayout.heroDescription.small} !important; }
-@media (min-width: ${themeLayout.breakpoints.medium}px) {
-  #exact-root #hero-title { font-size: ${themeLayout.heroTitle.medium} !important; }
-  #exact-root #hero-description { font-size: ${themeLayout.heroDescription.medium} !important; }
+#exact-root #hero-title { font-size: 40px !important; }
+#exact-root #hero-description { font-size: 18px !important; }
+@media (max-width: 767px) { #exact-root #hero-title[data-rightui-font-scope="home-title"] { font-size: clamp(20px, calc((100vw - 40px) / 12), 40px) !important; } }
+@media (min-width: 768px) {
+  #exact-root #hero-title { font-size: 56px !important; }
+  #exact-root #hero-description { font-size: 22px !important; }
 }
-@media (min-width: ${themeLayout.breakpoints.large}px) { #exact-root #hero-title { font-size: ${themeLayout.heroTitle.large} !important; } }
+@media (min-width: 1200px) { #exact-root #hero-title { font-size: 72px !important; } }
 @media (min-width: ${themeLayout.breakpoints.buildFlow}px) {
   #exact-build-flow { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1fr) !important; }
   #exact-build-flow > div > svg { transform: none !important; }
@@ -221,7 +223,8 @@ if(existsSync(resolve(site,'generated/catalog.ts')))unlinkSync(resolve(site,'gen
 write(resolve(root,'packages/catalog/catalog.json'),JSON.stringify({components,aiElements,charts:chartMeta,blocks:blocks.map(({code,...rest})=>rest)},null,2)+'\n');
 buildRegistry();
 mkdirSync(resolve(site,'assets/registry'),{recursive:true});copyFileSync(resolve(library,'generated/registry.json'),resolve(site,'assets/registry/index.json'));
-let template=read(resolve(root,'tools/app.contract.template')).replaceAll('{{THEME_PRESETS}}', JSON.stringify(themeOptions.preset)).replaceAll('{{THEME_FONTS}}', JSON.stringify(themeOptions.font)).replaceAll('{{THEME_LABELS}}', JSON.stringify(themeOptions.preset.map(preset => preset[0].toUpperCase() + preset.slice(1)))).replaceAll('{{UI_VERSION}}', uiVersion).replaceAll('{{MAC_DOWNLOAD_URL}}', JSON.stringify(downloads.macDownloadUrl)).replaceAll('{{IPHONE_URL}}', JSON.stringify(downloads.iphoneUrl)).replaceAll('{{NAVBAR_LOGO}}', 'data:image/png;base64,' + readFileSync(resolve(site, 'assets/brand/rightui-navbar.png')).toString('base64')).replace('// GENERATED_ROUTES',routes.map(([name,url])=>`  ${name} "${url}" render=${["component_chart", "area", "view_dashboard_01"].includes(name) ? "client" : "build activate=idle"}`).join('\n')+'\n  notfound render=build activate=idle');
+const weightTokens = Object.fromEntries([...createSiteTheme().matchAll(/ui\.weight-([a-z]+): number = (\d+)/g)].map(match => [match[1].toUpperCase(), match[2]]));
+let template=read(resolve(root,'tools/app.contract.template')).replace(/\{\{WEIGHT_([A-Z]+)\}\}/g, (_, role) => { if (!weightTokens[role]) throw new Error(`Missing font weight ${role}`); return weightTokens[role]; }).replaceAll('{{THEME_PRESETS}}', JSON.stringify(themeOptions.preset)).replaceAll('{{THEME_FONTS}}', JSON.stringify(themeOptions.font)).replaceAll('{{THEME_LABELS}}', JSON.stringify(themeOptions.preset.map(preset => preset[0].toUpperCase() + preset.slice(1)))).replaceAll('{{UI_VERSION}}', uiVersion).replaceAll('{{MAC_DOWNLOAD_URL}}', JSON.stringify(downloads.macDownloadUrl)).replaceAll('{{IPHONE_URL}}', JSON.stringify(downloads.iphoneUrl)).replaceAll('{{NAVBAR_LOGO}}', 'data:image/png;base64,' + readFileSync(resolve(site, 'assets/brand/rightui-navbar.png')).toString('base64')).replace('// GENERATED_ROUTES',routes.map(([name,url])=>`  ${name} "${url}" render=${["component_chart", "area", "view_dashboard_01"].includes(name) ? "client" : "build activate=idle"}`).join('\n')+'\n  notfound render=build activate=idle');
 const homeReady=existsSync(resolve(site,'components/home-cards.contract'));
 template=template.replace('{{NATIVE_APP}}', process.env.RIGHTUI_NATIVE === '1' ? 'true' : 'false');
 template=template.replace('{{NATIVE_MAC}}', process.env.RIGHTUI_NATIVE_MAC === '1' ? 'true' : 'false');

@@ -1,0 +1,55 @@
+use FontWeights from "@rightui/ui"
+use uiFontFamily, Slider, Switch, Button, Badge from "@rightui/ui"
+
+component FontAxisControls
+  props
+    id: string
+  inject
+    uiWeights: FontWeights
+    uiWeightScale: number
+    uiFont: string
+    uiOpticalSize: number
+    uiRoundness: number
+    uiChooseFontAxes: action
+  action roundness(value: number)
+    uiChooseFontAxes(uiOpticalSize, value, uiWeightScale)
+  action opticalSize(value: number)
+    uiChooseFontAxes(value, uiRoundness, uiWeightScale)
+  action automatic(value: bool)
+    uiChooseFontAxes(value ? 0 : 14, uiRoundness, uiWeightScale)
+  action weight(value: number)
+    uiChooseFontAxes(uiOpticalSize, uiRoundness, value)
+  action reset
+    uiChooseFontAxes(0, 50, 100)
+  view
+    column gap="ui.space-12" min-width=0
+      row justify-content="space-between" align-items="center" gap="ui.space-8"
+        text "Allo variable" font-size="ui.text-sm" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        Badge(label="3 axes", variant="secondary")
+      if uiFont == "sans"
+        Slider(id=id + "-weight", label="Weight (%)", value=uiWeightScale, minimum=25, maximum=112, step=1, disabled=false, change=weight)
+        text `Base × ${(uiWeightScale / 100).toFixed(2)} · body ${4 * uiWeightScale} / heading ${6 * uiWeightScale}` font-size="ui.text-xs" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        Slider(id=id + "-roundness", label="Roundness", value=uiRoundness, minimum=0, maximum=100, step=1, disabled=false, change=roundness)
+        row justify-content="space-between" margin-top="calc(0px - ui.space-12)" color="ui.muted-foreground"
+          text "Sharp" font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+          text "Round" font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        Slider(id=id + "-optical", label="Optical size", value=(uiOpticalSize == 0 ? 14 : uiOpticalSize), minimum=9, maximum=32, step=1, disabled=false, change=opticalSize)
+        Switch(id=id + "-auto", label="Automatic optical size", checked=(uiOpticalSize == 0), disabled=false, reduced=true, change=automatic)
+        text (uiOpticalSize == 0 ? "Optical size follows each text size. Weight scales proportionally for every role." : "One optical size across the site. Weight scales proportionally for every role.") font-size="ui.text-xs" line-height="ui.leading-normal" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        Button(id=id + "-reset", label="Reset type settings", variant="ghost", disabled=(uiOpticalSize == 0 and uiRoundness == 50 and uiWeightScale == 100), press=reset)
+      else
+        text "Select Allo to adjust its optical size and roundness." font-size="ui.text-sm" line-height="ui.leading-normal" color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+
+component FontSpecimen
+  props
+    width: number
+  inject
+    uiWeights: FontWeights
+    uiWeightScale: number
+    uiFont: string
+  view
+    column gap="ui.space-24" padding="ui.space-24" border-radius="ui.radius-panel" background-color="ui.muted" min-width=0 justify-content="center"
+      text "ALLO / VARIABLE TYPE" font-size="ui.text-xs" letter-spacing="0.08em" font-weight=uiWeights.medium color="ui.muted-foreground" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+      text "Type, with personality." testId="allo-specimen-heading" font-size=(width >= 1200 ? 64 : width >= 768 ? 48 : 40) line-height="ui.leading-display" letter-spacing="ui.tracking-display" font-weight=uiWeights.semibold font-family=uiFontFamily(uiFont) data-rightui-font="body" overflow-wrap="anywhere"
+      text "Small details. A different feel. Shape the letters across your interface, from a quiet label to a bold headline." testId="allo-specimen-body" font-size=(width >= 1200 ? 24 : width >= 768 ? 20 : 18) line-height="ui.leading-normal" font-weight=uiWeights.regular font-family=uiFontFamily(uiFont) data-rightui-font="body" max-width="36rem"
+      text "Aa Bb Rg 0123456789 →" testId="allo-specimen-glyphs" font-size=(width >= 1200 ? 48 : width >= 768 ? 40 : 32) font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body" overflow-wrap="anywhere"

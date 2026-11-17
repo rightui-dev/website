@@ -15,6 +15,15 @@ export const themeBootstrap = `(()=>{
   }
   root.setAttribute("data-x-modes",Object.keys(axes).map(key=>axes[key]+"="+settings[key]).join(","));
   root.setAttribute("data-rightui-font-choice",settings.font);
+  const axis=(key,state,fallback,min,max)=>{
+    const saved=read(state,fallback),stored=typeof saved==="number"&&Number.isFinite(saved)&&saved>=min&&saved<=max?saved:fallback;
+    const raw=query.get(key),value=raw===null||raw.trim()===""?NaN:Number(raw);
+    return Math.round(Number.isFinite(value)&&value>=min&&value<=max?value:stored);
+  };
+  const optical=axis("opsz","uiOpticalSize",0,0,32),rounded=axis("roundness","uiRoundness",50,0,100);
+  root.setAttribute("data-rightui-optical-size",String(optical>0&&optical<9?0:optical));
+  root.setAttribute("data-rightui-roundness",String(rounded));
+  root.setAttribute("data-rightui-weight-scale",String(axis("weight","uiWeightScale",100,25,112)));
 })()`;
 
 /** Run before styles, the activation loader and any visible markup on every URL. */

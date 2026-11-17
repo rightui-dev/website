@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily from "@rightui/ui"
 use TabsAdvanced from "@rightui/ui"
 use Code from "./code.contract"
@@ -29,13 +30,14 @@ component Installation
     expanded = not expanded
   derive copied = uiCopiedId == id and uiCopiedText == command
   inject
+    uiWeights: FontWeights
     uiFont: string
     uiCopiedId: string
     uiCopiedText: string
     uiCopyCode: action
   view
     section id="installation" min-width=0 display="flex" flex-direction="column" gap="ui.space-16"
-      h2 margin="ui.space-0" font-size="ui.text-xl" font-weight="ui.weight-semibold"
+      h2 margin="ui.space-0" font-size="ui.text-xl" font-weight=uiWeights.semibold
         text "Installation" font-family=uiFontFamily(uiFont) data-rightui-font="body"
       TabsAdvanced(id=id + "-mode", label="Installation method", labels=["Command", "Manual"], counts=[], selected=mode, variant="line", vertical=false, compact=true, disabledIndices=[], direction="ltr", reduced=reduced, choose=chooseMode)
       column id=(id + "-mode-panel") role="tabpanel" aria-labelledby=(id + "-mode-" + mode.toString()) gap="ui.space-16" min-width=0
@@ -45,8 +47,8 @@ component Installation
         if mode == 1
           text "Download the source package from npm, then install your editable copy as a local dependency. Keep package.json, the Contract files, ui.tamber, assets and licenses together." font-size="ui.text-sm" color="ui.muted-foreground" line-height="ui.leading-copy" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           row align-items="center" justify-content="space-between" gap="ui.space-12"
-            text "Component source" font-size="ui.text-sm" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-            button class=Hit press=toggleSource aria-expanded=expanded testId=(id + "-expand") padding="ui.space-4 ui.space-8"
+            text "Component source" font-size="ui.text-sm" font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
+            button class=Hit font-weight=uiWeights.medium press=toggleSource aria-expanded=expanded testId=(id + "-expand") padding="ui.space-4 ui.space-8"
               text (expanded ? "Collapse source" : "Expand source") font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           Code(id=id + "-source-code", code=sourceCode, title=sourcePath, language="contract", compact=not expanded)
         link href="/docs/installation" font-size="ui.text-sm" color="ui.foreground"

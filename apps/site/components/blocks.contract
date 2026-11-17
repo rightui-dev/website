@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily, CodeBlockAdvanced from "@rightui/ui"
 use DashboardBlockWithScroll from "@rightui/registry/blocks/dashboard"
 use SidebarBlockWithScroll, SidebarSettings from "@rightui/registry/blocks/sidebars"
@@ -84,45 +85,46 @@ component BlockFrame
   action toggleFolder
     folderOpen = not folderOpen
   inject
+    uiWeights: FontWeights
     uiFont: string
-  derive fullPage = "/view/" + slug + "?" + theme
+  derive fullPage = "/view/" + slug
   view
     column gap="ui.space-16" width="100%" min-width=0 id=slug
       row gap="ui.space-12" align-items="center" flex-wrap="wrap" padding="0 clamp(0px, (1100px - 100vw) * 1000, ui.space-16)"
         row background-color="ui.muted" padding="ui.space-3" border-radius="ui.radius-item"
-          button testId=(slug + "-preview-tab") class=Hit press=showPreview padding="ui.space-5 ui.space-10" background-color=(not codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=(not codeVisible)
+          button testId=(slug + "-preview-tab") class=Hit font-weight=uiWeights.medium press=showPreview padding="ui.space-5 ui.space-10" background-color=(not codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=(not codeVisible)
             text "Preview" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-          button testId=(slug + "-code-tab") class=Hit press=showCode padding="ui.space-5 ui.space-10" background-color=(codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=codeVisible
+          button testId=(slug + "-code-tab") class=Hit font-weight=uiWeights.medium press=showCode padding="ui.space-5 ui.space-10" background-color=(codeVisible ? "ui.background" : "transparent") border-radius="ui.radius-item" aria-pressed=codeVisible
             text "Code" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        text title flex=1 min-width=160 font-size="ui.text-sm" font-weight="ui.weight-medium" font-family=uiFontFamily(uiFont) data-rightui-font="body"
+        text title flex=1 min-width=160 font-size="ui.text-sm" font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
         if not nativeApp and width >= 1100
           row gap="ui.space-4" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-item" padding="ui.space-3"
-            button testId=(slug + "-desktop") class=Hit press=setSize(0) padding="ui.space-6" background-color=(size == 0 ? "ui.muted" : "transparent") aria-label="Desktop" aria-pressed=(size == 0)
+            button testId=(slug + "-desktop") class=Hit font-weight=uiWeights.medium press=setSize(0) padding="ui.space-6" background-color=(size == 0 ? "ui.muted" : "transparent") aria-label="Desktop" aria-pressed=(size == 0)
               BlockIcon(kind="desktop")
-            button testId=(slug + "-tablet") class=Hit press=setSize(768) padding="ui.space-6" background-color=(size == 768 ? "ui.muted" : "transparent") aria-label="Tablet" aria-pressed=(size == 768)
+            button testId=(slug + "-tablet") class=Hit font-weight=uiWeights.medium press=setSize(768) padding="ui.space-6" background-color=(size == 768 ? "ui.muted" : "transparent") aria-label="Tablet" aria-pressed=(size == 768)
               BlockIcon(kind="tablet")
-            button testId=(slug + "-mobile") class=Hit press=setSize(390) padding="ui.space-6" background-color=(size == 390 ? "ui.muted" : "transparent") aria-label="Mobile" aria-pressed=(size == 390)
+            button testId=(slug + "-mobile") class=Hit font-weight=uiWeights.medium press=setSize(390) padding="ui.space-6" background-color=(size == 390 ? "ui.muted" : "transparent") aria-label="Mobile" aria-pressed=(size == 390)
               BlockIcon(kind="mobile")
-            link testId=("open-block-" + slug) class=Hit href=fullPage target="_blank" rel="noopener noreferrer" padding="ui.space-6" aria-label="Open in new tab"
+            link testId=("open-block-" + slug) class=Hit font-weight=uiWeights.medium href=fullPage target="_blank" rel="noopener noreferrer" padding="ui.space-6" aria-label="Open in new tab"
               BlockIcon(kind="open")
-            button testId=(slug + "-reload") class=Hit press=reload padding="ui.space-6" aria-label="Reload preview"
+            button testId=(slug + "-reload") class=Hit font-weight=uiWeights.medium press=reload padding="ui.space-6" aria-label="Reload preview"
               BlockIcon(kind="reload")
         else
-          link testId=("open-block-" + slug) class=Hit href=fullPage target=(nativeApp ? "_self" : "_blank") rel="noopener noreferrer" padding="ui.space-6 ui.space-8" display="flex" gap="ui.space-8" align-items="center"
+          link testId=("open-block-" + slug) class=Hit font-weight=uiWeights.medium href=fullPage target=(nativeApp ? "_self" : "_blank") rel="noopener noreferrer" padding="ui.space-6 ui.space-8" display="flex" gap="ui.space-8" align-items="center"
             text (nativeApp ? "Open block" : "Open in new tab") font-size="ui.text-xs" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             BlockIcon(kind="open")
       if codeVisible
         view testId=(slug + "-source-browser") display="flex" flex-direction=(width < 700 ? "column" : "row") border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-card" overflow="hidden" min-width=0 background-color="ui.muted"
           column width=(width < 700 ? "100%" : "16rem") flex-shrink=0 min-width=0 gap="ui.space-4" padding="ui.space-12" box-sizing="border-box"
             text "Files" font-size="ui.text-sm" color="ui.muted-foreground" padding="ui.space-8" font-family=uiFontFamily(uiFont) data-rightui-font="body"
-            button class=Hit press=toggleFolder display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8" aria-expanded=folderOpen
+            button class=Hit font-weight=uiWeights.medium press=toggleFolder display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8" aria-expanded=folderOpen
               svg width=14 height=14 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true transform=(folderOpen ? "rotate(90deg)" : "none")
                 path d="m9 5 7 7-7 7"
               BlockIcon(kind="folder")
               text "blocks" font-size="ui.text-sm" font-family=uiFontFamily(uiFont) data-rightui-font="body"
             if folderOpen
               for file, index in files key=file.path
-                button testId=(slug + "-file-" + index.toString()) class=Hit press=chooseFile(index) display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8 ui.space-8 ui.space-8 ui.space-24" background-color=(selected == index ? "ui.border" : "transparent") border-radius="ui.radius-item" aria-pressed=(selected == index) text-align="left"
+                button testId=(slug + "-file-" + index.toString()) class=Hit font-weight=uiWeights.medium press=chooseFile(index) display="flex" align-items="center" gap="ui.space-8" padding="ui.space-8 ui.space-8 ui.space-8 ui.space-24" background-color=(selected == index ? "ui.border" : "transparent") border-radius="ui.radius-item" aria-pressed=(selected == index) text-align="left"
                   BlockIcon(kind="file")
                   text file.path.slice(7) font-size="ui.text-sm" overflow-wrap="anywhere" font-family=uiFontFamily(uiFont) data-rightui-font="body"
           view flex=1 min-width=0 background-color="ui.background"
@@ -138,4 +140,4 @@ component BlockFrame
         view background-color="ui.muted" border-width="ui.border-width" border-style="solid" border-color="ui.border" border-radius="ui.radius-card" padding="ui.space-8" width="100%" min-width=0 box-sizing="border-box" overflow="hidden"
           view intersect=visibility min-height=(slug == "dashboard-01" ? 1000 : 850) width="100%" max-width=(size == 0 ? "100%" : size.toString() + "px") margin="0 auto" background-color="ui.background" border-radius="ui.radius-item" overflow="hidden"
             if mounted
-              iframe id=("preview-" + slug) src=(fullPage + "&preview=" + revision.toString()) title=title width="100%" height=(slug == "dashboard-01" ? 1000 : 850) border="0"
+              iframe id=("preview-" + slug) src=(fullPage + "?" + theme + "&preview=" + revision.toString()) title=title width="100%" height=(slug == "dashboard-01" ? 1000 : 850) border="0"

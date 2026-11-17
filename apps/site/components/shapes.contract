@@ -74,6 +74,11 @@ shape ThemeSelection
   density: string
   radius: string
   font: string
+shape FontAxes
+  optical: number
+  rounded: number
+  weight: number
+
 shape ThemeExport
   code: string
 

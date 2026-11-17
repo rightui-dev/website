@@ -1,3 +1,4 @@
+use FontWeights from "@rightui/ui"
 use uiFontFamily from "@rightui/ui"
 use MenuEntry, ButtonSegment from "@rightui/ui"
 use Hit from "./styles.contract"
@@ -105,6 +106,7 @@ component DocActions
           case none
             stopPropagation()
   inject
+    uiWeights: FontWeights
     uiFont: string
     uiCopiedId: string
     uiCopiedText: string
@@ -117,7 +119,7 @@ component DocActions
             rect x=8 y=8 width=12 height=12 rx=2
             path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"
           text (copied ? "Copied" : "Copy Page") font-family=uiFontFamily(uiFont) data-rightui-font="body"
-        button id=id testId=id class=Hit press=toggle key=triggerKeys aria-label=("Actions for " + title) aria-haspopup="menu" aria-expanded=expanded aria-controls=(id + "-menu") width="ui.space-32" height="ui.space-32" display="flex" align-items="center" justify-content="center" border-left-width="ui.border-width" border-left-style="solid" border-left-color="ui.border" border-radius="ui.radius-flat"
+        button id=id testId=id class=Hit font-weight=uiWeights.medium press=toggle key=triggerKeys aria-label=("Actions for " + title) aria-haspopup="menu" aria-expanded=expanded aria-controls=(id + "-menu") width="ui.space-32" height="ui.space-32" display="flex" align-items="center" justify-content="center" border-left-width="ui.border-width" border-left-style="solid" border-left-color="ui.border" border-radius="ui.radius-flat"
           svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
             path d="m6 9 6 6 6-6"
       if expanded
@@ -130,14 +132,14 @@ component DocActions
             column role="none" align-items="stretch" gap="ui.space-0" min-width=0
               for item in entries key=item.id
                 if item.id == "markdown"
-                  link id=(id + "-item-markdown") testId=(id + "-item-markdown") href=markdownHref target="_blank" rel="noopener" role="menuitem" tabindex=-1 key=itemKeys(item.id) class=Hit display="flex" align-items="center" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" font-weight="ui.weight-regular"
+                  link id=(id + "-item-markdown") testId=(id + "-item-markdown") href=markdownHref target="_blank" rel="noopener" role="menuitem" tabindex=-1 key=itemKeys(item.id) class=Hit display="flex" align-items="center" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" font-weight=uiWeights.regular
                     svg width="ui.space-14" height="ui.space-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="ui.icon-stroke" aria-hidden=true
                       path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6"
                     text item.label font-family=uiFontFamily(uiFont) data-rightui-font="body"
                 else
                   button id=(id + "-item-" + item.id) testId=(id + "-item-" + item.id) class=Hit
                     role="menuitem" tabindex=-1 disabled=item.disabled press=pick(item) key=itemKeys(item.id)
-                    display="flex" width="100%" box-sizing="border-box" align-items="center" flex-wrap="wrap" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" border="0" border-radius="ui.radius-item" font-weight="ui.weight-regular" background-color="transparent"
+                    display="flex" width="100%" box-sizing="border-box" align-items="center" flex-wrap="wrap" gap="ui.space-8" min-height="ui.space-32" padding="ui.space-6 ui.space-8" border="0" border-radius="ui.radius-item" font-weight=uiWeights.regular background-color="transparent"
                     color=(item.destructive ? "ui.danger" : "ui.foreground")
                     :hover
                       background-color="ui.muted"

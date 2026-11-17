@@ -61,6 +61,10 @@ function fixFontDisplay(dir: string) {
         if (!fontPaths.some(path => face.includes(path))) return face;
         if (!/font-display\s*:\s*(optional|swap)/.test(face)) return face;
         fontFaces++;
+        // Exact consumes TTF sources; serve the matching upstream WOFF2 on web.
+        if (face.includes('assets/fonts/AlloVariable.ttf')) {
+          face = face.replaceAll('assets/fonts/AlloVariable.ttf', 'assets/fonts/AlloVariable.woff2').replace(/format\(["'](?:truetype|opentype)["']\)/g, 'format("woff2")');
+        }
         return face.replace(/font-display\s*:\s*optional/g, 'font-display:swap');
       });
       if (entry.name.endsWith('.html')) {
@@ -68,6 +72,9 @@ function fixFontDisplay(dir: string) {
         if (assertNavbarFirstPaint(next, inlineLogo)) firstPaintLogos++;
         next = next.replace(/<style data-rightui-critical>[\s\S]*?<\/style>\n?/g, '');
         next = insertHead(next, `<style data-rightui-critical>${criticalCSS}</style>`);
+        next = next.replace(/<link\b[^>]*href="[^"]*AlloVariable\.ttf"[^>]*>/g, link => link.replace('AlloVariable.ttf', 'AlloVariable.woff2').replace('font/ttf', 'font/woff2'));
+        // Also makes this pass idempotent on a previously prepared preview.
+        next = next.replace('<link rel="preload" href="/assets/fonts/AlloVariable.woff2" as="font" type="font/woff2" crossorigin>', '');
       }
       if (next !== source) writeFileSync(path, next);
     }
