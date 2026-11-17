@@ -38,3 +38,7 @@ Selectable presets need all compiled mode rules in the initial HTML response or 
 ## Version consistency
 
 Use `bun run sync:ui` after publishing a new UI beta and aligning the sibling library checkout. The installed package supplies the display version through `tools/ui-version.ts`; use `{{UI_VERSION}}` in current guides/templates. Generation and postbuild reject stale current-document references while preserving historical source files. `bun run deploy` enforces npm beta, official lock integrity, clean source and matching build provenance. Do not bypass this check with a raw Wrangler upload. Keep AppDrop URLs in `content/downloads.json`, shared by the Contract page and Markdown.
+
+## Fast checks
+
+Use only fast, useful checks by default: version/dependency consistency, archive integrity and representative HTTP routes. Keep compilation needed to produce deliverables. Do not add or run targeted browser scripts or long interaction suites unless the user explicitly requests them. Existing browser suites are opt-in and never release gates.

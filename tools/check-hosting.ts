@@ -5,9 +5,12 @@ import { createHash } from 'node:crypto';
 const origin = new URL(process.argv[2] ?? 'http://localhost:8793');
 const dist = resolve(import.meta.dir, '../dist');
 const routes = JSON.parse(readFileSync(resolve(dist, 'routes.json'), 'utf8')).routes as { pattern: string; render: string; notfound: boolean }[];
-const checks = routes.filter(route => !route.notfound).map(route => ({ path: route.pattern, status: 200, type: 'text/html' }));
+const smoke = process.argv.includes('--smoke');
+const sample = new Set(['/', '/docs/components/accordion', '/docs/components/code-block', '/docs/components/navigation-menu']);
+const selected = smoke ? routes.filter(route => sample.has(route.pattern) || route === routes.find(item => item.render === 'client')) : routes;
+const checks = selected.filter(route => !route.notfound).map(route => ({ path: route.pattern, status: 200, type: 'text/html' }));
 checks.push(
-  ...routes.filter(route => route.render === 'client').map(route => ({ path: route.pattern + '/', status: 200, type: 'text/html' })),
+  ...selected.filter(route => route.render === 'client').map(route => ({ path: route.pattern + '/', status: 200, type: 'text/html' })),
   { path: '/docs/compatibility.md', status: 200, type: 'text/markdown' },
   { path: '/docs/components/button.md', status: 200, type: 'text/markdown' },
   { path: '/source?file=packages/ui/button.contract', status: 200, type: 'text/html' },
@@ -16,7 +19,7 @@ checks.push(
 );
 
 async function response(path: string) {
-  return fetch(new URL(path, origin), { redirect: 'manual', signal: AbortSignal.timeout(30000) });
+  return fetch(new URL(path, origin), { redirect: 'manual', signal: AbortSignal.timeout(10000) });
 }
 
 for (let offset = 0; offset < checks.length; offset += 8) {

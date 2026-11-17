@@ -1,6 +1,6 @@
 # Local delivery, npm-only GitHub Actions
 
-All package validation, website builds/tests, iPhone/Mac builds and Cloudflare/AppDrop delivery run locally. GitHub Actions only verifies and publishes an existing npm archive using OIDC. No npm publishing token is needed locally or in GitHub.
+All package validation, website builds and quick checks, iPhone/Mac builds and Cloudflare/AppDrop delivery run locally. GitHub Actions only verifies and publishes an existing npm archive using OIDC. No npm publishing token is needed locally or in GitHub.
 
 ## Commands
 
@@ -19,7 +19,7 @@ bun run release status <release-id>
 
 `./release` accepts the same arguments. From the library repository, `bun run release:npm` forwards to the npm target.
 
-- `site`: verifies the published UI dependency, builds/tests the site, checks the Cloudflare emulator and uploads the validated output. It verifies production routes, assets, SEO, analytics and source provenance, and records the Cloudflare version ID.
+- `site`: verifies the published UI dependency, builds the site, checks the Cloudflare emulator and uploads the validated output. It verifies representative production routes, assets and source provenance; SEO and analytics are checked locally, and records the Cloudflare version ID.
 - `appdrop`: validates the current published UI and web candidate, builds iPhone and Mac sequentially, verifies archives and signatures, updates the existing drop, checks downloaded bytes, then commits/pushes only the generated website download link. It does not deploy the website.
 - `npm`: packs a prepared beta once, checks isolated installation and candidate documentation locally, creates its annotated tag and GitHub prerelease, and dispatches the npm-only workflow. After verifying the published bytes, the workflow aligns `beta` and `latest` to that version. The local engine verifies both tags and a fresh npm installation. It does not deploy the website or AppDrop.
 - `all`: validates the package, candidate site and both native archives before publication; publishes npm; updates AppDrop; synchronizes exact dependency/download metadata; commits/pushes those generated files; builds and deploys the final site.
@@ -59,7 +59,7 @@ References: [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 
 The engine prints the release ID and private report location. State, candidate checkout, sealed archives and logs are stored outside Git in the user's local application-support directory. A process lock serializes deliveries on that machine. It is not a distributed lock across other machines; remote state and npm workflow concurrency provide additional checks.
 
-Build/test commands run sequentially. The isolated website candidate consumes the exact sealed UI archive; generated candidate files never replace the active editor's files. Bun and SDK caches remain local. Successful steps reuse their results only within the same recorded source/toolchain context. Before upload, archive hashes and the complete website output fingerprint are rechecked.
+Build commands run sequentially. Browser scenario suites are not run during delivery. Quick checks cover version/dependency consistency, archive contents/integrity, local SEO/analytics and a small HTTP route sample (HTML, Markdown, client routing, assets and 404). Package installation checks compile the isolated consumer without launching a browser. Existing browser suites remain opt-in, only on explicit request. The isolated website candidate consumes the exact sealed UI archive; generated candidate files never replace the active editor's files. Bun and SDK caches remain local. Successful steps reuse their results only within the same recorded source/toolchain context. Before upload, archive hashes and the complete website output fingerprint are rechecked.
 
 Resume with the printed ID. Do not start a second delivery just because an upload timed out. The engine verifies npm and AppDrop against remote bytes and uses the matching workflow run. Failed GitHub runs can be retried through resume without rebuilding/repacking. An ambiguous AppDrop upload with no remotely matching artifact stops for inspection instead of blindly uploading again. A changed artifact or source commit also stops recovery.
 

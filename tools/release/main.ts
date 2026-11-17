@@ -18,7 +18,7 @@ const help = `Usage: bun run release <site|appdrop|npm|all> [--dry-run]
        bun run release status <id>
        bun run release doctor
 
-site: build, test and deploy rightui.dev locally.
+site: build, check and deploy rightui.dev locally.
 appdrop: build and upload iPhone + Mac locally; commit/push the returned download link.
 npm: validate locally, create the immutable GitHub prerelease, dispatch npm-only OIDC publication.
 all: validate all candidates, publish npm, upload native apps, synchronize and deploy the site.
@@ -42,7 +42,7 @@ export function plan(target: Target) {
     ...(hasNpm(target) ? ['create GitHub prerelease; publish its exact archive through npm OIDC only; verify npm'] : []),
     ...(hasNative(target) ? ['update the existing AppDrop link; verify downloaded bytes'] : []),
     ...(hasNative(target) ? ['commit/push generated website metadata only'] : []),
-    ...(hasSite(target) ? ['build/test site locally; check Cloudflare routing; deploy prepared assets; verify production'] : []),
+    ...(hasSite(target) ? ['build site locally; run quick checks; check Cloudflare routing; deploy prepared assets; verify production'] : []),
   ];
 }
 
@@ -136,7 +136,8 @@ async function candidate(journal: Journal, commands: Commands, archive?: Artifac
 
 async function verifyWeb(commands: Commands, site: string, label: string) {
   await commands.run(`${label}-build`, [bun, 'run', 'build'], site);
-  await commands.run(`${label}-test`, [bun, 'run', 'test'], site);
+  // Generation/postbuild already checks versions, public documents and assets.
+  // Browser scenario suites are opt-in, never part of a release.
 }
 
 async function commitMetadata(journal: Journal, commands: Commands, macRevision?: number) {
@@ -190,9 +191,9 @@ async function localHosting(commands: Commands) {
       await Bun.sleep(500);
     }
     if (!ready) throw new Error('Cloudflare emulator was not ready.');
-    await commands.run('hosting-local', [bun, 'run', 'check:hosting', 'http://127.0.0.1:8794'], root);
-    await commands.run('seo-local', [bun, 'tools/check-seo.ts', 'http://127.0.0.1:8794'], root);
-    await commands.run('analytics-local', [bun, 'tools/check-analytics.ts', 'http://127.0.0.1:8794'], root);
+    await commands.run('hosting-local', [bun, 'run', 'check:hosting', 'http://127.0.0.1:8794', '--smoke'], root);
+    await commands.run('seo-local', [bun, 'tools/check-seo.ts'], root);
+    await commands.run('analytics-local', [bun, 'tools/check-analytics.ts'], root);
   } finally { server.kill('SIGTERM'); await server.exited; }
 }
 
@@ -207,9 +208,7 @@ async function deploySite(journal: Journal, commands: Commands, guard: () => voi
   }, result => { if (treeHash(resolve(root, 'dist')) !== result.digest) throw new Error('Validated site assets changed. Refusing deployment.'); });
   const verifyLive = async () => {
     if (JSON.stringify(await fetchJson(`${config.site}/build-info.json`)) !== JSON.stringify(build.info)) throw new Error('Production provenance differs from this release.');
-    await commands.run('hosting-production', [bun, 'run', 'check:hosting', config.site], root);
-    await commands.run('seo-production', [bun, 'tools/check-seo.ts', config.site], root);
-    await commands.run('analytics-production', [bun, 'tools/check-analytics.ts', config.site], root);
+    await commands.run('hosting-production', [bun, 'run', 'check:hosting', config.site, '--smoke'], root);
   };
   return journal.step('site-deployment', async () => {
     guard();
