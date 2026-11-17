@@ -9,6 +9,8 @@ export async function checkNpm(version: string, archive?: Artifact) {
   if (!published) throw new Error(`@rightui/ui@${version} is not published yet.`);
   const beta = await fetchJson(`${registry}/beta`);
   if (beta?.version !== version) throw new Error(`npm beta is ${beta?.version}; delivery is pinned to ${version}.`);
+  const latest = await fetchJson(`${registry}/latest`);
+  if (latest?.version !== version) throw new Error(`npm latest is ${latest?.version}; the publication workflow must align beta and latest to ${version} before delivery continues.`);
   if (archive) {
     verifyArtifact(archive);
     if (new URL(published.dist.tarball).origin !== 'https://registry.npmjs.org') throw new Error('Unexpected registry archive URL.');

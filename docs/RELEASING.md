@@ -21,14 +21,14 @@ bun run release status <release-id>
 
 - `site`: verifies the published UI dependency, builds/tests the site, checks the Cloudflare emulator and uploads the validated output. It verifies production routes, assets, SEO, analytics and source provenance, and records the Cloudflare version ID.
 - `appdrop`: validates the current published UI and web candidate, builds iPhone and Mac sequentially, verifies archives and signatures, updates the existing drop, checks downloaded bytes, then commits/pushes only the generated website download link. It does not deploy the website.
-- `npm`: packs a prepared beta once, checks isolated installation and candidate documentation locally, creates its annotated tag and GitHub prerelease, and dispatches the npm-only workflow. It verifies published bytes and a fresh npm installation locally. It does not deploy the website or AppDrop.
+- `npm`: packs a prepared beta once, checks isolated installation and candidate documentation locally, creates its annotated tag and GitHub prerelease, and dispatches the npm-only workflow. After verifying the published bytes, the workflow aligns `beta` and `latest` to that version. The local engine verifies both tags and a fresh npm installation. It does not deploy the website or AppDrop.
 - `all`: validates the package, candidate site and both native archives before publication; publishes npm; updates AppDrop; synchronizes exact dependency/download metadata; commits/pushes those generated files; builds and deploys the final site.
 
 Invocation of a delivery command must be covered by the user's authorization for its listed effects. Installing or testing the tooling does not authorize a product release. Dry-run and doctor never build, commit, push or publish.
 
 ## Source preparation
 
-Prepare the version, changelog and compatibility evidence using the library's `docs/VERSIONING.md`. Commit and push the intended sources on `main` in both repositories before invoking delivery. The engine refuses dirty sources, other branches/remotes, changed SDKs and mismatched website/library versions. It does not guess whether a change breaks the public API, bump versions, commit unrelated edits, upgrade Exact, change `latest`, notarize apps or install them on a device.
+Prepare the version, changelog and compatibility evidence using the library's `docs/VERSIONING.md`. Commit and push the intended sources on `main` in both repositories before invoking delivery. The engine refuses dirty sources, other branches/remotes, changed SDKs and mismatched website/library versions. It does not guess whether a change breaks the public API, bump versions, commit unrelated edits, upgrade Exact, notarize apps or install them on a device. Every authorized npm delivery automatically aligns `beta` and `latest`; the version itself remains beta.
 
 After a standalone npm publication, `bun run sync:ui <exact-beta-version>` updates the website dependency and lock. Commit/push that change before `release site` or `release appdrop`. `all` performs this generated metadata commit itself.
 
@@ -38,7 +38,7 @@ Non-secret target identities and tool pins live in `tools/release/config.json`. 
 
 1. Install the pinned Bun and Exact toolchain, Node, GitHub CLI, Cloudflare dependencies and Apple build tools using the existing setup guides. Authenticate `gh` for both repositories and Wrangler for the configured account. Keep the AppDrop management credential in its private local store or `APPDROP_MANAGE_KEY`.
 2. Merge/push the library's `.github/workflows/publish-npm.yml` and `tools/publish-npm.mjs` to `rightui-dev/ui` on `main`. The workflow is manual only; pushes and tags do not trigger publication.
-3. Configure the `@rightui/ui` trusted publisher on npm: provider **GitHub Actions**, owner **rightui-dev**, repository **ui**, workflow **publish-npm.yml**, environment **npm**, permission **direct npm publish**. Do not grant dist-tag management. Preserve other existing publishers. The workflow uses GitHub's `npm` environment; configure it without a required reviewer if unattended publication is intended.
+3. Configure the `@rightui/ui` trusted publisher on npm: provider **GitHub Actions**, owner **rightui-dev**, repository **ui**, workflow **publish-npm.yml**, environment **npm**, permissions **Allow npm publish** and **Allow npm dist-tag**. Both are required and independent. Preserve other existing publishers. The workflow uses GitHub's `npm` environment; configure it without a required reviewer if unattended publication is intended.
 
 With an authenticated npm CLI supporting `npm trust`, the equivalent setup is:
 
@@ -49,7 +49,9 @@ npx --yes npm@11.21.2 trust github @rightui/ui \
   --allow-publish
 ```
 
-This one-time account configuration may require interactive login/2FA. An expired session must be renewed by the account owner. It is separate from future automated publications. `npm whoami` does not verify OIDC; only an authorized publication proves the complete exchange works.
+The CLI command above configures direct publishing; also enable **Allow npm dist-tag** in npm's trusted-publisher settings. The workflow pins npm 11.21.2 to support dist-tag operations through OIDC. This one-time account configuration may require interactive login/2FA. An expired session must be renewed by the account owner. It is separate from future automated publications. `npm whoami` does not verify OIDC; only an authorized workflow operation proves the exchange works.
+
+To repair the default tag for an already published beta, dispatch this same workflow with `tags_only=true`, the exact version, the source commit behind its annotated tag, and the validated archive SHA-256. The workflow still verifies the GitHub/npm archive bytes and refuses to publish any package in this mode. It will not promote an older beta over a newer current release.
 
 References: [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/), [npm trust](https://docs.npmjs.com/cli/v11/commands/npm-trust/).
 

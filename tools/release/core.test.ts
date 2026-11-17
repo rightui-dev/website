@@ -6,6 +6,7 @@ import { acquireLock, artifact, Commands, Journal, json, treeHash, validateState
 import { assertOtherPlatform, nextBuild, publicDrop, receipt } from './native';
 import { plan } from './main';
 import { assertMetadataOnly, type Metadata } from './metadata';
+import { checkNpm } from './npm';
 
 const directories: string[] = [];
 function temporary() { const dir = mkdtempSync(resolve(tmpdir(), 'rightui-release-test-')); directories.push(dir); return dir; }
@@ -116,11 +117,27 @@ test('GitHub workflow is manual, npm-only, serialized and uses OIDC without a pu
   expect(Object.keys(workflow.jobs)).toEqual(['publish']);
   expect(workflow.jobs.publish.permissions['id-token']).toBe('write');
   expect(workflow.jobs.publish.environment).toBe('npm');
+  expect(workflow.on.workflow_dispatch.inputs.tags_only.default).toBe(false);
   const steps = workflow.jobs.publish.steps;
   expect(steps.filter((step: any) => step.run).map((step: any) => step.run)).toEqual([
-    'npm install --global npm@11.6.2 --ignore-scripts', 'node tools/publish-npm.mjs',
+    'npm install --global npm@11.21.2 --ignore-scripts', 'node tools/publish-npm.mjs',
   ]);
   expect(JSON.stringify(workflow)).not.toContain('NPM_TOKEN');
   expect(JSON.stringify(workflow)).not.toContain('CLOUDFLARE');
   for (const step of steps.filter((step: any) => step.uses)) expect(step.uses).toMatch(/@[a-f0-9]{40}$/);
+});
+
+test('local delivery stays blocked until both npm tags select the expected version', async () => {
+  const original = globalThis.fetch;
+  const version = '0.4.0-beta.1';
+  let latest = '0.2.0-beta.5';
+  globalThis.fetch = (async (url: string | URL | Request) => new Response(JSON.stringify({
+    version: String(url).endsWith('/latest') ? latest : version,
+    dist: { integrity: 'sha512-verified' },
+  }), { status: 200 })) as typeof fetch;
+  try {
+    await expect(checkNpm(version)).rejects.toThrow('npm latest is 0.2.0-beta.5');
+    latest = version;
+    expect((await checkNpm(version)).version).toBe(version);
+  } finally { globalThis.fetch = original; }
 });

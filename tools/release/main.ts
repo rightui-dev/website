@@ -24,7 +24,8 @@ npm: validate locally, create the immutable GitHub prerelease, dispatch npm-only
 all: validate all candidates, publish npm, upload native apps, synchronize and deploy the site.
 
 Release sources must already be committed and pushed to main in both repositories.
-No version bump, stable release, npm latest update, device installation or native notarization is implicit.
+Each npm publication aligns beta and latest to the validated beta version.
+No version bump, stable release, device installation or native notarization is implicit.
 Generated website dependency/download metadata is committed and pushed by appdrop/all.
 Private artifacts, logs and resumable state live outside both repositories.
 `;
