@@ -1,0 +1,19 @@
+[data-rightui-focus-ring] :focus-visible {
+  outline-width: 1px;
+}
+
+/* Exact restores the platform outline on editable fields in its web shell. */
+@media not (forced-colors: active) {
+  #exact-root [data-rightui-focus-ring] :is(input, textarea, select):focus-visible {
+    outline: none !important;
+  }
+
+  #exact-root [data-rightui-focus-ring="on"] :is(input, textarea, select):focus-visible {
+    box-shadow: var(--x-ui-shadow-focus) !important;
+  }
+}
+
+[data-rightui-focus-ring="off"] :focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

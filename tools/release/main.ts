@@ -230,7 +230,7 @@ async function deploySite(journal: Journal, commands: Commands, guard: () => voi
   }, verifyLive);
 }
 
-export async function main(args = process.argv.slice(2)) {
+export async function main(args = process.argv.slice(2), lifecycle: { lockHeld?: boolean; onStarted?: (state: State) => void } = {}) {
   if (!args.length || args[0] === '--help') { console.log(help); return; }
   if (args[0] === 'doctor') {
     if (args.length !== 1) throw new Error(help);
@@ -260,7 +260,7 @@ export async function main(args = process.argv.slice(2)) {
     preflight(target, false); return;
   }
   process.umask(0o077);
-  const unlock = acquireLock(resolve(stateRoot, 'delivery.lock'));
+  const unlock = lifecycle.lockHeld ? () => {} : acquireLock(resolve(stateRoot, 'delivery.lock'));
   let commands: Commands | undefined;
   const stop = () => commands?.stop();
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
@@ -278,6 +278,7 @@ export async function main(args = process.argv.slice(2)) {
     }
     const directory = resolve(stateRoot, state.id), journal = new Journal(directory, state);
     journal.save();
+    lifecycle.onStarted?.(state);
     commands = new Commands(resolve(directory, 'logs'), { EXACT_FEEDBACK: '0', EXACT: exact, EXACT2: exact, WRANGLER_SEND_METRICS: 'false', PATH: `${dirname(bun)}:${process.env.PATH}` });
     const guard = () => {
       for (const path of [root, library, exact]) assertClean(path);

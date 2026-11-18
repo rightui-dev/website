@@ -2,6 +2,24 @@
 
 All package validation, website builds and quick checks, iPhone/Mac builds and Cloudflare/AppDrop delivery run locally. GitHub Actions only verifies and publishes an existing npm archive using OIDC. No npm publishing token is needed locally or in GitHub.
 
+## Deploy everything in one command
+
+Use the T3 project action **Tout déployer — iOS · macOS · npm · site**, or run `./deploy` from the website repository or parent RightUI workspace. Future full-delivery requests such as "tu peux tout deployer" use this command directly. Installing the command does not trigger a release.
+
+```sh
+./deploy --dry-run  # Read-only plan; no fetch, version edit, commit, build or upload
+./deploy            # Prepare sources and deliver everything
+./deploy            # After a failure: resume the recorded delivery
+```
+
+1. Verify both main branches, expected remotes and pinned SDK. Fetch without merging; refuse remote commits absent locally.
+2. Reuse a prepared beta, or increment its serial if distributed `packages/ui` files changed since the current annotated tag. Repository-only/site-only changes keep the existing npm version and tagged package provenance. Write meaningful Unreleased notes while implementing changes; if absent, the command generates factual changed-file notes. Breaking changes still require the agent to prepare a next-minor beta and migration notes using the library versioning procedure.
+3. Pack the exact UI bytes and synchronize website manifests and lock integrity. Commit **all non-ignored changes in both repositories**, preserving configured Git signing, then push both main branches without force. Finish the intended batch before clicking. Signing/authentication failures stop with the edits preserved; the command never silently disables signing.
+4. Run the existing `all` engine: quick checks and local sequential iOS/macOS builds, npm-only Actions with beta/latest verification, AppDrop uploads/download verification, generated metadata commit/push, then local website build, Cloudflare deployment and production checks. npm is verified before AppDrop changes so the delivered apps cannot depend on an unavailable package.
+5. Save the release ID in the private `deploy-current.json` pointer under the release state directory. A second invocation resumes that exact journal rather than rebuilding or uploading completed stages. Both entry points use the same process lock. If interrupted during generated metadata commits, the wrapper verifies the exact allowed edits before regenerating them, or adopts the matching completed commit. Unrelated edits stop recovery and are preserved.
+
+The action is manual: it never runs on workspace creation, thread settlement or startup, and settling a thread does not stop an active delivery. No secrets are stored in the T3 command. A second click while delivery is active is rejected by the shared lock. Failed builds or actual source, signing, remote/authentication conflicts still need correction before the same command can resume.
+
 ## Commands
 
 Run from the website repository. The launcher selects the pinned Bun when available, and otherwise refuses an incompatible runtime before delivery.
@@ -28,7 +46,7 @@ Invocation of a delivery command must be covered by the user's authorization for
 
 ## Source preparation
 
-Prepare the version, changelog and compatibility evidence using the library's `docs/VERSIONING.md`. Commit and push the intended sources on `main` in both repositories before invoking delivery. The engine refuses dirty sources, other branches/remotes, changed SDKs and mismatched website/library versions. It does not guess whether a change breaks the public API, bump versions, commit unrelated edits, upgrade Exact, notarize apps or install them on a device. Every authorized npm delivery automatically aligns `beta` and `latest`; the version itself remains beta.
+For the lower-level `release` command, prepare the version, changelog and compatibility evidence using the library's `docs/VERSIONING.md`, then commit/push the intended sources on `main` in both repositories first. `deploy` automates ordinary version/source preparation as described above. The engine refuses dirty sources, other branches/remotes, changed SDKs and mismatched website/library versions. It does not guess whether a change breaks the public API, upgrade Exact, notarize apps or install them on a device. Every authorized npm delivery automatically aligns `beta` and `latest`; the version itself remains beta.
 
 After a standalone npm publication, `bun run sync:ui <exact-beta-version>` updates the website dependency and lock. Commit/push that change before `release site` or `release appdrop`. `all` performs this generated metadata commit itself.
 

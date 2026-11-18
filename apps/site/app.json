@@ -6,6 +6,7 @@
   "start_url": "/",
   "display": "standalone",
   "data": [
+    "rightui-focus-ring",
     "rightui-font",
     "rightui-font-choice",
     "rightui-font-ready",
@@ -21,6 +22,7 @@
   "host": {
     "web": {
       "head": [
+        { "link": { "rel": "stylesheet", "href": "assets/focus-ring.css" } },
         {
           "script": {
             "type": "application/ld+json",

@@ -354,7 +354,7 @@ theme
   ui.border-width: length = ui.foundation-border-width
   ui.border-input-width: length = ui.border-width
   ui.border-strong-width: length = calc(ui.border-width * 2)
-  ui.foundation-focus-width: length = 3px
+  ui.foundation-focus-width: length = 1px
   ui.focus-width: length = ui.foundation-focus-width
   ui.foundation-icon-stroke: length = 1.75px
   ui.icon-stroke: length = ui.foundation-icon-stroke
@@ -365,6 +365,10 @@ theme
   ui.duration-fast: duration = 150ms
   ui.duration-normal: duration = 200ms
   ui.duration-slow: duration = 300ms
+  ui.duration-toast: duration = 500ms
+  ui.easing-toast: easing = cubic-bezier(0.22, 1, 0.36, 1)
+  ui.toast-width: length = 24rem
+  ui.toast-peek: length = ui.space-12
   ui.easing: easing = ease
   ui.easing-drawer: easing = -exact-spring(300, 30, 1)
   ui.easing-drawer-bounce: easing = -exact-spring(300, 22, 1)
@@ -423,7 +427,7 @@ theme
   ui.opacity-muted: number = 0.5
   ui.opacity-soft: number = 0.7
   ui.shadow-focus-inset: box-shadow = inset 0 0 0 ui.focus-width ui.ring
-  ui.shadow-focus-strong: box-shadow = 0 0 0 calc(ui.focus-width + 1px) ui.ring
+  ui.shadow-focus-strong: box-shadow = 0 0 0 calc(ui.focus-width * 2) ui.ring
   ui.shadow-background-ring: box-shadow = 0 0 0 ui.border-strong-width ui.background
   ui.shadow-border: box-shadow = 0 0 0 ui.border-width ui.border
   ui.shadow-preview: box-shadow = 0 20px 40px 0 ui.shadow

@@ -20,23 +20,31 @@ export async function checkNpm(version: string, archive?: Artifact) {
   return { version, integrity: published.dist.integrity, url: `https://www.npmjs.com/package/@rightui/ui/v/${version}` };
 }
 
+export function packageSource(library: string, tag: string, current: string) {
+  if (git(library, 'cat-file', '-t', tag) !== 'tag') throw new Error('The release tag must be annotated.');
+  const tagged = git(library, 'rev-parse', `${tag}^{commit}`);
+  if (git(library, 'merge-base', tagged, current) !== tagged ||
+      git(library, 'rev-parse', `${tagged}:packages/ui`) !== git(library, 'rev-parse', `${current}:packages/ui`)) {
+    throw new Error('Package sources differ from the immutable release tag. Prepare a new beta.');
+  }
+  return tagged;
+}
+
 export async function publishNpm(journal: Journal, commands: Commands, library: string, archive: Artifact, guard: () => void) {
   const { version, source } = journal.state, tag = `v${version}`;
   verifyArtifact(archive);
-  await journal.step('github-release', async () => {
+  const releaseRecord = await journal.step('github-release', async () => {
     guard();
     const remoteTag = git(library, 'ls-remote', 'origin', `refs/tags/${tag}`, `refs/tags/${tag}^{}`);
     const localTag = git(library, 'tag', '--list', tag);
-    if (localTag) {
-      if (git(library, 'cat-file', '-t', tag) !== 'tag' || git(library, 'rev-parse', `${tag}^{commit}`) !== source.library) throw new Error('Existing local release tag has different provenance.');
-    } else if (remoteTag) {
+    if (!localTag && remoteTag) {
       await commands.run('fetch-release-tag', ['git', 'fetch', 'origin', `refs/tags/${tag}:refs/tags/${tag}`], library);
-      if (git(library, 'cat-file', '-t', tag) !== 'tag' || git(library, 'rev-parse', `${tag}^{commit}`) !== source.library) throw new Error('Existing remote release tag has different provenance.');
-    } else {
+    } else if (!localTag) {
       await commands.run('tag-release', ['git', 'tag', '-a', tag, source.library, '-m', `chore(release): @rightui/ui ${version}`], library);
     }
+    const publishedSource = packageSource(library, tag, source.library);
     if (!remoteTag) await commands.run('push-release-tag', ['git', 'push', 'origin', `refs/tags/${tag}`], library);
-    else if (!remoteTag.includes(`${source.library}\trefs/tags/${tag}^{}`)) throw new Error('Remote release tag differs from the frozen source.');
+    else if (!remoteTag.includes(`${publishedSource}\trefs/tags/${tag}^{}`)) throw new Error('Remote release tag differs from the frozen source.');
 
     const notes = readFileSync(resolve(library, 'packages/ui/CHANGELOG.md'), 'utf8').split(`## [${version}]`)[1]?.split(/^## /m)[0]?.trim();
     if (!notes) throw new Error('The release has no changelog notes.');
@@ -47,7 +55,8 @@ export async function publishNpm(journal: Journal, commands: Commands, library: 
     let release = await fetchJson(`https://api.github.com/repos/${config.libraryRepository}/releases/tags/${tag}`);
     if (!release) {
       await commands.run('create-github-release', ['gh', 'release', 'create', tag, '--repo', config.libraryRepository, '--verify-tag', '--prerelease', '--latest=false', '--title', `@rightui/ui ${version}`, '--notes-file', notesFile], library);
-      release = await fetchJson(`https://api.github.com/repos/${config.libraryRepository}/releases/tags/${tag}`);
+      // Authenticated read avoids a cached anonymous 404 immediately after creation.
+      release = JSON.parse(await commands.run('read-github-release', ['gh', 'api', `repos/${config.libraryRepository}/releases/tags/${tag}`], library));
     }
     if (!release || release.draft || !release.prerelease) throw new Error('Release must be a published GitHub prerelease.');
     for (const file of [archive.path, checksum]) {
@@ -60,7 +69,7 @@ export async function publishNpm(journal: Journal, commands: Commands, library: 
         await commands.run(`upload-${name}`, ['gh', 'release', 'upload', tag, file, '--repo', config.libraryRepository], library);
       }
     }
-    return { url: release.html_url, archive: archive.sha256, source: source.library };
+    return { url: release.html_url, archive: archive.sha256, source: publishedSource };
   });
 
   return journal.step('npm-publication', async interrupted => {
@@ -71,7 +80,7 @@ export async function publishNpm(journal: Journal, commands: Commands, library: 
     if (!run) {
       if (interrupted) throw new Error('Previous npm dispatch has no visible matching run. Inspect GitHub Actions before retrying; no duplicate dispatch was sent.');
       await commands.run('dispatch-npm', ['gh', 'workflow', 'run', config.workflow, '--repo', config.libraryRepository, '--ref', config.branch,
-        '-f', `version=${version}`, '-f', `source_sha=${source.library}`, '-f', `sha256=${archive.sha256}`], library);
+        '-f', `version=${version}`, '-f', `source_sha=${releaseRecord.source}`, '-f', `sha256=${archive.sha256}`], library);
       for (let attempt = 0; attempt < 12; attempt++) {
         run = (await runs()).find((item: any) => item.display_title === title);
         if (run) break;
@@ -80,6 +89,12 @@ export async function publishNpm(journal: Journal, commands: Commands, library: 
       if (!run) throw new Error('npm workflow was dispatched but is not visible yet. Resume this release; do not dispatch manually.');
     } else if (run.status === 'completed' && run.conclusion !== 'success') {
       await commands.run('retry-npm', ['gh', 'run', 'rerun', String(run.id), '--repo', config.libraryRepository, '--failed'], library);
+    } else if (run.status === 'completed') {
+      const tags = (await fetchJson(registry))?.['dist-tags'];
+      if (tags?.beta !== version || tags?.latest !== version) {
+        // A successful historical run does not prove today's tags still match.
+        await commands.run('reconcile-npm-tags', ['gh', 'run', 'rerun', String(run.id), '--repo', config.libraryRepository], library);
+      }
     }
     console.log(`npm publication: ${run.html_url}`);
     await commands.run('wait-npm', ['gh', 'run', 'watch', String(run.id), '--repo', config.libraryRepository, '--exit-status', '--interval', '5'], library);

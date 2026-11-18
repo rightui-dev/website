@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+cd "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ -x "$HOME/.bun-1.4.2/bin/bun" ]; then
+  exec "$HOME/.bun-1.4.2/bin/bun" tools/deploy.ts "$@"
+fi
+exec bun tools/deploy.ts "$@"

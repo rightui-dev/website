@@ -14,6 +14,7 @@
     "release": "./release",
     "test:release": "bun test tools/release/*.test.ts",
     "deploy": "./release site",
+    "deploy:all": "./deploy",
     "deploy:check": "wrangler deploy --dry-run",
     "preview:cloudflare": "wrangler dev --port 8793",
     "check:hosting": "bun tools/check-hosting.ts",
@@ -25,7 +26,7 @@
     "deploy:prepared": "bun tools/check-ui-version.ts --published --dist && wrangler deploy"
   },
   "dependencies": {
-    "@rightui/ui": "0.4.0-beta.2"
+    "@rightui/ui": "0.4.0-beta.3"
   },
   "engines": {
     "bun": ">=1.4.2"

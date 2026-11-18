@@ -35,6 +35,8 @@ component ThemeSample
 
 component ThemePage
   props
+    focusRing: bool
+    toggleFocusRing: action
     width: number
     preset: string
     palettes: string[]
@@ -73,6 +75,7 @@ component ThemePage
         column gap="ui.space-16"
           text "Palette" font-weight=uiWeights.medium font-family=uiFontFamily(uiFont) data-rightui-font="body"
           TabsAdvanced(id="theme-preset", label="Palette", labels=paletteLabels, counts=[], selected=palettes.indexOf(preset), variant="default", vertical=false, compact=false, disabledIndices=[], direction="ltr", reduced=reduced, choose=choosePreset)
+          Switch(id="theme-focus-ring", label="Focus ring", checked=focusRing, disabled=false, reduced=reduced, change=toggleFocusRing)
           row gap="ui.space-24" flex-wrap="wrap"
             column gap="ui.space-8"
               text "Density" font-family=uiFontFamily(uiFont) data-rightui-font="body"

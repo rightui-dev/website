@@ -9,7 +9,7 @@ font "Newsreader"
   200 800 = "assets/fonts/Newsreader.ttf"
   200 800 italic = "assets/fonts/Newsreader-Italic.ttf"
 use Viewport, CatalogEntry, ScreenRequest, Screen, ThemeExport, ThemeSelection, FontAxes from "./components/shapes.contract"
-use Hit, QuietLink, Heading, Paragraph, Button, ModalFrame, PopoverFrame, PopoverTrigger, ButtonContent, InputControl, InputStyle, DialogFrame, MarkdownDocument, parseMarkdown, TabsAdvanced from "@rightui/ui"
+use Hit, QuietLink, Heading, Paragraph, Button, ModalFrame, PopoverFrame, PopoverTrigger, ButtonContent, InputControl, InputStyle, DrawerAdvanced, DialogFrameWithFocus, MarkdownDocument, parseMarkdown, TabsAdvanced from "@rightui/ui"
 use ThemePage, QuickThemeControls from "./components/themes.contract"
 use PageInsets from "./components/page-insets.contract"
 use Code from "./components/code.contract"
@@ -41,9 +41,12 @@ component RightUI
   resource catalog = loadCatalog() as shape CatalogEntry[] else empty()
   resource aiCatalog = loadAI() as shape CatalogEntry[] else empty()
   resource screens = loadScreens((nativeIOS ? stack(nav) : stack(nav).slice(-1)).map(e => ScreenRequest(id=`${e.id}`, name=e.name, sourceFile=searchParam(e, "file"), blockCategory=searchParam(e, "category")))) as shape Screen[] else empty()
-  resource themeExport = loadTheme(preset, density, radius, fontChoice, settledOpticalSize, settledRoundness, settledWeightPercent) when top(nav).name == "themes" as shape ThemeExport else empty()
+  resource themeExport = loadTheme(preset, density, radius, fontChoice, settledOpticalSize, settledRoundness, settledWeightPercent, focusRing) when top(nav).name == "themes" as shape ThemeExport else empty()
   state theme = "system" persist
   state uiPreset = "neutral" persist
+  state focusRing = true persist
+  action toggleFocusRing(value: bool)
+    focusRing = value
   state uiDensity = "comfortable" persist
   state uiRadius = "default" persist
   state uiFont = "sans" persist
@@ -392,7 +395,7 @@ component RightUI
   action toggleCode
     showCode = not showCode
   view
-    view id="site-shell" testId="site-shell" data-rightui-font-choice=fontChoice data-rightui-font-ready=themeReady font-weight=fontWeights.regular font-variation-settings=fontVariations font-optical-sizing=opticalSizing navigationKey=`${top(nav).id}` navigationBack="back" navigate=follow key=keys viewport-fit=(nativeApp ? "cover" : "auto") width="100%" height="100%" overflow="clip" background-color="ui.surface" color="ui.foreground" -webkit-font-smoothing="antialiased"
+    view id="site-shell" testId="site-shell" data-rightui-focus-ring=(focusRing ? "on" : "off") data-rightui-font-choice=fontChoice data-rightui-font-ready=themeReady font-weight=fontWeights.regular font-variation-settings=fontVariations font-optical-sizing=opticalSizing navigationKey=`${top(nav).id}` navigationBack="back" navigate=follow key=keys viewport-fit=(nativeApp ? "cover" : "auto") width="100%" height="100%" overflow="clip" background-color="ui.surface" color="ui.foreground" -webkit-font-smoothing="antialiased"
       if nativeMac
         row id="mac-titlebar" testId="mac-titlebar" resize=measureTitlebar position="absolute" top=0 left=0 right=0 height="max(32px, env(titlebar-area-height, 0px))" padding-left="env(titlebar-area-x, 0px)" padding-right="ui.space-8" box-sizing="border-box" align-items="center" z-index=60
           row gap="ui.space-2" align-items="center"
@@ -438,7 +441,7 @@ component RightUI
                 else if screen.page.kind == "try-iphone"
                   TryIPhone(iphoneUrl={{IPHONE_URL}})
                 else if screen.page.kind == "themes"
-                  ThemePage(width=viewport.width, preset=preset, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, density=density, radius=radius, font=fontChoice, code=(current(themeExport) ? themeExport.code : ""), reduced=viewport.prefersReducedMotion, choose=chooseTheme)
+                  ThemePage(focusRing=focusRing, toggleFocusRing=toggleFocusRing, width=viewport.width, preset=preset, palettes={{THEME_PRESETS}}, paletteLabels={{THEME_LABELS}}, density=density, radius=radius, font=fontChoice, code=(current(themeExport) ? themeExport.code : ""), reduced=viewport.prefersReducedMotion, choose=chooseTheme)
                 else if isDocumentation(screen.name)
                   row padding="calc(ui.space-32 + clamp(0px, (100vw - 1023px) * 1000, ui.space-16)) 0 ui.space-64" gap="ui.space-0" align-items="flex-start" box-sizing="border-box"
                     main id="docs-article" testId="docs-article" flex=1 min-width=0 max-width="max(40rem, calc((1280px - 100vw) * 1000))"
@@ -670,16 +673,41 @@ component RightUI
         row gap="ui.space-8" justify-content="flex-end"
           Button(id="home-confirmation-cancel", label="Don't allow", variant="outline", disabled=false, press=closeHomeDialog)
           Button(id="home-confirmation-allow", label="Allow", variant="primary", disabled=false, press=closeHomeDialog)
-      DialogFrame(id="site-search", open=searchOpen, reduced=viewport.prefersReducedMotion, title="Search documentation", description="Find components, guides and examples.", focusIds=["search-input"].concat(matches.map(hit => "search-hit-" + hit.slug)), dismiss=closeSearch)
-        scroll flex="1 1 auto" min-height=0 padding="ui.focus-width" margin="calc(0px - ui.focus-width)" box-sizing="border-box"
-          column gap="ui.space-12"
-            input id="search-input" testId="search-input" class=InputStyle font-weight=fontWeights.regular value=query input=search key=searchKey placeholder="Search documentation..." aria-label="Search documentation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
-            column gap="ui.space-4"
-              if matches.length == 0
-                text "No results found." padding="ui.space-24" text-align="center" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
-              for hit, index in matches key=hit.slug
-                link id=("search-hit-" + hit.slug) href=hit.href class=Hit font-weight=fontWeights.medium padding="ui.space-10 ui.space-12" background-color=(index == activeHit ? "ui.muted" : "transparent")
-                  text hit.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+      if searchOpen
+        SearchFrame(id="site-search", compact=(viewport.width <= 1024), reduced=viewport.prefersReducedMotion, title="Search documentation", description="Find components, guides and examples.", focusIds=["search-input"].concat(matches.map(hit => "search-hit-" + hit.slug)), dismiss=closeSearch)
+          scroll flex="1 1 auto" min-height=0 box-sizing="border-box"
+            column gap="ui.space-12" padding="ui.focus-width"
+              input id="search-input" testId="search-input" class=InputStyle font-weight=fontWeights.regular value=query input=search key=searchKey placeholder="Search documentation..." aria-label="Search documentation" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+              column gap="ui.space-4"
+                if matches.length == 0
+                  text "No results found." padding="ui.space-24" text-align="center" color="ui.muted-foreground" font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+                for hit, index in matches key=hit.slug
+                  link id=("search-hit-" + hit.slug) href=hit.href class=Hit font-weight=fontWeights.medium padding="ui.space-10 ui.space-12" background-color=(index == activeHit ? "ui.muted" : "transparent")
+                    text hit.title font-family=uiFontFamily(fontChoice) data-rightui-font="body"
+
+component SearchFrame
+  props
+    id: string
+    compact: bool
+    reduced: bool
+    title: string
+    description: string
+    focusIds: string[]
+    dismiss: action
+  slot
+  state awaitingFocus = true
+  action focusSearch(e: FocusEvent)
+    if compact and awaitingFocus and (e.target == id + "-handle" or e.target == id + "-close")
+      awaitingFocus = false
+      focus("search-input")
+  view
+    view focusin=focusSearch
+      if compact
+        DrawerAdvanced(id=id, open=true, title=title, description=description, reduced=reduced, focusIds=focusIds, dismiss=dismiss, snapPoints=[0.9], initialSnap=0.9)
+          children
+      else
+        DialogFrameWithFocus(initialFocus="search-input", id=id, open=true, title=title, description=description, reduced=reduced, focusIds=focusIds, dismiss=dismiss)
+          children
 
 component DocsSidebar
   props
