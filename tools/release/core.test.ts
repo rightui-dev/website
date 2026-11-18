@@ -94,10 +94,12 @@ test('generated metadata cannot silently commit concurrent user edits or other d
   const manifest = JSON.stringify({ scripts: { build: 'original' }, dependencies: { '@rightui/ui': version } });
   const before: Metadata = {
     'package.json': manifest, 'apps/site/package.json': manifest,
+    'apps/site/app.test.contract': 'expect @rightui/ui@0.4.0-beta.1\n',
     'bun.lock': JSON.stringify({ workspaces: { '': { dependencies: { '@rightui/ui': version } } }, packages: { '@rightui/ui': ['old'], other: ['unchanged'] } }),
     'content/downloads.json': JSON.stringify({ iphoneUrl: 'iphone', macDownloadUrl: 'old' }),
   };
   const after = { ...before, 'bun.lock': before['bun.lock'].replace('["old"]', '["new"]'), 'content/downloads.json': JSON.stringify({ iphoneUrl: 'iphone', macDownloadUrl: 'new' }) };
+  expect(() => assertMetadataOnly(before, { ...after, 'apps/site/app.test.contract': 'other assertion' }, version, 'new')).toThrow('Unexpected edit');
   expect(() => assertMetadataOnly(before, after, version, 'new')).not.toThrow();
   expect(() => assertMetadataOnly(before, { ...after, 'package.json': manifest.replace('original', 'user edit') }, version, 'new')).toThrow('Unexpected edit');
   expect(() => assertMetadataOnly(before, { ...after, 'bun.lock': after['bun.lock'].replace('unchanged', 'other upgrade') }, version, 'new')).toThrow('Unexpected edit');

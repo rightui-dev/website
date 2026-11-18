@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { acquireLock, assertClean, git, json, validateState, writeJson, type State } from './core';
+import { acquireLock, assertClean, git, gitOutput, json, validateState, writeJson, type State } from './core';
 import { main } from './main';
 import { assertMetadataOnly, metadataFiles, type Metadata } from './metadata';
 import config from './config.json';
@@ -79,7 +79,7 @@ export function recoverMetadata(repo: string, directory: string, state: State) {
   const revision = state.steps['upload-mac']?.result?.revision;
   if (!Number.isInteger(revision)) throw new Error('Missing verified Mac receipt for metadata recovery.');
   const url = `https://appdrop.app/api/drops/${config.appdropId}/file?revision=${revision}&build=macos`;
-  const before = Object.fromEntries(metadataFiles.map(file => [file, git(repo, 'show', `${previous}:${file}`)])) as Metadata;
+  const before = Object.fromEntries(metadataFiles.map(file => [file, gitOutput(repo, 'show', `${previous}:${file}`)])) as Metadata;
   if (git(repo, 'ls-files', '--others', '--exclude-standard')) throw new Error('Untracked files appeared during delivery. Preserve them and reconcile before resuming.');
   const changed = git(repo, 'diff', '--name-only', previous).split('\n').filter(Boolean);
   if (changed.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Source files changed during delivery. Refusing automatic recovery.');
@@ -93,8 +93,8 @@ export function recoverMetadata(repo: string, directory: string, state: State) {
   } else if (git(repo, 'status', '--porcelain')) {
     const staged = git(repo, 'diff', '--cached', '--name-only').split('\n').filter(Boolean);
     if (staged.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Unexpected staged files during metadata recovery.');
-    const stagedMetadata = Object.fromEntries(metadataFiles.map(file => [file, git(repo, 'show', `:${file}`)])) as Metadata;
-    assertMetadataOnly(before, stagedMetadata, state.version, url);
+    const stagedMetadata = Object.fromEntries(metadataFiles.map(file => [file, gitOutput(repo, 'show', `:${file}`)])) as Metadata;
+    assertMetadataOnly(before, stagedMetadata, state.version, url, staged);
     // Save evidence before re-generating the verified dependency/download metadata.
     writeFileSync(resolve(directory, 'metadata-recovery.patch'), git(repo, 'diff', previous), { mode: 0o600 });
     git(repo, 'restore', '--staged', '--worktree', '--', ...metadataFiles);

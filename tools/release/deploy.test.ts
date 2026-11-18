@@ -76,7 +76,9 @@ function metadataFixture() {
   for (const file of ['package.json', 'apps/site/package.json']) writeFileSync(resolve(dir, file), JSON.stringify({ dependencies: { '@rightui/ui': version } }));
   writeFileSync(resolve(dir, 'bun.lock'), JSON.stringify({ workspaces: {}, packages: { '@rightui/ui': ['archive'] } }));
   writeFileSync(resolve(dir, 'content/downloads.json'), JSON.stringify({ iphoneUrl: 'keep', macDownloadUrl: 'old' }));
+  writeFileSync(resolve(dir, 'apps/site/app.test.contract'), 'expected @rightui/ui@0.4.0-beta.1\n');
   const head = commit(dir);
+  writeFileSync(resolve(dir, 'apps/site/app.test.contract'), 'expected @rightui/ui@0.4.0-beta.2\n');
   const source = { website: head, library: head, exact: head };
   const state: State = { schema: 1, id: 'test-all', target: 'all', version, workspace: dir, source, current: { ...source }, createdAt: '', toolchain: '', buildNumber: '1',
     steps: { 'website-metadata': { status: 'running' }, 'upload-mac': { status: 'done', result: { revision: 12 } } } };

@@ -23,7 +23,10 @@ export function writeJson(path: string, value: unknown) {
   renameSync(`${path}.tmp`, path);
 }
 export function git(root: string, ...args: string[]): string {
-  return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 }).trim();
+  return gitOutput(root, ...args).trim();
+}
+export function gitOutput(root: string, ...args: string[]): string {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
 }
 export function assertClean(root: string) {
   if (git(root, 'status', '--porcelain')) throw new Error(`Uncommitted changes in ${root}. Commit the intended release sources before delivery; no files were staged automatically.`);

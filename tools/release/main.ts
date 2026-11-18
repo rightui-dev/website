@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import config from './config.json';
-import { acquireLock, artifact, assertClean, Commands, fetchJson, git, hash, Journal, json, treeHash, validateState, verifyArtifact, type Artifact, type Snapshot, type State, type Target } from './core';
+import { acquireLock, artifact, assertClean, Commands, fetchJson, git, gitOutput, hash, Journal, json, treeHash, validateState, verifyArtifact, type Artifact, type Snapshot, type State, type Target } from './core';
 import { appdropTool, buildNative, deliverNative, nextBuild, readDrop } from './native';
 import { checkNpm, publishNpm } from './npm';
 import { assertMetadataOnly, metadataFiles, type Metadata } from './metadata';
@@ -165,7 +165,7 @@ async function commitMetadata(journal: Journal, commands: Commands, macRevision?
       await commands.run('stage-metadata', ['git', 'add', '--', ...changed], root);
       if (git(root, 'rev-parse', 'HEAD') !== journal.state.current.website ||
           git(root, 'diff', '--cached', '--name-only').split('\n').filter(Boolean).some(file => !changed.includes(file))) throw new Error('Git changed while preparing release metadata.');
-      assertMetadataOnly(before, Object.fromEntries(metadataFiles.map(file => [file, git(root, 'show', `:${file}`)])) as Metadata, journal.state.version, macUrl);
+      assertMetadataOnly(before, Object.fromEntries(metadataFiles.map(file => [file, gitOutput(root, 'show', `:${file}`)])) as Metadata, journal.state.version, macUrl);
       await commands.run('commit-metadata', ['git', 'commit', '-m', `chore(release): sync ${journal.state.version} (${journal.state.id})`], root);
       journal.state.current.website = git(root, 'rev-parse', 'HEAD');
       journal.save();
