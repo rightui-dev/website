@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { git, type State } from './core';
 import { alignedLock, assertNotBehind, changedPackageFiles, nextBeta, recoverMetadata, withReleaseNotes } from './deploy';
 import { packageSource } from './npm';
+import { preserveConcurrentEdits, restoreConcurrentEdits } from './concurrent-edits';
 
 const directories: string[] = [];
 afterEach(() => { for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true }); });
@@ -113,4 +114,81 @@ test('metadata recovery preserves a staged source edit hidden by a restored work
   git(dir, 'add', 'package.json'); writeFileSync(file, original);
   expect(() => recoverMetadata(dir, log, state)).toThrow('Unexpected edit');
   expect(git(dir, 'show', ':package.json')).toContain('user work');
+});
+
+test('a completed metadata commit is recovered independently of later uncommitted source edits', () => {
+  const { dir, log, state } = metadataFixture();
+  const head = commit(dir, `chore(release): sync ${state.version} (${state.id})`);
+  writeFileSync(resolve(dir, 'package.json'), 'subsequent user edit');
+  writeFileSync(resolve(dir, 'new-file.txt'), 'new source');
+  recoverMetadata(dir, log, state, true);
+  expect(state.current.website).toBe(head);
+  preserveConcurrentEdits(dir, resolve(log, 'edits.json'));
+  expect(git(dir, 'status', '--porcelain')).toBe('');
+  restoreConcurrentEdits(dir, resolve(log, 'edits.json'));
+  expect(readFileSync(resolve(dir, 'package.json'), 'utf8')).toBe('subsequent user edit');
+  expect(readFileSync(resolve(dir, 'new-file.txt'), 'utf8')).toBe('new source');
+});
+
+function editsFixture() {
+  const dir = repo(), log = mkdtempSync(resolve(tmpdir(), 'rightui-concurrent-test-'));
+  directories.push(log);
+  return { dir, file: resolve(log, 'edits.json') };
+}
+
+test('resume preserves staged, unstaged and new files, then restores them exactly once after a metadata commit', () => {
+  const { dir, file } = editsFixture();
+  const source = resolve(dir, 'packages/ui/example.contract');
+  writeFileSync(source, 'staged edit'); git(dir, 'add', 'packages/ui/example.contract');
+  writeFileSync(source, 'unstaged edit'); writeFileSync(resolve(dir, 'new-file.txt'), 'new file');
+  preserveConcurrentEdits(dir, file);
+  expect(git(dir, 'status', '--porcelain')).toBe('');
+  expect(readFileSync(source, 'utf8')).toBe('original');
+  preserveConcurrentEdits(dir, file);
+  expect(JSON.parse(readFileSync(file, 'utf8')).entries).toHaveLength(1);
+  writeFileSync(resolve(dir, 'downloads.json'), 'published metadata'); commit(dir);
+  restoreConcurrentEdits(dir, file);
+  expect(readFileSync(source, 'utf8')).toBe('unstaged edit');
+  expect(git(dir, 'show', ':packages/ui/example.contract')).toBe('staged edit');
+  expect(readFileSync(resolve(dir, 'new-file.txt'), 'utf8')).toBe('new file');
+  expect(readFileSync(resolve(dir, 'downloads.json'), 'utf8')).toBe('published metadata');
+  const status = git(dir, 'status', '--porcelain');
+  restoreConcurrentEdits(dir, file);
+  expect(git(dir, 'status', '--porcelain')).toBe(status);
+});
+
+test('a crash after stashing but before recording its hash is reconciled from the unique stash message', () => {
+  const { dir, file } = editsFixture();
+  writeFileSync(resolve(dir, 'new-file.txt'), 'preserved'); preserveConcurrentEdits(dir, file);
+  const state = JSON.parse(readFileSync(file, 'utf8')), oid = state.entries[0].oid;
+  state.entries[0].phase = 'saving'; delete state.entries[0].oid;
+  writeFileSync(file, JSON.stringify(state));
+  preserveConcurrentEdits(dir, file);
+  expect(JSON.parse(readFileSync(file, 'utf8')).entries[0].oid).toBe(oid);
+  restoreConcurrentEdits(dir, file);
+  expect(readFileSync(resolve(dir, 'new-file.txt'), 'utf8')).toBe('preserved');
+});
+
+test('restoration conflicts preserve the full backup and do not apply it twice', () => {
+  const { dir, file } = editsFixture();
+  const source = resolve(dir, 'packages/ui/example.contract');
+  writeFileSync(source, 'user version'); preserveConcurrentEdits(dir, file);
+  writeFileSync(source, 'concurrent version'); commit(dir);
+  expect(() => restoreConcurrentEdits(dir, file)).toThrow('complete backup remains');
+  const state = JSON.parse(readFileSync(file, 'utf8'));
+  expect(git(dir, 'show', `${state.entries[0].oid}:packages/ui/example.contract`)).toBe('user version');
+  expect(() => restoreConcurrentEdits(dir, file)).toThrow('interrupted or conflicted');
+});
+
+test('resume can recover generated metadata before preserving unrelated concurrent source edits', () => {
+  const { dir, log, state } = metadataFixture();
+  writeFileSync(resolve(dir, 'packages/ui/example.contract'), 'concurrent edit');
+  writeFileSync(resolve(dir, 'new-file.txt'), 'new file');
+  recoverMetadata(dir, log, state, true);
+  expect(JSON.parse(readFileSync(resolve(dir, 'content/downloads.json'), 'utf8')).macDownloadUrl).toBe('old');
+  preserveConcurrentEdits(dir, resolve(log, 'edits.json'));
+  expect(git(dir, 'status', '--porcelain')).toBe('');
+  expect(() => recoverMetadata(dir, log, state, true)).not.toThrow();
+  restoreConcurrentEdits(dir, resolve(log, 'edits.json'));
+  expect(readFileSync(resolve(dir, 'packages/ui/example.contract'), 'utf8')).toBe('concurrent edit');
 });

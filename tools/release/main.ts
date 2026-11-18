@@ -115,7 +115,8 @@ async function candidate(journal: Journal, commands: Commands, archive?: Artifac
     // A disposable local clone protects the active editor; the SDK and its caches remain local.
     rmSync(base, { recursive: true, force: true });
     mkdirSync(resolve(base, '.tooling'), { recursive: true, mode: 0o700 });
-    symlinkSync(library, resolve(base, 'components'));
+    await commands.run('clone-candidate-library', ['git', 'clone', '--shared', '--no-checkout', library, resolve(base, 'components')], root);
+    await commands.run('checkout-candidate-library', ['git', 'checkout', '--detach', journal.state.source.library], resolve(base, 'components'));
     symlinkSync(exact, resolve(base, '.tooling/exact'));
     await commands.run('clone-candidate', ['git', 'clone', '--shared', '--no-checkout', root, site], root);
     await commands.run('checkout-candidate', ['git', 'checkout', '--detach', journal.state.source.website], site);
@@ -129,8 +130,11 @@ async function candidate(journal: Journal, commands: Commands, archive?: Artifac
     }
     try { await commands.run('candidate-install', [bun, 'install', '--ignore-scripts', ...(archive ? [] : ['--frozen-lockfile'])], site); }
     finally { writeFileSync(manifestFile, original); }
-    return { site, revision: journal.state.source.website };
-  }, result => { if (git(result.site, 'rev-parse', 'HEAD') !== result.revision) throw new Error('Candidate checkout changed.'); });
+    return { site, revision: journal.state.source.website, libraryRevision: journal.state.source.library };
+  }, result => {
+    if (git(result.site, 'rev-parse', 'HEAD') !== result.revision) throw new Error('Candidate checkout changed.');
+    if (result.libraryRevision && git(resolve(result.site, '../components'), 'rev-parse', 'HEAD') !== result.libraryRevision) throw new Error('Candidate library checkout changed.');
+  });
   return site;
 }
 
@@ -197,6 +201,14 @@ async function localHosting(commands: Commands) {
   } finally { server.kill('SIGTERM'); await server.exited; }
 }
 
+export async function waitForProvenance(expected: unknown, read: () => Promise<unknown>, wait = (ms: number) => Bun.sleep(ms)) {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    if (JSON.stringify(await read()) === JSON.stringify(expected)) return;
+    if (attempt < 11) await wait(5000);
+  }
+  throw new Error('Production provenance differs from this release. Resume after checking propagation; no rebuild is needed.');
+}
+
 async function deploySite(journal: Journal, commands: Commands, guard: () => void) {
   const build = await journal.step('site-build', async () => {
     await commands.run('check-published-ui', [bun, 'tools/check-ui-version.ts', '--published'], root);
@@ -207,7 +219,7 @@ async function deploySite(journal: Journal, commands: Commands, guard: () => voi
     return { digest: treeHash(resolve(root, 'dist')), info: json(resolve(root, 'dist/build-info.json')) };
   }, result => { if (treeHash(resolve(root, 'dist')) !== result.digest) throw new Error('Validated site assets changed. Refusing deployment.'); });
   const verifyLive = async () => {
-    if (JSON.stringify(await fetchJson(`${config.site}/build-info.json`)) !== JSON.stringify(build.info)) throw new Error('Production provenance differs from this release.');
+    await waitForProvenance(build.info, () => fetchJson(`${config.site}/build-info.json`));
     await commands.run('hosting-production', [bun, 'run', 'check:hosting', config.site, '--smoke'], root);
   };
   return journal.step('site-deployment', async () => {

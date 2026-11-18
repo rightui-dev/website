@@ -6,6 +6,7 @@ import { acquireLock, assertClean, git, gitOutput, json, validateState, writeJso
 import { main } from './main';
 import { assertMetadataOnly, metadataFiles, type Metadata } from './metadata';
 import config from './config.json';
+import { editsFile, preserveConcurrentEdits, restoreConcurrentEdits } from './concurrent-edits';
 
 const root = resolve(import.meta.dir, '../..');
 const library = resolve(root, '../components');
@@ -72,32 +73,42 @@ export function assertNotBehind(repo: string) {
 }
 
 // Recover only the exact generated edits the release engine owns. Never discard source edits.
-export function recoverMetadata(repo: string, directory: string, state: State) {
+export function recoverMetadata(repo: string, directory: string, state: State, allowSourceEdits = false) {
   if (state.steps['website-metadata']?.status !== 'running') return;
   const previous = state.current.website;
   const head = git(repo, 'rev-parse', 'HEAD');
+  if (head === previous && !git(repo, 'status', '--porcelain')) return;
   const revision = state.steps['upload-mac']?.result?.revision;
   if (!Number.isInteger(revision)) throw new Error('Missing verified Mac receipt for metadata recovery.');
   const url = `https://appdrop.app/api/drops/${config.appdropId}/file?revision=${revision}&build=macos`;
   const before = Object.fromEntries(metadataFiles.map(file => [file, gitOutput(repo, 'show', `${previous}:${file}`)])) as Metadata;
-  if (git(repo, 'ls-files', '--others', '--exclude-standard')) throw new Error('Untracked files appeared during delivery. Preserve them and reconcile before resuming.');
-  const changed = git(repo, 'diff', '--name-only', previous).split('\n').filter(Boolean);
-  if (changed.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Source files changed during delivery. Refusing automatic recovery.');
-  const after = Object.fromEntries(metadataFiles.map(file => [file, readFileSync(resolve(repo, file), 'utf8')])) as Metadata;
-  assertMetadataOnly(before, after, state.version, url);
   if (head !== previous) {
-    assertClean(repo);
+    if (!allowSourceEdits) assertClean(repo);
     if (git(repo, 'rev-parse', 'HEAD^') !== previous || git(repo, 'log', '-1', '--format=%s') !== `chore(release): sync ${state.version} (${state.id})`) throw new Error('Unexpected commit during metadata recovery.');
+    const committedFiles = git(repo, 'diff', '--name-only', previous, head).split('\n').filter(Boolean);
+    if (committedFiles.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Source files changed during the metadata commit.');
+    const committed = Object.fromEntries(metadataFiles.map(file => [file, gitOutput(repo, 'show', `${head}:${file}`)])) as Metadata;
+    assertMetadataOnly(before, committed, state.version, url);
     state.current.website = head;
     writeJson(resolve(directory, 'release.json'), state);
-  } else if (git(repo, 'status', '--porcelain')) {
+    return; // Leave subsequent source edits intact for preservation by the wrapper.
+  }
+  if (!allowSourceEdits && git(repo, 'ls-files', '--others', '--exclude-standard')) throw new Error('Untracked files appeared during delivery. Preserve them and reconcile before resuming.');
+  const changed = git(repo, 'diff', '--name-only', previous).split('\n').filter(Boolean);
+  if ((!allowSourceEdits || head !== previous) && changed.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Source files changed during delivery. Refusing automatic recovery.');
+  const generated = changed.filter(file => (metadataFiles as readonly string[]).includes(file));
+  const after = Object.fromEntries(metadataFiles.map(file => [file, readFileSync(resolve(repo, file), 'utf8')])) as Metadata;
+  assertMetadataOnly(before, after, state.version, url, allowSourceEdits ? generated : metadataFiles);
+  if (git(repo, 'status', '--porcelain')) {
     const staged = git(repo, 'diff', '--cached', '--name-only').split('\n').filter(Boolean);
-    if (staged.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Unexpected staged files during metadata recovery.');
+    if (!allowSourceEdits && staged.some(file => !(metadataFiles as readonly string[]).includes(file))) throw new Error('Unexpected staged files during metadata recovery.');
     const stagedMetadata = Object.fromEntries(metadataFiles.map(file => [file, gitOutput(repo, 'show', `:${file}`)])) as Metadata;
-    assertMetadataOnly(before, stagedMetadata, state.version, url, staged);
+    const stagedGenerated = staged.filter(file => (metadataFiles as readonly string[]).includes(file));
+    assertMetadataOnly(before, stagedMetadata, state.version, url, stagedGenerated);
     // Save evidence before re-generating the verified dependency/download metadata.
     writeFileSync(resolve(directory, 'metadata-recovery.patch'), git(repo, 'diff', previous), { mode: 0o600 });
-    git(repo, 'restore', '--staged', '--worktree', '--', ...metadataFiles);
+    const restore = [...new Set([...generated, ...stagedGenerated])];
+    if (restore.length) git(repo, 'restore', '--staged', '--worktree', '--', ...restore);
   }
 }
 
@@ -123,6 +134,7 @@ export async function deploy(args = process.argv.slice(2)) {
   }
   process.umask(0o077);
   const unlock = acquireLock(resolve(stateRoot, 'delivery.lock'));
+  let pendingDirectory: string | undefined;
   try {
     // Another invocation may have finished between our read-only checks and lock acquisition.
     const latest: Deployment | undefined = existsSync(pointer) ? json(pointer) : undefined;
@@ -132,7 +144,16 @@ export async function deploy(args = process.argv.slice(2)) {
     if (deployment.releaseId) {
       const directory = resolve(stateRoot, deployment.releaseId), state: State = json(resolve(directory, 'release.json'));
       validateState(state, root);
-      recoverMetadata(root, directory, state);
+      pendingDirectory = directory;
+      recoverMetadata(root, directory, state, true);
+      for (const [repo, key] of [[library, 'library'], [root, 'website']] as const) {
+        if (git(repo, 'rev-parse', 'HEAD') !== state.current[key]) throw new Error('New commits appeared since this delivery. Refusing to change frozen source provenance.');
+      }
+      if (!state.steps['candidate-checkout']?.result?.libraryRevision) {
+        const changed = [...git(library, 'diff', '--name-only', 'HEAD').split('\n'), ...git(library, 'diff', '--cached', '--name-only').split('\n'), ...git(library, 'ls-files', '--others', '--exclude-standard').split('\n')].filter(Boolean);
+        if (changed.some(file => file !== 'AGENTS.md' && !file.startsWith('docs/') && !file.startsWith('tools/'))) throw new Error('This older delivery used a shared candidate library. Package/demo edits require artifact review before its native builds can be reused.');
+      }
+      for (const [repo, key] of [[library, 'library'], [root, 'website']] as const) preserveConcurrentEdits(repo, editsFile(directory, key));
       await main(['resume', deployment.releaseId], { lockHeld: true });
     } else {
       // Check both remotes before changing either repository.
@@ -181,8 +202,22 @@ export async function deploy(args = process.argv.slice(2)) {
         writeJson(pointer, deployment);
       } });
     }
+    if (pendingDirectory) {
+      for (const [repo, key] of [[library, 'library'], [root, 'website']] as const) restoreConcurrentEdits(repo, editsFile(pendingDirectory, key));
+      pendingDirectory = undefined;
+    }
     deployment.done = true;
     writeJson(pointer, deployment);
     console.log('Complete: both repositories, npm beta/latest, iOS/macOS AppDrop and rightui.dev.');
-  } finally { unlock(); }
+  } finally {
+    try {
+      if (pendingDirectory) {
+        const errors: unknown[] = [];
+        for (const [repo, key] of [[library, 'library'], [root, 'website']] as const) {
+          try { restoreConcurrentEdits(repo, editsFile(pendingDirectory, key)); } catch (error) { errors.push(error); }
+        }
+        if (errors.length) throw new AggregateError(errors, errors.map(error => (error as Error).message).join('\n'));
+      }
+    } finally { unlock(); }
+  }
 }

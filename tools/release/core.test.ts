@@ -4,9 +4,26 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { acquireLock, artifact, Commands, Journal, json, treeHash, validateState, verifyArtifact, writeJson, type State } from './core';
 import { assertOtherPlatform, nextBuild, publicDrop, receipt } from './native';
-import { plan } from './main';
+import { plan, waitForProvenance } from './main';
 import { assertMetadataOnly, type Metadata } from './metadata';
-import { checkNpm } from './npm';
+import { checkNpm, releaseNotes } from './npm';
+
+test('production verification waits for propagation without accepting a persistent wrong release', async () => {
+  let reads = 0, waits = 0;
+  await waitForProvenance({ revision: 'new' }, async () => ({ revision: ++reads < 3 ? 'old' : 'new' }), async () => { waits++; });
+  expect(reads).toBe(3); expect(waits).toBe(2);
+  waits = 0;
+  await expect(waitForProvenance({ revision: 'new' }, async () => ({ revision: 'wrong' }), async () => { waits++; })).rejects.toThrow('Production provenance differs');
+  expect(waits).toBe(11);
+});
+
+test('release bodies exclude the changelog heading date and duplicate title, preserving component notes and subsections', () => {
+  const changelog = '# Changelog\r\n\r\n## Unreleased\r\n\r\n## [0.4.0-beta.3] - 2026-11-18\r\n\r\n- **InputOTP**: round outer cells.\r\n\r\n### Migration\r\n\r\nKeep this detail.\r\n\r\n## [0.4.0-beta.2] - 2026-11-17\r\n\r\n- Older change.\r\n';
+  expect(releaseNotes(changelog, '0.4.0-beta.3')).toBe('- **InputOTP**: round outer cells.\n\n### Migration\n\nKeep this detail.\n');
+  expect(releaseNotes(changelog, '0.4.0-beta.2')).toBe('- Older change.\n');
+  expect(() => releaseNotes(changelog, '0.4.0-beta.1')).toThrow('No changelog notes');
+  expect(() => releaseNotes('## [0.4.0-beta.3] - 2026-11-18\n\n## [0.4.0-beta.2]\n- Older change.', '0.4.0-beta.3')).toThrow('No changelog notes');
+});
 
 const directories: string[] = [];
 function temporary() { const dir = mkdtempSync(resolve(tmpdir(), 'rightui-release-test-')); directories.push(dir); return dir; }

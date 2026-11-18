@@ -4,6 +4,19 @@ import { artifact, Commands, download, fetchJson, git, Journal, verifyArtifact, 
 import config from './config.json';
 
 const registry = 'https://registry.npmjs.org/@rightui%2Fui';
+
+export function releaseNotes(changelog: string, version: string): string {
+  const lines = changelog.replaceAll('\r\n', '\n').split('\n');
+  const heading = lines.findIndex(line => /^## \[([^\]]+)\](?:\s.*)?$/.exec(line)?.[1] === version);
+  if (heading < 0) throw new Error(`No changelog notes for ${version}.`);
+  const following = lines.slice(heading + 1);
+  const next = following.findIndex(line => /^##(?:\s|$)/.test(line));
+  const notes = (next < 0 ? following : following.slice(0, next)).join('\n').trim();
+  if (!notes) throw new Error(`No changelog notes for ${version}.`);
+  // GitHub already displays the release title and date. Keep only the entry body.
+  return notes + '\n';
+}
+
 export async function checkNpm(version: string, archive?: Artifact) {
   const published = await fetchJson(`${registry}/${version}`);
   if (!published) throw new Error(`@rightui/ui@${version} is not published yet.`);
@@ -46,10 +59,9 @@ export async function publishNpm(journal: Journal, commands: Commands, library: 
     if (!remoteTag) await commands.run('push-release-tag', ['git', 'push', 'origin', `refs/tags/${tag}`], library);
     else if (!remoteTag.includes(`${publishedSource}\trefs/tags/${tag}^{}`)) throw new Error('Remote release tag differs from the frozen source.');
 
-    const notes = readFileSync(resolve(library, 'packages/ui/CHANGELOG.md'), 'utf8').split(`## [${version}]`)[1]?.split(/^## /m)[0]?.trim();
-    if (!notes) throw new Error('The release has no changelog notes.');
+    const notes = releaseNotes(readFileSync(resolve(library, 'packages/ui/CHANGELOG.md'), 'utf8'), version);
     const notesFile = resolve(journal.directory, 'release-notes.md');
-    writeFileSync(notesFile, `## @rightui/ui ${version}\n\n${notes}\n`, { mode: 0o600 });
+    writeFileSync(notesFile, notes, { mode: 0o600 });
     const checksum = `${archive.path}.sha256`;
     writeFileSync(checksum, `${archive.sha256}  rightui-ui-${version}.tgz\n`, { mode: 0o600 });
     let release = await fetchJson(`https://api.github.com/repos/${config.libraryRepository}/releases/tags/${tag}`);

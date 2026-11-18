@@ -44,3 +44,5 @@ Use `bun run sync:ui` after publishing a new UI beta and aligning the sibling li
 ## Fast checks
 
 Use only fast, useful checks by default: version/dependency consistency, archive integrity and representative HTTP routes. Keep compilation needed to produce deliverables. Do not add or run targeted browser scripts or long interaction suites unless the user explicitly requests them. Existing browser suites are opt-in and never release gates.
+
+Before editing release inputs or tooling, check the private RightUI `releases/delivery.lock` owner and wait for an active delivery to finish. Do not change files underneath a running build. If edits appeared during a failed delivery, `./deploy` (from the website or parent workspace) preserves uncommitted changes, resumes the frozen journal, then restores them for the next delivery. Keep its Git stash backups until recovery is confirmed. Never bypass a real conflict or a changed source commit.
