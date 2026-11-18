@@ -115,6 +115,17 @@ for (const slug of ['sheet', 'dialog', 'drawer', 'alert_dialog', 'toast']) {
 }
 const toastClock = read(resolve(root, 'node_modules/@rightui/ui/docs/TOAST.md')).split('```contract\n')[1]?.split('```')[0].trimEnd();
 if (!toastClock) throw new Error('ToastViewport requires its documented root clock setup.');
+pages.component_carousel.sections.push({
+  id: 'autoplay-clock', title: 'Autoplay', language: 'Contract',
+  text: 'The autoplay example reads carouselTick from the root. Enable its timer while the carousel is on screen and motion is allowed. Manual navigation stops autoplay.',
+  code: `  state carouselTick = 0
+  provide
+    carouselTick = carouselTick
+  action advanceCarousel
+    carouselTick = carouselTick + 1
+  task carouselClock when top(nav).name == "component_carousel" and not viewport.prefersReducedMotion
+    every(2000, advanceCarousel)`,
+});
 pages.component_toast.sections.push({id:'clock-setup',title:'Notification clock',text:'Add this gated clock to the root. Pass toastTime and runToastClock to ToastViewport as clock and requestClock. For this demo, also provide rightuiDemoTime = toastTime and rightuiRunDemo = runToastClock. Loading notifications remain until updated or dismissed; update the same message ID when your real operation completes.',code:toastClock,language:'Contract'});
 const scrollerClock = read(resolve(root, 'node_modules/@rightui/ui/docs/MESSAGE-SCROLLER.md')).split('```contract\n')[2]?.split('```')[0].trimEnd();
 if (!scrollerClock) throw new Error('Message Scroller demo requires its documented root clock setup.');
@@ -218,7 +229,18 @@ const sourceLoaders=Object.entries(sourceFiles).map(([path,data],i)=>{write(reso
 write(resolve(site,'generated/index.ts'),`export const pages = {${Object.keys(pages).map(name=>`${JSON.stringify(name)}:()=>import("./pages/${name}.ts")`).join(',')}};\nexport const sources = {${sourceLoaders.join(',')}};\n`);
 write(resolve(site,'generated/nav.ts'),`export default ${JSON.stringify(catalog)};\n`);
 write(resolve(site,'generated/charts-data.ts'),`export default ${JSON.stringify(charts)};\n`);
-write(resolve(site,'generated/blocks-data.ts'),`export default ${JSON.stringify(blocks.map(({slug,title,code,source})=>({slug,title,source,code,files:blockSources(source)})))};\n`);
+const blockFiles: typeof sourceFiles = {};
+const blockIndex = blocks.map(({slug, title, source}) => {
+  const files = blockSources(source);
+  for (const file of files) blockFiles[file.path] = file;
+  return {slug, title, source, paths: files.map(file => file.path)};
+});
+write(resolve(site, 'generated/blocks-data.ts'), [
+  `const sources: Record<string, {path: string; code: string; language: string}> = ${JSON.stringify(blockFiles)};`,
+  `const blocks = ${JSON.stringify(blockIndex)};`,
+  'export default blocks.map(({slug, title, source, paths}) => ({slug, title, source, code: sources[source].code, files: paths.map(path => sources[path])}));',
+  '',
+].join('\n'));
 if(existsSync(resolve(site,'generated/catalog.ts')))unlinkSync(resolve(site,'generated/catalog.ts'));
 write(resolve(root,'packages/catalog/catalog.json'),JSON.stringify({components,aiElements,charts:chartMeta,blocks:blocks.map(({code,...rest})=>rest)},null,2)+'\n');
 buildRegistry();

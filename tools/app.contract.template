@@ -71,6 +71,7 @@ component RightUI
   state copiedId = ""
   state copiedText = ""
   state copyVersion = 0
+  state carouselTick = 0
   state demoTime = 0
   state demoUntil = 0
   provide
@@ -83,6 +84,7 @@ component RightUI
     uiCopiedId = copiedId
     uiCopiedText = copiedText
     uiCopyCode = copyCode
+    carouselTick = carouselTick
     rightuiDemoTime = demoTime
     rightuiRunDemo = runDemo
   action copyCode(id: string, text: string)
@@ -95,6 +97,10 @@ component RightUI
     copiedText = ""
   task clearCopy when copiedId != "" key=copyVersion
     after(3000, clearCopyFeedback)
+  action advanceCarousel
+    carouselTick = carouselTick + 1
+  task carouselClock when top(nav).name == "component_carousel" and not viewport.prefersReducedMotion
+    every(2000, advanceCarousel)
   action runDemo(duration: number)
     demoUntil = max(demoUntil, demoTime + duration)
   action tickDemo
