@@ -11,8 +11,11 @@ export function uiVersion(root = resolve(import.meta.dir, '..')): string {
     'apps/site/package.json': read(resolve(root, 'apps/site/package.json')).dependencies?.['@rightui/ui'],
     'packages/registry/package.json': read(resolve(root, 'packages/registry/package.json')).dependencies?.['@rightui/ui'],
     'library package': read(resolve(root, '../components/packages/ui/package.json')).version,
-    'compatibility metadata': read(resolve(root, '../components/metadata/compatibility.json')).version,
   };
+  const evidenceVersion = read(resolve(root, '../components/metadata/compatibility.json')).version;
+  if (typeof evidenceVersion !== 'string' || !beta.test(evidenceVersion) || Bun.semver.order(evidenceVersion, version) > 0) {
+    throw new Error(`Invalid compatibility evidence version ${evidenceVersion} for installed @rightui/ui ${version}.`);
+  }
   const lock = Bun.JSONC.parse(readFileSync(resolve(root, 'bun.lock'), 'utf8')) as {
     workspaces: Record<string, { dependencies?: Record<string, string> }>;
     overrides?: Record<string, string>;

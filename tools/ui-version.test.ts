@@ -20,8 +20,18 @@ test('installed package is the common version, with aligned manifests and lock',
 for (const file of ['package.json', 'apps/site/package.json', 'packages/registry/package.json']) test(`rejects stale ${file}`, () => {
   const root = fixture(); write(resolve(root, file), { dependencies: { '@rightui/ui': old } }); expect(() => uiVersion(root)).toThrow('installed @rightui/ui');
 });
-for (const file of ['../components/packages/ui/package.json', '../components/metadata/compatibility.json']) test(`rejects stale ${file}`, () => {
+test('rejects a stale library checkout', () => {
+  const file = '../components/packages/ui/package.json';
   const root = fixture(); write(resolve(root, file), { version: old }); expect(() => uiVersion(root)).toThrow('installed @rightui/ui');
+});
+test('keeps historical compatibility evidence and rejects future or invalid evidence', () => {
+  const root = fixture(), file = resolve(root, '../components/metadata/compatibility.json');
+  write(file, { version: old });
+  expect(uiVersion(root)).toBe(current);
+  for (const version of ['0.3.0-beta.4', 'invalid']) {
+    write(file, { version });
+    expect(() => uiVersion(root)).toThrow('compatibility evidence');
+  }
 });
 test('rejects a stale lock even when manifests agree', () => {
   const root = fixture(); write(resolve(root, 'bun.lock'), { workspaces: {}, packages: { '@rightui/ui': [`@rightui/ui@${old}`] } }); expect(() => uiVersion(root)).toThrow('bun.lock');

@@ -8,7 +8,7 @@ The public documentation site is served at `https://rightui.dev` by the static-a
 
 `bun run sync:ui` reads npm's current beta, requires the matching library checkout, pins both website manifests, installs the official package and regenerates the guides, AI prompt, all installation commands, Markdown and footer. Review and commit the resulting changes. The package's freshly published releases are exempted from Bun's age gate; other dependencies retain it. This command does not publish npm, change dist-tags or deploy.
 
-The installed `@rightui/ui/package.json` supplies the displayed version. Generation checks it against the library, compatibility metadata, workspace manifests and Bun lock. Build checks reject stale commands, archive names, footer labels and unresolved placeholders in current public documents, including dedicated client shells. Source archives retain historical changelogs and fixtures unchanged.
+The installed `@rightui/ui/package.json` supplies the displayed version. Generation checks it against the library, workspace manifests and Bun lock. Compatibility records retain the version actually checked and may refer to an earlier beta. Build checks reject stale commands, archive names, footer labels and unresolved placeholders in current public documents, including dedicated client shells. Source archives retain historical changelogs and fixtures unchanged.
 
 `bun run deploy` checks the current npm beta and archive integrity before building and again immediately before upload. It refuses local overrides, dirty source checkouts and stale build provenance. Publishing npm alone does not update a static website: run sync, commit and deploy for each delivery. Keep validation history dated; it is not the current installation version.
 
